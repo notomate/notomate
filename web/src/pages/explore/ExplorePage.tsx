@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
 import NoteListSkeleton from '@/components/notecard/NoteListSkeleton';
-import logo from '@/assets/app.png';
+import logo from '@/assets/app.svg';
 import { LogIn, House } from 'lucide-react';
 import { useCurrentUserStore } from '@/stores/current-user';
 

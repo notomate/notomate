@@ -1,0 +1,13 @@
+<svg viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- shaft -->
+  <line x1="90" y1="18" x2="42" y2="135" stroke="#111" stroke-width="2.5" stroke-linecap="round"></line>
+  <!-- leaf left side (organic) -->
+  <path d="M90 18 C70 28 52 60 42 135 C62 88 80 52 90 18Z" fill="#111"></path>
+  <!-- right side vane lines only -->
+  <path d="M90 18 C105 32 110 52 95 68" stroke="#111" stroke-width="1.8" fill="none"></path>
+  <path d="M82 40 C96 50 100 68 88 80" stroke="#111" stroke-width="1.5" fill="none"></path>
+  <path d="M72 60 C84 70 88 86 76 96" stroke="#111" stroke-width="1.2" fill="none"></path>
+  <path d="M62 82 C72 90 74 104 64 112" stroke="#111" stroke-width="1" fill="none"></path>
+  <!-- shaft highlight -->
+  <line x1="90" y1="18" x2="42" y2="135" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity="0.5"></line>
+</svg>

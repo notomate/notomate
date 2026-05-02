@@ -1,6 +1,6 @@
 import { Dialog } from "radix-ui"
 import { useTranslation } from "react-i18next"
-import logo from "@/assets/app.png"
+import logo from "@/assets/app.svg"
 
 interface AboutModalProps {
     open: boolean

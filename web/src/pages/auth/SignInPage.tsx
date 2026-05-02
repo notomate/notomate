@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { signIn } from '@/api/auth';
-import logo from '@/assets/app.png'
+import logo from '@/assets/app.svg'
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/stores/toast';
 import { useCurrentUserStore } from '@/stores/current-user';
