@@ -385,6 +385,8 @@ export default {
     objectUpdatedError: "オブジェクトの更新に失敗しました",
     deleteObjectConfirm: "このオブジェクトを削除してもよろしいですか？",
     editColumn: "カラムを編集",
+    addItem: "アイテムを追加",
+    itemTitle: "アイテムのタイトル...",
     viewNotFound: "ビューが見つかりません",
     createdBy: "作成者",
     updatedAt: "更新",

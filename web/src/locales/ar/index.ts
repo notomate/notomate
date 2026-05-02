@@ -385,6 +385,8 @@ export default {
     objectUpdatedError: "فشل تحديث الكائن",
     deleteObjectConfirm: "هل أنت متأكد من رغبتك في حذف هذا الكائن؟",
     editColumn: "تعديل العمود",
+    addItem: "إضافة عنصر",
+    itemTitle: "عنوان العنصر...",
     viewNotFound: "العرض غير موجود",
     createdBy: "تم الإنشاء بواسطة",
     updatedAt: "تم التحديث",

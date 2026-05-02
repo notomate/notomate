@@ -105,8 +105,14 @@ export interface MapMarkerData {
   color?: string;
 }
 
+export interface KanbanCardData {
+  id: string;
+  title: string;
+}
+
 export interface KanbanColumnData {
   color?: string; // Column header color
+  items?: KanbanCardData[];
 }
 
 // Whiteboard view data

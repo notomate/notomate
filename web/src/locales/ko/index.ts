@@ -385,6 +385,8 @@ export default {
     objectUpdatedError: "객체 업데이트 실패",
     deleteObjectConfirm: "이 객체를 정말로 삭제하시겠습니까?",
     editColumn: "컬럼 편집",
+    addItem: "항목 추가",
+    itemTitle: "항목 제목...",
     viewNotFound: "보기를 찾을 수 없습니다",
     createdBy: "작성자",
     updatedAt: "업데이트됨",

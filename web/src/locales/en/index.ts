@@ -389,6 +389,8 @@ export default {
     objectUpdatedError: "Failed to update object",
     deleteObjectConfirm: "Are you sure you want to delete this object?",
     editColumn: "Edit Column",
+    addItem: "Add item",
+    itemTitle: "Item title...",
     viewNotFound: "View not found",
     createdBy: "Created by",
     updatedAt: "Updated",

@@ -385,6 +385,8 @@ export default {
     objectUpdatedError: "Aggiornamento oggetto non riuscito",
     deleteObjectConfirm: "Sei sicuro di voler eliminare questo oggetto?",
     editColumn: "Modifica colonna",
+    addItem: "Aggiungi elemento",
+    itemTitle: "Titolo elemento...",
     viewNotFound: "Visualizzazione non trovata",
     createdBy: "Creato da",
     updatedAt: "Aggiornato",

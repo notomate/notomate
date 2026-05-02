@@ -385,6 +385,8 @@ export default {
     objectUpdatedError: "Ошибка обновления объекта",
     deleteObjectConfirm: "Вы уверены, что хотите удалить этот объект?",
     editColumn: "Редактировать колонку",
+    addItem: "Добавить элемент",
+    itemTitle: "Заголовок элемента...",
     viewNotFound: "Представление не найдено",
     createdBy: "Создано",
     updatedAt: "Обновлено",

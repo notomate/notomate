@@ -389,6 +389,8 @@ export default {
     objectUpdatedError: "物件更新失敗",
     deleteObjectConfirm: "確定要刪除這個物件嗎?",
     editColumn: "編輯欄位",
+    addItem: "新增項目",
+    itemTitle: "項目標題...",
     viewNotFound: "找不到視圖",
     createdBy: "建立者",
     updatedAt: "更新時間",

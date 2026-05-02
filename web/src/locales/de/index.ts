@@ -385,6 +385,8 @@ export default {
     objectUpdatedError: "Objekt konnte nicht aktualisiert werden",
     deleteObjectConfirm: "Sind Sie sicher, dass Sie dieses Objekt löschen möchten?",
     editColumn: "Spalte bearbeiten",
+    addItem: "Element hinzufügen",
+    itemTitle: "Elementtitel...",
     viewNotFound: "Ansicht nicht gefunden",
     createdBy: "Erstellt von",
     updatedAt: "Aktualisiert",

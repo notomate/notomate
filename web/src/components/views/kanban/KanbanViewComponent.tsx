@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { KanbanColumnData, KanbanViewData, View } from '../../../types/view'
+import { KanbanCardData, KanbanColumnData, KanbanViewData, View } from '../../../types/view'
 import { deleteViewObject, updateViewObject, updateView } from '../../../api/view'
-import { MoreVertical, Edit2, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MoreVertical, Edit2, Trash2, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Dialog } from 'radix-ui'
 import { useToastStore } from '../../../stores/toast'
@@ -33,8 +33,30 @@ const KanbanViewComponent = ({
     const [editingName, setEditingName] = useState('')
     const [editingColor, setEditingColor] = useState('')
 
+    // inline add-item state per column
+    const [addingItemColumnId, setAddingItemColumnId] = useState<string | null>(null)
+    const [newItemTitle, setNewItemTitle] = useState('')
+    const addItemInputRef = useRef<HTMLTextAreaElement>(null)
+
+    // editing a card
+    const [editingCardKey, setEditingCardKey] = useState<{ columnId: string; cardId: string } | null>(null)
+    const [editingCardTitle, setEditingCardTitle] = useState('')
+    const editCardInputRef = useRef<HTMLTextAreaElement>(null)
+
     const currentWorkspaceId = workspaceId || params.workspaceId
     const currentViewId = viewId || params.viewId
+
+    useEffect(() => {
+        if (addingItemColumnId && addItemInputRef.current) {
+            addItemInputRef.current.focus()
+        }
+    }, [addingItemColumnId])
+
+    useEffect(() => {
+        if (editingCardKey && editCardInputRef.current) {
+            editCardInputRef.current.focus()
+        }
+    }, [editingCardKey])
 
     const sortedColumns = useMemo(() => {
         let viewData: KanbanViewData | null = null
@@ -129,6 +151,56 @@ const KanbanViewComponent = ({
         } catch { addToast({ title: t('views.objectUpdatedError'), type: 'error' }) }
     }
 
+    const updateColumnItems = (column: any, items: KanbanCardData[]) => {
+        const existing: KanbanColumnData = column.data ? JSON.parse(column.data) : {}
+        updateColumnMutation.mutate({
+            columnId: column.id,
+            name: column.name,
+            data: JSON.stringify({ ...existing, items })
+        })
+    }
+
+    const handleAddItem = (column: any) => {
+        const title = newItemTitle.trim()
+        if (!title) {
+            setAddingItemColumnId(null)
+            setNewItemTitle('')
+            return
+        }
+        const existing: KanbanColumnData = column.data ? JSON.parse(column.data) : {}
+        const items = existing.items || []
+        const newCard: KanbanCardData = { id: crypto.randomUUID(), title }
+        updateColumnItems(column, [...items, newCard])
+        setNewItemTitle('')
+        // keep the input open for rapid entry
+    }
+
+    const handleStartEditCard = (columnId: string, card: KanbanCardData) => {
+        setEditingCardKey({ columnId, cardId: card.id })
+        setEditingCardTitle(card.title)
+    }
+
+    const handleSaveCardEdit = (column: any) => {
+        if (!editingCardKey) return
+        const title = editingCardTitle.trim()
+        if (!title) {
+            setEditingCardKey(null)
+            return
+        }
+        const existing: KanbanColumnData = column.data ? JSON.parse(column.data) : {}
+        const items = (existing.items || []).map(item =>
+            item.id === editingCardKey.cardId ? { ...item, title } : item
+        )
+        updateColumnItems(column, items)
+        setEditingCardKey(null)
+    }
+
+    const handleDeleteCard = (column: any, cardId: string) => {
+        const existing: KanbanColumnData = column.data ? JSON.parse(column.data) : {}
+        const items = (existing.items || []).filter(item => item.id !== cardId)
+        updateColumnItems(column, items)
+    }
+
     return (
         <>
             <div className="h-full overflow-x-auto">
@@ -136,55 +208,171 @@ const KanbanViewComponent = ({
                     {sortedColumns.map((column, index) => {
                         let columnData: KanbanColumnData = {}
                         try { if (column.data) columnData = JSON.parse(column.data) } catch {}
+                        const items = columnData.items || []
+                        const isAddingHere = addingItemColumnId === column.id
 
                         return (
                             <div
                                 key={column.id}
-                                className="flex-shrink-0 w-72 h-full bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 flex flex-col"
+                                className="flex-shrink-0 w-72 bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 flex flex-col max-h-full"
                             >
-                                <div className="flex items-center justify-between mb-4">
+                                {/* Column header */}
+                                <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                         {columnData.color && (
                                             <div className="w-3 h-3 rounded" style={{ backgroundColor: columnData.color }} />
                                         )}
-                                        <span className="font-semibold text-lg">{column.name}</span>
+                                        <span className="font-semibold text-base">{column.name}</span>
+                                        <span className="text-xs text-neutral-400 dark:text-neutral-500">{items.length}</span>
                                     </div>
                                     {!isPublic && (
-                                        <DropdownMenu.Root>
-                                            <DropdownMenu.Trigger asChild>
-                                                <button className="p-1 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors">
-                                                    <MoreVertical size={16} />
-                                                </button>
-                                            </DropdownMenu.Trigger>
-                                            <DropdownMenu.Portal>
-                                                <DropdownMenu.Content className="min-w-[160px] bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-1 z-50" sideOffset={5}>
-                                                    {index > 0 && (
-                                                        <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-700" onSelect={() => handleMoveColumn(column.id, 'forward')}>
-                                                            <ChevronLeft size={14} />{t('actions.moveForward')}
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                className="p-1 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
+                                                onClick={() => { setAddingItemColumnId(column.id); setNewItemTitle('') }}
+                                                title={t('views.addItem', 'Add item')}
+                                            >
+                                                <Plus size={16} />
+                                            </button>
+                                            <DropdownMenu.Root>
+                                                <DropdownMenu.Trigger asChild>
+                                                    <button className="p-1 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors">
+                                                        <MoreVertical size={16} />
+                                                    </button>
+                                                </DropdownMenu.Trigger>
+                                                <DropdownMenu.Portal>
+                                                    <DropdownMenu.Content className="min-w-[160px] bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-1 z-50" sideOffset={5}>
+                                                        {index > 0 && (
+                                                            <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-700" onSelect={() => handleMoveColumn(column.id, 'forward')}>
+                                                                <ChevronLeft size={14} />{t('actions.moveForward')}
+                                                            </DropdownMenu.Item>
+                                                        )}
+                                                        {index < sortedColumns.length - 1 && (
+                                                            <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-700" onSelect={() => handleMoveColumn(column.id, 'backward')}>
+                                                                <ChevronRight size={14} />{t('actions.moveBackward')}
+                                                            </DropdownMenu.Item>
+                                                        )}
+                                                        <DropdownMenu.Separator className="h-px bg-neutral-200 dark:bg-neutral-700 my-1" />
+                                                        <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-700" onSelect={() => handleEditColumn(column.id)}>
+                                                            <Edit2 size={14} />{t('actions.edit')}
                                                         </DropdownMenu.Item>
-                                                    )}
-                                                    {index < sortedColumns.length - 1 && (
-                                                        <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-700" onSelect={() => handleMoveColumn(column.id, 'backward')}>
-                                                            <ChevronRight size={14} />{t('actions.moveBackward')}
+                                                        <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onSelect={() => { if (window.confirm(t('views.deleteObjectConfirm'))) deleteColumnMutation.mutate(column.id) }}>
+                                                            <Trash2 size={14} />{t('actions.delete')}
                                                         </DropdownMenu.Item>
-                                                    )}
-                                                    <DropdownMenu.Separator className="h-px bg-neutral-200 dark:bg-neutral-700 my-1" />
-                                                    <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-700" onSelect={() => handleEditColumn(column.id)}>
-                                                        <Edit2 size={14} />{t('actions.edit')}
-                                                    </DropdownMenu.Item>
-                                                    <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onSelect={() => { if (window.confirm(t('views.deleteObjectConfirm'))) deleteColumnMutation.mutate(column.id) }}>
-                                                        <Trash2 size={14} />{t('actions.delete')}
-                                                    </DropdownMenu.Item>
-                                                </DropdownMenu.Content>
-                                            </DropdownMenu.Portal>
-                                        </DropdownMenu.Root>
+                                                    </DropdownMenu.Content>
+                                                </DropdownMenu.Portal>
+                                            </DropdownMenu.Root>
+                                        </div>
                                     )}
                                 </div>
-                                <div className="flex-1 overflow-y-auto">
-                                    <div className="text-center py-8 text-neutral-400 dark:text-neutral-500 text-sm">
-                                        {t('views.kanbanEmpty', 'Empty column')}
-                                    </div>
+
+                                {/* Cards list */}
+                                <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+                                    {items.map(card => {
+                                        const isEditingThisCard = editingCardKey?.columnId === column.id && editingCardKey?.cardId === card.id
+                                        return (
+                                            <div key={card.id} className="group bg-white dark:bg-neutral-700 rounded-md p-3 shadow-sm border border-neutral-200 dark:border-neutral-600">
+                                                {isEditingThisCard ? (
+                                                    <div>
+                                                        <textarea
+                                                            ref={editCardInputRef}
+                                                            value={editingCardTitle}
+                                                            onChange={e => setEditingCardTitle(e.target.value)}
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSaveCardEdit(column) }
+                                                                if (e.key === 'Escape') setEditingCardKey(null)
+                                                            }}
+                                                            className="w-full text-sm resize-none bg-transparent outline-none border-none p-0"
+                                                            rows={2}
+                                                        />
+                                                        <div className="flex gap-1 mt-2">
+                                                            <button
+                                                                onClick={() => handleSaveCardEdit(column)}
+                                                                className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                            >
+                                                                {t('common.save')}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setEditingCardKey(null)}
+                                                                className="px-2 py-1 text-xs border dark:border-neutral-500 rounded hover:bg-neutral-100 dark:hover:bg-neutral-600"
+                                                            >
+                                                                {t('common.cancel')}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-start justify-between gap-1">
+                                                        <span
+                                                            className="text-sm flex-1 cursor-pointer"
+                                                            onClick={() => !isPublic && handleStartEditCard(column.id, card)}
+                                                        >
+                                                            {card.title}
+                                                        </span>
+                                                        {!isPublic && (
+                                                            <button
+                                                                onClick={() => handleDeleteCard(column, card.id)}
+                                                                className="opacity-0 group-hover:opacity-100 p-0.5 text-neutral-400 hover:text-red-500 rounded transition-opacity"
+                                                            >
+                                                                <X size={12} />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+
+                                    {items.length === 0 && !isAddingHere && (
+                                        <div className="text-center py-6 text-neutral-400 dark:text-neutral-500 text-sm">
+                                            {t('views.kanbanEmpty', 'Empty column')}
+                                        </div>
+                                    )}
                                 </div>
+
+                                {/* Inline add item */}
+                                {!isPublic && (
+                                    <div className="mt-2 flex-shrink-0">
+                                        {isAddingHere ? (
+                                            <div className="bg-white dark:bg-neutral-700 rounded-md p-2 shadow-sm border border-neutral-200 dark:border-neutral-600">
+                                                <textarea
+                                                    ref={addItemInputRef}
+                                                    value={newItemTitle}
+                                                    onChange={e => setNewItemTitle(e.target.value)}
+                                                    onKeyDown={e => {
+                                                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddItem(column) }
+                                                        if (e.key === 'Escape') { setAddingItemColumnId(null); setNewItemTitle('') }
+                                                    }}
+                                                    placeholder={t('views.itemTitle', 'Item title...')}
+                                                    className="w-full text-sm resize-none bg-transparent outline-none border-none p-0 placeholder-neutral-400"
+                                                    rows={2}
+                                                />
+                                                <div className="flex gap-1 mt-2">
+                                                    <button
+                                                        onClick={() => handleAddItem(column)}
+                                                        disabled={!newItemTitle.trim()}
+                                                        className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {t('views.addItem', 'Add item')}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { setAddingItemColumnId(null); setNewItemTitle('') }}
+                                                        className="px-2 py-1 text-xs border dark:border-neutral-500 rounded hover:bg-neutral-100 dark:hover:bg-neutral-600"
+                                                    >
+                                                        {t('common.cancel')}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => { setAddingItemColumnId(column.id); setNewItemTitle('') }}
+                                                className="w-full flex items-center gap-1 px-2 py-1.5 text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition-colors"
+                                            >
+                                                <Plus size={14} />
+                                                {t('views.addItem', 'Add item')}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )
                     })}

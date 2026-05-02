@@ -389,6 +389,8 @@ export default {
     objectUpdatedError: "对象更新失败",
     deleteObjectConfirm: "确定要删除此对象吗？",
     editColumn: "编辑列",
+    addItem: "添加项目",
+    itemTitle: "项目标题...",
     viewNotFound: "未找到视图",
     createdBy: "创建者",
     updatedAt: "更新于",
