@@ -9,7 +9,7 @@ function TagChip({ label, onRemove }: { label: string; onRemove?: () => void }) 
   const { bg, text } = TAG_STYLE
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${bg} ${text} select-none`}>
-      {label}
+      <span className="opacity-50">#</span>{label}
       {onRemove && (
         <button onClick={onRemove} className="ml-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 p-0.5 transition-colors" tabIndex={-1}>
           <X size={10} strokeWidth={2.5} />

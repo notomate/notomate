@@ -248,7 +248,7 @@ const TagsRenderer: React.FC<{ tags: string[] }> = ({ tags }) => {
         <div className="flex flex-wrap items-center gap-1.5 my-1">
             {tags.map(t => (
                 <span key={t} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300">
-                    {t}
+                    <span className="opacity-50">#</span>{t}
                 </span>
             ))}
         </div>
