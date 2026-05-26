@@ -255,6 +255,79 @@ const TagsRenderer: React.FC<{ tags: string[] }> = ({ tags }) => {
     )
 }
 
+const CarouselNodeRenderer: React.FC<{ items: Array<{ src: string; name: string; type: 'image' | 'video' }> }> = ({ items }) => {
+    const [isExpanded, setIsExpanded] = useState(false)
+    const scrollRef = useRef<HTMLDivElement>(null)
+
+    if (!items.length) return null
+
+    const remaining = items.length - 3
+    const showCompact = !isExpanded
+
+    if (showCompact) {
+        const visibleItems = items.slice(0, 3)
+        return (
+            <>
+                <div className="flex gap-2 w-full">
+                    {visibleItems.map((item, idx) => {
+                        const isOverlay = idx === 2 && remaining > 0
+                        return (
+                            <div
+                                key={`${item.src}-${idx}`}
+                                className="relative flex-shrink-0 aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800"
+                                onClick={isOverlay ? () => setIsExpanded(true) : undefined}
+                                style={{ width: 'calc((100% - 1rem) / 3)', ...(isOverlay ? { cursor: 'pointer' } : {}) }}
+                            >
+                                {item.type === 'image' ? (
+                                    isOverlay ? (
+                                        <PhotoView src={item.src}>
+                                            <img src={item.src} alt={item.name} className="w-full h-full object-cover pointer-events-none" />
+                                        </PhotoView>
+                                    ) : (
+                                        <PhotoView src={item.src}>
+                                            <img src={item.src} alt={item.name} className="w-full h-full object-cover cursor-zoom-in" />
+                                        </PhotoView>
+                                    )
+                                ) : (
+                                    <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
+                                )}
+                                {isOverlay && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <span className="text-white text-2xl font-semibold">+{remaining}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+                {items.slice(3).map((item, idx) =>
+                    item.type === 'image' ? (
+                        <PhotoView key={`hidden-${idx}`} src={item.src}>
+                            <span style={{ display: 'none' }} />
+                        </PhotoView>
+                    ) : null
+                )}
+            </>
+        )
+    }
+
+    return (
+        <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-1 w-full" style={{ scrollbarWidth: 'thin' }}>
+            {items.map((item, idx) => (
+                <div key={`${item.src}-${idx}`} className="relative flex-shrink-0 aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800" style={{ width: 'calc((100% - 1rem) / 3)' }}>
+                    {item.type === 'image' ? (
+                        <PhotoView src={item.src}>
+                            <img src={item.src} alt={item.name} className="w-full h-full object-cover cursor-zoom-in" />
+                        </PhotoView>
+                    ) : (
+                        <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
+                    )}
+                </div>
+            ))}
+        </div>
+    )
+}
+
 const VIEW_TYPE_META: Record<ViewType, { icon: React.ReactNode; label: string }> = {
     map: { icon: <Map size={16} />, label: 'Map' },
     calendar: { icon: <CalendarDays size={16} />, label: 'Calendar' },
@@ -491,21 +564,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
             case 'carouselNode': {
                 const items: Array<{ src: string; name: string; type: 'image' | 'video' }> = node.attrs?.items || []
                 if (!items.length) return null
-                return (
-                    <div key={key} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
-                        {items.map((item, idx) => (
-                            <div key={`${item.src}-${idx}`} className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800">
-                                {item.type === 'image' ? (
-                                    <PhotoView src={item.src}>
-                                        <img src={item.src} alt={item.name} className="w-full h-full object-cover cursor-zoom-in" />
-                                    </PhotoView>
-                                ) : (
-                                    <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                )
+                return <CarouselNodeRenderer key={key} items={items} />
             }
             case 'table':
                 return <div className='max-w-full overflow-x-auto' key={key}>

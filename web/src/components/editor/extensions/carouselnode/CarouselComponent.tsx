@@ -7,6 +7,7 @@ import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 
 const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes, selected, editor, deleteNode, getPos }) => {
     const [isPickerOpen, setIsPickerOpen] = useState(false)
+    const [isExpanded, setIsExpanded] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
     const items: CarouselItem[] = node.attrs.items || []
     const isEditable = editor.isEditable
@@ -57,6 +58,37 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
 
     if (!isEditable && items.length === 0) return null
 
+    if (!isEditable) {
+        const visibleItems = items.slice(0, 3)
+        const remaining = items.length - 3
+
+        return (
+            <NodeViewWrapper>
+                <div className="carousel-node select-none">
+                    <div className="flex gap-2">
+                        {visibleItems.map((item, index) => (
+                            <div
+                                key={`${item.src}-${index}`}
+                                className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800"
+                            >
+                                {item.type === 'image' ? (
+                                    <img src={item.src} alt={item.name} className="w-full h-full object-cover" draggable={false} />
+                                ) : (
+                                    <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
+                                )}
+                                {index === 2 && remaining > 0 && (
+                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <span className="text-white text-2xl font-semibold">+{remaining}</span>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </NodeViewWrapper>
+        )
+    }
+
     if (items.length === 0) {
         return (
             <NodeViewWrapper className="carousel-node select-none border dark:border-neutral-700 rounded p-2 bg-gray-100 dark:bg-neutral-800">
@@ -84,6 +116,9 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
         )
     }
 
+    const showCompact = !isExpanded && items.length > 3
+    const remaining = items.length - 3
+
     return (
         <NodeViewWrapper>
             <div className="carousel-node relative group select-none">
@@ -91,49 +126,85 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
                     <NodeTouchMenu visible={selected} actions={nodeActions} />
                 )}
 
-                {items.length > 2 && (
+                {showCompact ? (
+                    <div className="flex gap-2">
+                        {items.slice(0, 3).map((item, index) => {
+                            const isOverlay = index === 2
+                            return (
+                                <div
+                                    key={`${item.src}-${index}`}
+                                    className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800 group/item"
+                                    onClick={isOverlay ? (e) => { e.stopPropagation(); setIsExpanded(true) } : undefined}
+                                    style={isOverlay ? { cursor: 'pointer' } : undefined}
+                                >
+                                    {item.type === 'image' ? (
+                                        <img src={item.src} alt={item.name} className="w-full h-full object-cover" draggable={false} />
+                                    ) : (
+                                        <video src={item.src} className="w-full h-full object-cover" preload="metadata" />
+                                    )}
+                                    {!isOverlay && (
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveItem(index)}
+                                            className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-black/80 rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                            title="Remove"
+                                        >
+                                            <X size={12} className="text-white" />
+                                        </button>
+                                    )}
+                                    {isOverlay && (
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                            <span className="text-white text-2xl font-semibold">+{remaining}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )
+                        })}
+                    </div>
+                ) : (
                     <>
-                        <button
-                            type="button"
-                            onClick={scrollLeft}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 dark:bg-neutral-800/90 hover:bg-white dark:hover:bg-neutral-800 rounded-full shadow-lg border border-gray-200 dark:border-neutral-600 transition-all opacity-0 group-hover:opacity-100"
-                        >
-                            <ChevronLeft size={16} className="text-gray-700 dark:text-gray-300" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={scrollRight}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 dark:bg-neutral-800/90 hover:bg-white dark:hover:bg-neutral-800 rounded-full shadow-lg border border-gray-200 dark:border-neutral-600 transition-all opacity-0 group-hover:opacity-100"
-                        >
-                            <ChevronRight size={16} className="text-gray-700 dark:text-gray-300" />
-                        </button>
-                    </>
-                )}
-
-                <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
-                    {items.map((item, index) => (
-                        <div
-                            key={`${item.src}-${index}`}
-                            className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800 group/item"
-                        >
-                            {item.type === 'image' ? (
-                                <img src={item.src} alt={item.name} className="w-full h-full object-cover" draggable={false} />
-                            ) : (
-                                <video src={item.src} className="w-full h-full object-cover" controls={!isEditable} preload="metadata" />
-                            )}
-                            {isEditable && (
+                        {items.length > 2 && (
+                            <>
                                 <button
                                     type="button"
-                                    onClick={() => handleRemoveItem(index)}
-                                    className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-black/80 rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                    title="Remove"
+                                    onClick={scrollLeft}
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 dark:bg-neutral-800/90 hover:bg-white dark:hover:bg-neutral-800 rounded-full shadow-lg border border-gray-200 dark:border-neutral-600 transition-all opacity-0 group-hover:opacity-100"
                                 >
-                                    <X size={12} className="text-white" />
+                                    <ChevronLeft size={16} className="text-gray-700 dark:text-gray-300" />
                                 </button>
-                            )}
+                                <button
+                                    type="button"
+                                    onClick={scrollRight}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 dark:bg-neutral-800/90 hover:bg-white dark:hover:bg-neutral-800 rounded-full shadow-lg border border-gray-200 dark:border-neutral-600 transition-all opacity-0 group-hover:opacity-100"
+                                >
+                                    <ChevronRight size={16} className="text-gray-700 dark:text-gray-300" />
+                                </button>
+                            </>
+                        )}
+                        <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
+                            {items.map((item, index) => (
+                                <div
+                                    key={`${item.src}-${index}`}
+                                    className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800 group/item"
+                                >
+                                    {item.type === 'image' ? (
+                                        <img src={item.src} alt={item.name} className="w-full h-full object-cover" draggable={false} />
+                                    ) : (
+                                        <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveItem(index)}
+                                        className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-black/80 rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                        title="Remove"
+                                    >
+                                        <X size={12} className="text-white" />
+                                    </button>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </>
+                )}
 
                 {extension.options?.workspaceId && (
                     <CarouselMediaPickerDialog
