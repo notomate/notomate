@@ -1,17 +1,12 @@
-import { Search, X, FileText, PanelRight, Settings, Info, Compass, LogOut, User as UserIcon } from "lucide-react"
+import { Search, X, FileText, PanelRight } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { getNotes, NoteData } from "@/api/note"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { Link, Outlet, useNavigate } from "react-router-dom"
-import { useInfiniteQuery, useMutation } from "@tanstack/react-query"
+import { Link, Outlet } from "react-router-dom"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { useRef, useCallback, useState, useEffect } from "react"
 import WorkspaceMenu from "@/components/workspacemenu/WorkspaceMenu"
-import { useCurrentUserStore } from "@/stores/current-user"
-import { useWorkspaceStore } from "@/stores/workspace"
-import { signOut } from "@/api/auth"
-import UserSettingsModal from "@/components/user/UserSettingsModal"
-import AboutModal from "@/components/user/AboutModal"
-import { DropdownMenu } from "radix-ui"
+import UserMenu from "@/components/usermenu/UserMenu"
 
 const PAGE_SIZE = 30
 const INITIAL_DISPLAY = 5
@@ -34,29 +29,10 @@ const ViewsLayout = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
     const [isSearchVisible, setIsSearchVisible] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-    const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
-    const [isAboutModalOpen, setIsAboutModalOpen] = useState(false)
     const [displayCount, setDisplayCount] = useState(INITIAL_DISPLAY)
     const { t } = useTranslation()
     const scrollContainerRef = useRef<HTMLDivElement | null>(null)
     const observerRef = useRef<IntersectionObserver | null>(null)
-    const { user, resetCurrentUser } = useCurrentUserStore()
-    const { resetWorkspaces } = useWorkspaceStore()
-
-    const navigate = useNavigate()
-
-    const signoutMutation = useMutation({
-        mutationFn: () => signOut(),
-        onSuccess: async () => {
-            try {
-                resetWorkspaces()
-                resetCurrentUser()
-                navigate(`/`)
-            } catch (error) {
-                console.error("Error invalidating queries:", error)
-            }
-        },
-    })
 
     useEffect(() => {
         const handler = setTimeout(() => setDebouncedQuery(query), 300)
@@ -222,65 +198,7 @@ const ViewsLayout = () => {
 
                 {/* User menu */}
                 <div className="px-3 pb-3 pt-1 border-t border-neutral-200 dark:border-neutral-700 shrink-0">
-                    {user && (
-                        <DropdownMenu.Root>
-                            <DropdownMenu.Trigger asChild>
-                                <button className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors text-left">
-                                    <div className="w-6 h-6 rounded-full bg-blue-500 text-white font-semibold flex items-center justify-center text-xs shrink-0">
-                                        {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon size={14} />}
-                                    </div>
-                                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{user.name}</span>
-                                </button>
-                            </DropdownMenu.Trigger>
-                            <DropdownMenu.Portal>
-                                <DropdownMenu.Content
-                                    className="rounded-md w-52 bg-white text-gray-900 dark:bg-neutral-700 dark:text-gray-100 p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform] z-[9999]"
-                                    align="start"
-                                    side="top"
-                                    sideOffset={8}
-                                >
-                                    <div className="px-3 py-2 border-b dark:border-neutral-600">
-                                        <p className="font-semibold text-sm">{user.name}</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                                    </div>
-                                    <DropdownMenu.Item className="select-none rounded-lg leading-none outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-neutral-200 dark:data-[highlighted]:bg-neutral-700">
-                                        <button
-                                            onClick={() => setIsUserSettingsOpen(true)}
-                                            className="flex gap-3 p-3 items-center w-full text-sm"
-                                        >
-                                            <Settings size={16} />
-                                            {t("menu.settings")}
-                                        </button>
-                                    </DropdownMenu.Item>
-                                    <DropdownMenu.Item className="select-none rounded-lg leading-none outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-neutral-200 dark:data-[highlighted]:bg-neutral-700">
-                                        <button
-                                            onClick={() => setIsAboutModalOpen(true)}
-                                            className="flex gap-3 p-3 items-center w-full text-sm"
-                                        >
-                                            <Info size={16} />
-                                            {t("menu.about")}
-                                        </button>
-                                    </DropdownMenu.Item>
-                                    <DropdownMenu.Item className="select-none rounded-lg leading-none outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-neutral-200 dark:data-[highlighted]:bg-neutral-700">
-                                        <Link to="/explore" className="flex gap-3 p-3 items-center w-full text-sm">
-                                            <Compass size={16} />
-                                            {t("menu.explore")}
-                                        </Link>
-                                    </DropdownMenu.Item>
-                                    <DropdownMenu.Separator className="h-[1px] bg-neutral-200 dark:bg-neutral-600 m-1" />
-                                    <DropdownMenu.Item className="text-red-600 dark:text-red-400 select-none rounded-lg leading-none outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-red-100 dark:data-[highlighted]:bg-red-900/30">
-                                        <button
-                                            onClick={() => signoutMutation.mutate()}
-                                            className="flex gap-3 p-3 items-center w-full text-sm"
-                                        >
-                                            <LogOut size={16} />
-                                            {t("actions.signout")}
-                                        </button>
-                                    </DropdownMenu.Item>
-                                </DropdownMenu.Content>
-                            </DropdownMenu.Portal>
-                        </DropdownMenu.Root>
-                    )}
+                    <UserMenu />
                 </div>
             </div>
 
@@ -291,8 +209,6 @@ const ViewsLayout = () => {
                 </div>
             </div>
 
-            <UserSettingsModal open={isUserSettingsOpen} onOpenChange={setIsUserSettingsOpen} />
-            <AboutModal open={isAboutModalOpen} onOpenChange={setIsAboutModalOpen} />
         </div>
     )
 }
