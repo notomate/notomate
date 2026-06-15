@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useId, useCallback } from 'react'
 import { PhotoView, PhotoProvider } from 'react-photo-view'
 import ShikiHighlighter from "react-shiki"
 import { useTranslation } from 'react-i18next'
@@ -81,46 +81,104 @@ const TiktokRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
 
 const ThreadsRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
     const containerRef = useRef<HTMLDivElement>(null)
-    const [mountKey, setMountKey] = useState(Date.now)
+    const [loading, setLoading] = useState(true)
+    // Unique per-instance suffix so two embeds of the same post don't share a
+    // DOM id. The Threads SDK stores the blockquote id on its iframe and removes
+    // that element by id on every resize message; a shared id makes one instance
+    // delete another instance's blockquote before it renders.
+    const instanceId = useId().replace(/:/g, '')
 
-    useEffect(() => {
-        setMountKey(Date.now())
-    }, [url])
-
-    useEffect(() => {
-        const handlePageShow = (e: PageTransitionEvent) => {
-            if (e.persisted) setMountKey(Date.now())
-        }
-        window.addEventListener('pageshow', handlePageShow)
-        return () => window.removeEventListener('pageshow', handlePageShow)
-    }, [])
-
-    useEffect(() => {
+    const renderEmbed = useCallback((): (() => void) | void => {
         if (!url || !containerRef.current) return
         const match = (() => { try { return new URL(url).pathname.match(/\/post\/([^/?#]+)/) } catch { return null } })()
         const postId = match?.[1]
         if (!postId) return
         const container = containerRef.current
         container.innerHTML = ''
+        setLoading(true)
         const blockquote = document.createElement('blockquote')
         blockquote.className = 'text-post-media'
         blockquote.setAttribute('data-text-post-permalink', url)
         blockquote.setAttribute('data-text-post-version', '0')
-        blockquote.id = `ig-tp-${postId}`
+        blockquote.id = `ig-tp-${postId}-${instanceId}`
         blockquote.style.cssText = 'background:#FFF;border-width:1px;border-style:solid;border-color:#00000026;border-radius:16px;max-width:650px;margin:1px;min-width:270px;padding:0;width:99.375%'
         container.appendChild(blockquote)
-        const existing = document.getElementById('threads-embed-js')
-        if (existing) existing.remove()
-        const script = document.createElement('script')
-        script.id = 'threads-embed-js'
-        script.src = `https://www.threads.com/embed.js?_=${Date.now()}`
-        script.async = true
-        container.appendChild(script)
-        return () => { container.innerHTML = '' }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mountKey])
+        // The Threads embed SDK registers into window.instgrm.Embeds and guards
+        // against re-running on subsequent script injections. On remount reuse
+        // the loaded SDK and call process() to render the new blockquote; only
+        // inject the script the first time it isn't present.
+        const w = window as unknown as { instgrm?: { Embeds?: { process?: () => void } } }
+        if (w.instgrm?.Embeds?.process) {
+            w.instgrm.Embeds.process()
+        } else if (!document.getElementById('threads-embed-js')) {
+            const script = document.createElement('script')
+            script.id = 'threads-embed-js'
+            script.src = 'https://www.threads.com/embed.js'
+            script.async = true
+            document.body.appendChild(script)
+        }
 
-    return <div key={mountKey} ref={containerRef} />
+        // Hide the loading placeholder once the SDK has swapped the blockquote
+        // for an iframe with a real (non-zero) height. Fall back to the iframe's
+        // load event, and a safety timeout so it never sticks.
+        let settled = false
+        let timer = 0
+        const observer = new MutationObserver(() => {
+            const iframe = container.querySelector('iframe')
+            if (!iframe) return
+            if (!iframe.dataset.loadBound) {
+                iframe.dataset.loadBound = '1'
+                iframe.addEventListener('load', finish)
+            }
+            if (parseFloat(iframe.style.height || '0') > 0) finish()
+        })
+        const finish = () => {
+            if (settled) return
+            settled = true
+            observer.disconnect()
+            window.clearTimeout(timer)
+            setLoading(false)
+        }
+        observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'height'] })
+        timer = window.setTimeout(finish, 8000)
+
+        return () => {
+            observer.disconnect()
+            window.clearTimeout(timer)
+        }
+    }, [url, instanceId])
+
+    // Inject on mount/url change, and re-inject when the page is restored from
+    // the bfcache (back/forward navigation), where the cross-origin Threads
+    // iframe is blanked but React effects don't re-run.
+    useEffect(() => {
+        let dispose = renderEmbed()
+        const handlePageShow = (e: PageTransitionEvent) => {
+            if (e.persisted) {
+                dispose?.()
+                dispose = renderEmbed()
+            }
+        }
+        window.addEventListener('pageshow', handlePageShow)
+        const container = containerRef.current
+        return () => {
+            window.removeEventListener('pageshow', handlePageShow)
+            dispose?.()
+            if (container) container.innerHTML = ''
+        }
+    }, [renderEmbed])
+
+    return (
+        <div className="relative">
+            {loading && (
+                <div className="flex items-center justify-center gap-2 py-12 max-w-[650px] rounded-2xl border border-black/10 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 dark:text-gray-500">
+                    <LoaderCircle size={16} className="animate-spin" />
+                    <span className="text-sm">Loading Threads post…</span>
+                </div>
+            )}
+            <div ref={containerRef} className={loading ? 'h-0 overflow-hidden' : ''} />
+        </div>
+    )
 }
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
