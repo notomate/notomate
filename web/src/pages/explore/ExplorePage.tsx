@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
@@ -9,11 +9,32 @@ import logo from '@/assets/app.svg';
 import { LogIn, House } from 'lucide-react';
 import { useCurrentUserStore } from '@/stores/current-user';
 
+const PAGE_SIZE = 20;
+
 const ExplorePage: React.FC = () => {
-    const { data: notes = [], isLoading } = useQuery({
+    const observerRef = useRef<IntersectionObserver | null>(null);
+
+    const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
         queryKey: ['explore-notes'],
-        queryFn: () => getPublicNotes(1, 20),
+        queryFn: ({ pageParam = 1 }: { pageParam?: unknown }) =>
+            getPublicNotes(Number(pageParam), PAGE_SIZE),
+        getNextPageParam: (lastPage, allPages) =>
+            lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
+        initialPageParam: 1,
     });
+
+    const notes = data?.pages.flat() ?? [];
+
+    const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
+        if (observerRef.current) observerRef.current.disconnect();
+        if (node && hasNextPage && !isFetchingNextPage) {
+            observerRef.current = new IntersectionObserver(
+                (entries) => { if (entries[0].isIntersecting) fetchNextPage() },
+                { rootMargin: '200px', threshold: 0.1 }
+            );
+            observerRef.current.observe(node);
+        }
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
     const { user, fetchUser } = useCurrentUserStore();
     const [authChecked, setAuthChecked] = useState(false);
@@ -116,7 +137,7 @@ const ExplorePage: React.FC = () => {
                 </header>
 
                 {/* Note list — full width on mobile, capped on desktop */}
-                <div className="lg:max-w-[600px] mx-auto lg:py-4">
+                <div className="lg:max-w-[600px] mx-auto py-4">
                     {isLoading ? (
                         <NoteListSkeleton />
                     ) : notes.length === 0 ? (
@@ -124,7 +145,15 @@ const ExplorePage: React.FC = () => {
                             No public notes yet.
                         </div>
                     ) : (
-                        <NoteList notes={notes} showLink={false} />
+                        <>
+                            <NoteList notes={notes} showLink={false} />
+                            <div ref={loadMoreRef} className="h-px" />
+                            {isFetchingNextPage && (
+                                <div className="text-center text-gray-500 dark:text-gray-400 py-4 text-sm">
+                                    Loading more…
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
