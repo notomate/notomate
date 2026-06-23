@@ -86,9 +86,12 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 		}
 	}
 
+	query := c.QueryParam("query")
+
 	filter := model.NoteFilter{
 		PageSize:   pageSize,
 		PageNumber: pageNumber,
+		Query:      query,
 		ParentID:   "null",
 	}
 

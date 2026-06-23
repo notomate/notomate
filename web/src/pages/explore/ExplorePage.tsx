@@ -6,7 +6,7 @@ import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
 import NoteListSkeleton from '@/components/notecard/NoteListSkeleton';
 import logo from '@/assets/app.svg';
-import { LogIn, House } from 'lucide-react';
+import { LogIn, House, Search, X } from 'lucide-react';
 import { useCurrentUserStore } from '@/stores/current-user';
 
 const PAGE_SIZE = 20;
@@ -14,10 +14,18 @@ const PAGE_SIZE = 20;
 const ExplorePage: React.FC = () => {
     const observerRef = useRef<IntersectionObserver | null>(null);
 
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-        queryKey: ['explore-notes'],
+        queryKey: ['explore-notes', debouncedSearch],
         queryFn: ({ pageParam = 1 }: { pageParam?: unknown }) =>
-            getPublicNotes(Number(pageParam), PAGE_SIZE),
+            getPublicNotes(Number(pageParam), PAGE_SIZE, debouncedSearch),
         getNextPageParam: (lastPage, allPages) =>
             lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
         initialPageParam: 1,
@@ -39,14 +47,20 @@ const ExplorePage: React.FC = () => {
     const { user, fetchUser } = useCurrentUserStore();
     const [authChecked, setAuthChecked] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isXl, setIsXl] = useState(() => window.innerWidth >= 1280);
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const mobileButtonRef = useRef<HTMLButtonElement>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchUser().finally(() => setAuthChecked(true));
     }, []);
+
+    useEffect(() => {
+        if (isSearchOpen) searchInputRef.current?.focus();
+    }, [isSearchOpen]);
 
     useEffect(() => {
         const mq = window.matchMedia("(min-width: 1280px)");
@@ -134,15 +148,50 @@ const ExplorePage: React.FC = () => {
                         <img src={logo} className="w-8" alt="logo" />
                         <span className="text-lg font-bold text-gray-900 dark:text-gray-100">Explore</span>
                     </button>
+                    <button
+                        onClick={() => setIsSearchOpen(prev => !prev)}
+                        className="p-2 -m-1 rounded-md text-gray-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                        title="Search"
+                        aria-pressed={isSearchOpen}
+                    >
+                        {isSearchOpen ? <X size={20} /> : <Search size={20} />}
+                    </button>
                 </header>
 
                 {/* Note list — full width on mobile, capped on desktop */}
-                <div className="lg:max-w-[600px] mx-auto py-4">
+                <div className="lg:max-w-[600px] mx-auto pb-4 lg:py-4">
+                    {/* Search */}
+                    <div className={`px-4 mb-4 ${isSearchOpen ? 'block' : 'hidden'} lg:block`}>
+                        <div className="relative">
+                            <Search
+                                size={16}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+                            />
+                            <input
+                                ref={searchInputRef}
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search public notes…"
+                                className="w-full pl-9 pr-9 py-2 text-sm rounded-lg bg-neutral-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 transition-shadow"
+                            />
+                            {search && (
+                                <button
+                                    onClick={() => setSearch('')}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                                    title="Clear search"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
                     {isLoading ? (
                         <NoteListSkeleton />
                     ) : notes.length === 0 ? (
                         <div className="text-center text-gray-500 dark:text-gray-400 py-20">
-                            No public notes yet.
+                            {debouncedSearch ? 'No notes match your search.' : 'No public notes yet.'}
                         </div>
                     ) : (
                         <>

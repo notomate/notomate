@@ -15,8 +15,10 @@ export interface NoteData {
 }
 
 
-export const getPublicNotes = async (pageNum: number, pageSize: number) => {
-  const response = await axios.get(`/api/v1/explore/notes?pageSize=${pageSize}&pageNumber=${pageNum}`);
+export const getPublicNotes = async (pageNum: number, pageSize: number, query = '') => {
+  const params = new URLSearchParams({ pageSize: String(pageSize), pageNumber: String(pageNum) });
+  if (query) params.set('query', query);
+  const response = await axios.get(`/api/v1/explore/notes?${params}`);
   return response.data;
 };
 
