@@ -4,23 +4,13 @@
 
 # CollabReef
 
-An open-source, self-hosted collaborative workspace that brings notes, whiteboards, spreadsheets, kanban, calendars, and maps into one place — with real-time co-editing.
+A simple, self-hosted, all-in-one note-taking app.
 
 **English** · [繁體中文](./README.zh-TW.md)
 
 </div>
 
-## Features
-
-- **Notes** — rich-text notes with real-time co-editing, slash commands, embeds, and media
-- **Whiteboard** — freehand drawing, shapes, text, sticky notes, and connectors
-- **Spreadsheet** — collaborative spreadsheet with formulas, styling, and merging
-- **Kanban** — drag-and-drop task management
-- **Calendar** — event scheduling with timed and all-day events
-- **Map** — geographic markers and location pinning
-- **Sharing** — public links, an explore page, and per-resource visibility control
-- **Workspaces** — multiple workspaces, member roles, invitations, and an admin panel
-- **Self-hosted** — full data ownership, SQLite or PostgreSQL, S3/MinIO file storage, API keys
+Write anything, anywhere — memos, journals, work notes, checklists, or a blog. The block-based editor supports rich text, media, embeds, and more, so you can capture complete notes in one place. Fully self-hosted, so your data stays yours.
 
 ## Installation
 
@@ -73,24 +63,7 @@ volumes:
 docker compose up -d
 ```
 
-The app will be available at `http://localhost`. See [`.env.example`](./.env.example) for the full list of configuration options.
-
-## Development
-
-Run each service in its own terminal:
-
-```bash
-# Backend API (Go)
-cd api && go run ./cmd/api
-
-# Collab server (Node.js)
-cd collab && npm install && npm start
-
-# Web frontend (Vite)
-cd web && npm install && npm run dev
-```
-
-Copy `.env.example` to `.env` and adjust as needed before starting.
+The app will be available at `http://localhost`. See [`.env.example`](./.env.example) for configuration options.
 
 ## Contributing
 
