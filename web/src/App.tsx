@@ -9,6 +9,7 @@ import NotesPage from './pages/workspace/notes/NotesPage';
 import Setup from './pages/workspacesetup/WorkspaceSetupPage';
 import NoteDetailPage from './pages/workspace/notes/NoteDetailPage';
 import FilesPage from './pages/workspace/files/FilesPage';
+import SearchPage from './pages/workspace/notes/SearchPage';
 import Settings from './pages/workspace/settings/SettingsPage';
 import { Toast } from './components/toast/Toast'
 import { useToastStore } from './stores/toast';
@@ -68,6 +69,7 @@ function App() {
             <Route index element={<Navigate to="notes" replace />} />
             <Route path='notes' element={<NotesLayout />}>
               <Route index element={<NotesPage />} />
+              <Route path='search' element={<SearchPage />} />
               <Route path=':noteId' element={<NoteDetailPage />} ></Route>
               <Route path='files' element={<FilesPage />} />
             </Route>
