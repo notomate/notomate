@@ -150,7 +150,7 @@ const ExplorePage: React.FC = () => {
                     </button>
                     <button
                         onClick={() => setIsSearchOpen(prev => !prev)}
-                        className="p-2 -m-1 rounded-md text-gray-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                        className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                         title="Search"
                         aria-pressed={isSearchOpen}
                     >
@@ -161,7 +161,7 @@ const ExplorePage: React.FC = () => {
                 {/* Note list — full width on mobile, capped on desktop */}
                 <div className="lg:max-w-[600px] mx-auto pb-4 lg:py-4">
                     {/* Search */}
-                    <div className={`px-4 mb-4 ${isSearchOpen ? 'block' : 'hidden'} lg:block`}>
+                    <div className={`px-2 mb-2 ${isSearchOpen ? 'block' : 'hidden'} lg:block`}>
                         <div className="relative">
                             <Search
                                 size={16}
@@ -173,7 +173,7 @@ const ExplorePage: React.FC = () => {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search public notes…"
-                                className="w-full pl-9 pr-9 py-2 text-sm rounded-lg bg-neutral-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 transition-shadow"
+                                className="w-full pl-9 pr-9 py-2 text-sm rounded-lg bg-neutral-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
                             />
                             {search && (
                                 <button
