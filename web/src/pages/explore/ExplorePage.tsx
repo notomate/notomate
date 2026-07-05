@@ -173,7 +173,7 @@ const ExplorePage: React.FC = () => {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search public notes…"
-                                className="w-full pl-9 pr-9 py-2 text-sm rounded-lg bg-neutral-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                                className="w-full pl-9 pr-9 py-2 text-sm rounded-lg bg-neutral-100 dark:bg-neutral-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
                             />
                             {search && (
                                 <button
