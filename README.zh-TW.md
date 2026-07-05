@@ -1,6 +1,14 @@
+<div align="center">
+
+<img src="web/src/assets/app.svg" width="88" alt="CollabReef" />
+
 # CollabReef
 
-**CollabReef** 是一個開源、可自行架設的協作服務，讓你以彈性且視覺化的方式整理筆記與資源。
+一個開源、可自行架設的協作工作空間，將筆記、白板、試算表、看板、行事曆與地圖整合於一處，並由 Y.js 驅動即時共同編輯。
+
+[English](./README.md) · **繁體中文**
+
+</div>
 
 ## 功能
 
@@ -14,7 +22,7 @@
 
 ### 富文本編輯器
 - **斜線指令** — 使用 `/` 選單快速插入內容區塊
-- **嵌入** — YouTube、Twitter/X、Instagram、Facebook、TikTok、Threads
+- **嵌入** — YouTube、Instagram、TikTok、Threads
 - **媒體** — 圖片、影片、附件、輪播
 - **區塊** — 子頁面、內嵌視圖預覽、位置、行事曆事件、評分、標籤
 
@@ -35,7 +43,23 @@
 - **完全自行架設** — 完整資料主權，支援 SQLite 或 PostgreSQL
 - **Docker 就緒** — 使用 Docker Compose 幾分鐘內完成部署
 
----
+## 架構
+
+CollabReef 由三個服務組成，並置於 Nginx 反向代理之後：
+
+| 服務 | 角色 |
+|---|---|
+| **api** | Go 後端，提供 REST API、認證、儲存與 gRPC 文件存取 |
+| **collab** | Node.js 即時協作伺服器（Hocuspocus + Y.js），負責即時共同編輯 |
+| **nginx** | 反向代理，負責流量路由並提供建置後的前端 |
+
+## 技術棧
+
+- **前端** — React 19、TypeScript、Vite、Tailwind CSS、TipTap、Y.js / Hocuspocus、Zustand、TanStack Query、React Router、Radix UI、React Flow、Fortune Sheet、Leaflet、i18next
+- **後端** — Go、Echo、GORM、gRPC、JWT、goldmark、MinIO client
+- **協作伺服器** — Node.js、Hocuspocus、Y.js、gRPC
+- **儲存與資料庫** — SQLite 或 PostgreSQL、本機檔案系統或 S3/MinIO
+- **基礎設施** — Docker、Docker Compose、Nginx
 
 ## 安裝
 
@@ -98,6 +122,30 @@ docker compose up -d
 | `APP_DISABLE_SIGNUP` | 停用公開註冊 | `false` |
 | `DB_DRIVER` | 資料庫驅動（`sqlite3` 或 `postgres`） | `sqlite3` |
 | `DB_DSN` | 資料庫連線字串 | — |
+| `STORAGE_TYPE` | 儲存後端（本機或 `s3`） | 本機 |
+| `STORAGE_S3_ENDPOINT` | S3/MinIO 端點 | — |
+| `STORAGE_S3_ACCESS_KEY` | S3/MinIO 存取金鑰 | — |
+| `STORAGE_S3_SECRET_KEY` | S3/MinIO 私密金鑰 | — |
+| `STORAGE_S3_BUCKET` | S3/MinIO Bucket 名稱 | — |
+
+完整清單請參閱 [`.env.example`](./.env.example)。
+
+## 開發
+
+請在各自的終端機中執行每個服務。
+
+```bash
+# 後端 API（Go）
+cd api && go run ./cmd/api
+
+# 協作伺服器（Node.js）
+cd collab && npm install && npm start
+
+# 前端（Vite）
+cd web && npm install && npm run dev
+```
+
+啟動前請將 `.env.example` 複製為 `.env` 並依需求調整。
 
 ## 貢獻
 
