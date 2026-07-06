@@ -50,7 +50,7 @@ const SearchPage = () => {
     return (
         <div className="h-full flex flex-col bg-neutral-50 dark:bg-neutral-950">
             <div ref={scrollRef} className="flex-1 overflow-auto">      
-                <div className="max-w-2xl px-2 pt-2 xl:pt-4 pb-2 mx-auto">
+                <div className="w-full lg:max-w-3xl px-2 pt-2 xl:pt-4 pb-2 mx-auto">
                     <div className="relative">
                         <Search
                             size={16}
@@ -75,7 +75,7 @@ const SearchPage = () => {
                         )}
                     </div>
                 </div>
-                <div className="max-w-2xl mx-auto">
+                <div className="w-full lg:max-w-3xl mx-auto">
                     {isLoading ? (
                         <NoteListSkeleton />
                     ) : notes.length === 0 ? (

@@ -191,7 +191,7 @@ const NotesLayout = () => {
                 </nav>
 
                 {/* User menu */}
-                <div className="shrink-0 px-3 pb-3 pt-1 border-t border-neutral-200 dark:border-neutral-700">
+                <div className="shrink-0 p-2 border-t border-neutral-200 dark:border-neutral-700">
                     <UserMenu />
                 </div>
             </div>

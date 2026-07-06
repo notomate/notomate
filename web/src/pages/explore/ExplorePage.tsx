@@ -48,7 +48,7 @@ const ExplorePage: React.FC = () => {
     const [authChecked, setAuthChecked] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [isXl, setIsXl] = useState(() => window.innerWidth >= 1280);
+    const [isLg, setIsLg] = useState(() => window.innerWidth >= 1024);
     const menuRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const mobileButtonRef = useRef<HTMLButtonElement>(null);
@@ -63,14 +63,14 @@ const ExplorePage: React.FC = () => {
     }, [isSearchOpen]);
 
     useEffect(() => {
-        const mq = window.matchMedia("(min-width: 1280px)");
-        const handler = (e: MediaQueryListEvent) => setIsXl(e.matches);
+        const mq = window.matchMedia("(min-width: 1024px)");
+        const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
         mq.addEventListener("change", handler);
         return () => mq.removeEventListener("change", handler);
     }, []);
 
     useEffect(() => {
-        if (!isXl || !isMenuOpen) return;
+        if (!isLg || !isMenuOpen) return;
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
             if (
@@ -83,7 +83,7 @@ const ExplorePage: React.FC = () => {
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isMenuOpen, isXl]);
+    }, [isMenuOpen, isLg]);
 
     const menuContent = authChecked && (
         <div className="flex flex-col p-1">
@@ -124,7 +124,7 @@ const ExplorePage: React.FC = () => {
                     >
                         <img src={logo} className="w-9" alt="logo" />
                     </button>
-                    {isXl && isMenuOpen && (
+                    {isLg && isMenuOpen && (
                         <div
                             ref={menuRef}
                             className="absolute top-full left-0 mt-2 w-52 bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100 rounded-md shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)] overflow-hidden z-[9999]"
@@ -207,7 +207,7 @@ const ExplorePage: React.FC = () => {
                 </div>
             </div>
 
-            {!isXl && isMenuOpen && createPortal(
+            {!isLg && isMenuOpen && createPortal(
                 <>
                     <div
                         className="fixed inset-0 bg-black/40 z-40"

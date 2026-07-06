@@ -197,7 +197,7 @@ const ViewsLayout = () => {
                 </nav>
 
                 {/* User menu */}
-                <div className="px-3 pb-3 pt-1 border-t border-neutral-200 dark:border-neutral-700 shrink-0">
+                <div className="p-2 border-t border-neutral-200 dark:border-neutral-700 shrink-0">
                     <UserMenu />
                 </div>
             </div>
