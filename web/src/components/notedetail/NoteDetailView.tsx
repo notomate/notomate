@@ -100,7 +100,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                         </div>
                     </div>
                     <div className="flex-1 overflow-auto">
-                        <div className="max-w-3xl w-full m-auto">
+                        <div className="lg:max-w-3xl w-full m-auto">
                             <div className="lg:p-10">
                                 <div className="flex flex-col gap-2">
                                     <div className="px-4">
