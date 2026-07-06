@@ -96,7 +96,7 @@ const WorkspaceMenu = () => {
             </div>
             <div className="border-t dark:border-neutral-700 p-2">
                 <Link
-                    to={`/workspaces/${workspaceId}/settings`}
+                    to={`/workspaces/${workspaceId}/notes/settings`}
                     onClick={() => setIsMenuOpen(false)}
                     className="px-3 py-2 rounded w-full hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center gap-2 text-sm"
                 >

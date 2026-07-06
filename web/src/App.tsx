@@ -72,6 +72,7 @@ function App() {
               <Route path='search' element={<SearchPage />} />
               <Route path=':noteId' element={<NoteDetailPage />} ></Route>
               <Route path='files' element={<FilesPage />} />
+              <Route path='settings' element={<Settings />} />
             </Route>
             <Route element={<ViewsLayout />}>
               <Route path='calendar/:calendarId' element={<CalendarPage />}>
@@ -84,7 +85,6 @@ function App() {
               <Route path='whiteboard/:whiteboardId' element={<WhiteboardPage />} />
               <Route path='spreadsheet/:spreadsheetId' element={<SpreadsheetPage />} />
             </Route>
-            <Route path='settings' element={<Settings />}></Route>
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />
