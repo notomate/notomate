@@ -80,7 +80,7 @@ const NotesLayout = () => {
         <div className="flex h-svh">
             {/* Notes sidebar */}
             <div
-                className={`w-full xl:w-[240px] h-full flex flex-col shrink-0 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 ${isSidebarOpen ? "flex" : "hidden xl:flex"}`}
+                className={`w-full lg:w-[240px] h-full flex flex-col shrink-0 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 ${isSidebarOpen ? "flex" : "hidden lg:flex"}`}
             >
                 {/* Workspace menu */}
                 <div className="px-3 pt-3 pb-1 flex items-center gap-2">
@@ -89,7 +89,7 @@ const NotesLayout = () => {
                     </div>
                     <button
                         aria-label="close sidebar"
-                        className="xl:hidden shrink-0 p-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-500 dark:text-gray-400"
+                        className="lg:hidden shrink-0 p-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-500 dark:text-gray-400"
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         <PanelRight size={16} />
@@ -101,22 +101,22 @@ const NotesLayout = () => {
                     <button
                         onClick={handleCreateNote}
                         disabled={createNoteMutation.isPending}
-                        className="w-full flex items-center gap-2 px-3 py-2.5 xl:px-3 xl:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
+                        className="w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
                     >
-                        <Plus className="shrink-0 size-4 xl:size-3.5" />
+                        <Plus className="shrink-0 size-4 lg:size-3.5" />
                         <span className="leading-snug">{t("actions.newNote")}</span>
                     </button>
                     <Link
                         to="search"
                         onClick={() => setIsSidebarOpen(false)}
                         className={[
-                            "w-full flex items-center gap-2 px-3 py-2.5 xl:px-3 xl:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
+                            "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                             isSearchActive
                                 ? "bg-neutral-200 dark:bg-neutral-700 text-gray-900 dark:text-gray-100 font-medium"
                                 : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                         ].join(" ")}
                     >
-                        <Search className="shrink-0 size-4 xl:size-3.5" />
+                        <Search className="shrink-0 size-4 lg:size-3.5" />
                         <span className="leading-snug">{t("placeholder.search")}</span>
                     </Link>
                     <Link
@@ -125,14 +125,14 @@ const NotesLayout = () => {
                         className={(() => {
                             const isActive = location.pathname.endsWith('/files')
                             return [
-                                "w-full flex items-center gap-2 px-3 py-2.5 xl:px-3 xl:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
+                                "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                                 isActive
                                     ? "bg-neutral-200 dark:bg-neutral-700 text-gray-900 dark:text-gray-100 font-medium"
                                     : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                             ].join(" ")
                         })()}
                     >
-                        <Folder className="shrink-0 size-4 xl:size-3.5" />
+                        <Folder className="shrink-0 size-4 lg:size-3.5" />
                         <span className="leading-snug">{t("menu.files")}</span>
                     </Link>
                     {isLoading ? (
@@ -142,7 +142,7 @@ const NotesLayout = () => {
                             ))}
                         </div>
                     ) : notes.length === 0 ? (
-                        <div className="px-5 py-4 xl:px-3 text-xs text-gray-400 dark:text-neutral-600">
+                        <div className="px-5 py-4 lg:px-3 text-xs text-gray-400 dark:text-neutral-600">
                             {t("messages.noMoreNotes")}
                         </div>
                     ) : (
@@ -155,14 +155,14 @@ const NotesLayout = () => {
                                     className={(() => {
                                         const isActive = noteId === note.id
                                         return [
-                                            "flex items-center gap-2 px-3 py-2.5 xl:px-3 xl:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 group",
+                                            "flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 group",
                                             isActive
                                                 ? "bg-neutral-200 dark:bg-neutral-700 text-gray-900 dark:text-gray-100 font-medium"
                                                 : "text-gray-600 dark:text-gray-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-gray-100"
                                         ].join(" ")
                                     })()}
                                 >
-                                    <FileText className="shrink-0 opacity-50 size-4 xl:size-3.5" />
+                                    <FileText className="shrink-0 opacity-50 size-4 lg:size-3.5" />
                                     <span className="truncate leading-snug">
                                         {getNoteTitle(note)}
                                     </span>
@@ -179,9 +179,9 @@ const NotesLayout = () => {
                                         }
                                     }}
                                     disabled={isFetchingNextPage}
-                                    className="w-full flex items-center gap-2 px-3 py-2.5 xl:px-3 xl:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
+                                    className="w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
                                 >
-                                    <span className="leading-snug pl-6 xl:pl-5">
+                                    <span className="leading-snug pl-6 lg:pl-5">
                                         {isFetchingNextPage ? "..." : `+${remaining > 0 ? Math.min(remaining, INITIAL_DISPLAY) : INITIAL_DISPLAY} more`}
                                     </span>
                                 </button>
@@ -199,7 +199,7 @@ const NotesLayout = () => {
             {/* Main content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Mobile header */}
-                <div className="shrink-0 py-3 pl-4 pr-5  xl:hidden flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700">
+                <div className="shrink-0 py-3 pl-4 pr-5  lg:hidden flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700">
                     <span className="font-semibold text-gray-700 dark:text-gray-200">
                         {currentWorkspaceName ?? t("menu.notes")}
                     </span>

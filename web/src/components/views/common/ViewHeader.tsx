@@ -52,8 +52,8 @@ const ViewHeader = ({ viewId, workspaceId, viewName, viewType, rightActions, ico
     }
 
     return (
-        <div className="flex items-center justify-between xl:py-4 bg-neutral-100 dark:bg-neutral-900">
-            <div className="flex items-center gap-2 p-4 xl:px-4 xl:py-0">
+        <div className="flex items-center justify-between lg:py-4 bg-neutral-100 dark:bg-neutral-900">
+            <div className="flex items-center gap-2 p-4 lg:px-4 lg:py-0">
                 <button
                     onClick={() => navigate(-1)}
                     title={t("actions.back")}

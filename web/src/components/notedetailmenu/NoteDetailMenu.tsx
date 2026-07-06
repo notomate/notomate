@@ -21,11 +21,11 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
     const [isMenuOpened, setIsMenuOpened] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
-    const [isXl, setIsXl] = useState(() => window.innerWidth >= 1280)
+    const [isLg, setIsLg] = useState(() => window.innerWidth >= 1024)
 
     useEffect(() => {
-        const mq = window.matchMedia('(min-width: 1280px)')
-        const handler = (e: MediaQueryListEvent) => setIsXl(e.matches)
+        const mq = window.matchMedia('(min-width: 1024px)')
+        const handler = (e: MediaQueryListEvent) => setIsLg(e.matches)
         mq.addEventListener('change', handler)
         return () => mq.removeEventListener('change', handler)
     }, [])
@@ -76,9 +76,9 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
         setIsMenuOpened(prev => !prev)
     }
 
-    // Close dropdown when clicking outside (xl only)
+    // Close dropdown when clicking outside (lg only)
     useEffect(() => {
-        if (!isXl || !isMenuOpened) return
+        if (!isLg || !isMenuOpened) return
 
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node
@@ -92,7 +92,7 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
 
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [isMenuOpened, isXl])
+    }, [isMenuOpened, isLg])
 
     const menuItems = workspaceId && (
         <>
@@ -139,7 +139,7 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
                 <button ref={buttonRef} className="p-2" onClick={handleOpenMenu}>
                     <Ellipsis size={16} />
                 </button>
-                {isXl && isMenuOpened && (
+                {isLg && isMenuOpened && (
                     <div
                         ref={menuRef}
                         className="absolute top-full right-0 min-w-[240px] overflow-y-auto bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg z-50"
@@ -151,7 +151,7 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
                 )}
             </div>
 
-            {!isXl && isMenuOpened && createPortal(
+            {!isLg && isMenuOpened && createPortal(
                 <>
                     <div
                         className="fixed inset-0 bg-black/40 z-40"

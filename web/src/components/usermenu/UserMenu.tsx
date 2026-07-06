@@ -18,13 +18,13 @@ const UserMenu = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
     const [isAboutModalOpen, setIsAboutModalOpen] = useState(false)
-    const [isXl, setIsXl] = useState(() => window.innerWidth >= 1280)
+    const [isLg, setIsLg] = useState(() => window.innerWidth >= 1024)
     const menuRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
 
     useEffect(() => {
-        const mq = window.matchMedia("(min-width: 1280px)")
-        const handler = (e: MediaQueryListEvent) => setIsXl(e.matches)
+        const mq = window.matchMedia("(min-width: 1024px)")
+        const handler = (e: MediaQueryListEvent) => setIsLg(e.matches)
         mq.addEventListener("change", handler)
         return () => mq.removeEventListener("change", handler)
     }, [])
@@ -43,7 +43,7 @@ const UserMenu = () => {
     })
 
     useEffect(() => {
-        if (!isXl || !isMenuOpen) return
+        if (!isLg || !isMenuOpen) return
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node
             if (!menuRef.current?.contains(target) && !buttonRef.current?.contains(target)) {
@@ -52,7 +52,7 @@ const UserMenu = () => {
         }
         document.addEventListener("mousedown", handleClickOutside)
         return () => document.removeEventListener("mousedown", handleClickOutside)
-    }, [isMenuOpen, isXl])
+    }, [isMenuOpen, isLg])
 
     if (!user) return null
 
@@ -110,7 +110,7 @@ const UserMenu = () => {
                     </div>
                     <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{user.name}</span>
                 </button>
-                {isXl && isMenuOpen && (
+                {isLg && isMenuOpen && (
                     <div
                         ref={menuRef}
                         className="absolute bottom-full left-0 mb-2 w-52 bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100 rounded-md shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)] overflow-hidden z-[9999]"
@@ -120,7 +120,7 @@ const UserMenu = () => {
                 )}
             </div>
 
-            {!isXl && isMenuOpen && createPortal(
+            {!isLg && isMenuOpen && createPortal(
                 <>
                     <div
                         className="fixed inset-0 bg-black/40 z-40"

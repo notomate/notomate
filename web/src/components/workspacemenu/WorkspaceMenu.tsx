@@ -11,21 +11,21 @@ const WorkspaceMenu = () => {
     const { workspaceId } = useParams()
     const [keyword, setKeyword] = useState("")
     const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const [isXl, setIsXl] = useState(() => window.innerWidth >= 1280)
+    const [isLg, setIsLg] = useState(() => window.innerWidth >= 1024)
     const menuRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
     const navigate = useNavigate()
     const { t } = useTranslation()
 
     useEffect(() => {
-        const mq = window.matchMedia("(min-width: 1280px)")
-        const handler = (e: MediaQueryListEvent) => setIsXl(e.matches)
+        const mq = window.matchMedia("(min-width: 1024px)")
+        const handler = (e: MediaQueryListEvent) => setIsLg(e.matches)
         mq.addEventListener("change", handler)
         return () => mq.removeEventListener("change", handler)
     }, [])
 
     useEffect(() => {
-        if (!isXl || !isMenuOpen) return
+        if (!isLg || !isMenuOpen) return
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node
             if (!menuRef.current?.contains(target) && !buttonRef.current?.contains(target)) {
@@ -34,7 +34,7 @@ const WorkspaceMenu = () => {
         }
         document.addEventListener("mousedown", handleClickOutside)
         return () => document.removeEventListener("mousedown", handleClickOutside)
-    }, [isMenuOpen, isXl])
+    }, [isMenuOpen, isLg])
 
     const handleWorkspaceButtonClick = (id: string) => {
         setIsMenuOpen(false)
@@ -121,7 +121,7 @@ const WorkspaceMenu = () => {
                         <ChevronsUpDown size={16} />
                     </span>
                 </button>
-                {isXl && isMenuOpen && (
+                {isLg && isMenuOpen && (
                     <div
                         ref={menuRef}
                         className="absolute top-full left-0 mt-2 w-full min-w-[228px] bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border dark:border-none rounded-lg shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)] overflow-hidden z-[9999]"
@@ -131,7 +131,7 @@ const WorkspaceMenu = () => {
                 )}
             </div>
 
-            {!isXl && isMenuOpen && createPortal(
+            {!isLg && isMenuOpen && createPortal(
                 <>
                     <div
                         className="fixed inset-0 bg-black/40 z-40"

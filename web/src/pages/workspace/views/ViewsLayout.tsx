@@ -78,7 +78,7 @@ const ViewsLayout = () => {
             {/* Notes sidebar */}
             <div
                 ref={scrollContainerRef}
-                className={`w-full xl:w-[240px] h-full overflow-auto shrink-0 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex-col ${isSidebarOpen ? "flex" : "hidden xl:flex"}`}
+                className={`w-full lg:w-[240px] h-full overflow-auto shrink-0 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 flex-col ${isSidebarOpen ? "flex" : "hidden lg:flex"}`}
             >
                 {/* Workspace menu */}
                 <div className="px-3 pt-3 pb-1 flex items-center gap-1">
@@ -87,7 +87,7 @@ const ViewsLayout = () => {
                     </div>
                     <button
                         aria-label="close sidebar"
-                        className="xl:hidden shrink-0 p-1 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-500 dark:text-gray-400"
+                        className="lg:hidden shrink-0 p-1 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-500 dark:text-gray-400"
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         <PanelRight size={16} />
@@ -95,9 +95,9 @@ const ViewsLayout = () => {
                 </div>
 
                 {/* Note list */}
-                <nav className="flex-1 overflow-auto py-1 px-3 xl:px-1">
+                <nav className="flex-1 overflow-auto py-1 px-3 lg:px-1">
                     {isSearchVisible ? (
-                        <div className="px-3 py-2.5 xl:px-2 xl:py-1.5">
+                        <div className="px-3 py-2.5 lg:px-2 lg:py-1.5">
                             <div className="flex items-center gap-2 py-1 px-2 rounded-md border dark:border-neutral-700 bg-white dark:bg-neutral-900 dark:text-neutral-100">
                                 <Search size={13} className="text-gray-400 shrink-0" />
                                 <input
@@ -124,9 +124,9 @@ const ViewsLayout = () => {
                         <button
                             aria-label="search"
                             onClick={() => setIsSearchVisible(true)}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 xl:px-2 xl:py-1.5 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
+                            className="w-full flex items-center gap-2 px-3 py-2.5 lg:px-2 lg:py-1.5 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                         >
-                            <Search className="shrink-0 size-4 xl:size-3.5" />
+                            <Search className="shrink-0 size-4 lg:size-3.5" />
                             <span className="leading-snug">{t("placeholder.search")}</span>
                         </button>
                     )}
@@ -141,7 +141,7 @@ const ViewsLayout = () => {
                             ))}
                         </div>
                     ) : notes.length === 0 ? (
-                        <div className="px-5 py-4 xl:px-3 text-xs text-gray-400 dark:text-neutral-600">
+                        <div className="px-5 py-4 lg:px-3 text-xs text-gray-400 dark:text-neutral-600">
                             {t("messages.noMoreNotes")}
                         </div>
                     ) : (
@@ -151,9 +151,9 @@ const ViewsLayout = () => {
                                     key={note.id}
                                     to={`/workspaces/${currentWorkspaceId}/notes/${note.id}`}
                                     onClick={() => setIsSidebarOpen(false)}
-                                    className="flex items-center gap-2 px-3 py-2.5 xl:px-2 xl:py-1.5 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 group text-gray-600 dark:text-gray-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-gray-100"
+                                    className="flex items-center gap-2 px-3 py-2.5 lg:px-2 lg:py-1.5 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 group text-gray-600 dark:text-gray-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-gray-100"
                                 >
-                                    <FileText className="shrink-0 opacity-50 size-4 xl:size-3.5" />
+                                    <FileText className="shrink-0 opacity-50 size-4 lg:size-3.5" />
                                     <span className="truncate leading-snug">{getNoteTitle(note)}</span>
                                 </Link>
                             ))}
@@ -168,9 +168,9 @@ const ViewsLayout = () => {
                                         }
                                     }}
                                     disabled={isFetchingNextPage}
-                                    className="w-full flex items-center gap-2 px-3 py-2.5 xl:px-2 xl:py-1.5 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
+                                    className="w-full flex items-center gap-2 px-3 py-2.5 lg:px-2 lg:py-1.5 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
                                 >
-                                    <span className="leading-snug pl-6 xl:pl-5">
+                                    <span className="leading-snug pl-6 lg:pl-5">
                                         {isFetchingNextPage
                                             ? "..."
                                             : `+${remaining > 0 ? Math.min(remaining, INITIAL_DISPLAY) : INITIAL_DISPLAY} more`}
