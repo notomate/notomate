@@ -1,0 +1,143 @@
+# RSS 轉筆記
+#
+# 定期抓取一個 RSS feed,把每一篇「還沒建立過筆記」的新項目各自新增為一則
+# workspace 筆記。示範重點:排程觸發 + 呼叫 CollabReef API 建立筆記。
+#
+# 事前準備
+#   1. 到「使用者設定 > API Keys」建立一組 API key。
+#   2. 到 workspace 的「工作流」設定頁,新增:
+#        secrets: CB_API_KEY        = 上一步產生的 API key
+#        vars:    RSS_FEED_URL      = 要訂閱的 RSS/Atom feed 網址
+#                 CB_API_BASE_URL   = api 服務可連到的位址,例如
+#                                     http://collabreef-api:8080
+#                 (選填) CB_PARENT_NOTE_ID = 想把新筆記放在哪則筆記底下
+#   3. 用來建立 API key 的使用者必須是這個 workspace 的成員。
+#
+# 注意:workflow YAML 對所有 workspace 成員可見,請勿把 API key 等機密
+# 直接寫在 run 區塊裡 — 一律透過 secrets 注入。
+name: RSS to Notes
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      feed_url:
+        description: "覆寫要抓取的 feed 網址(留空則使用 vars.RSS_FEED_URL)"
+        default: ""
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch feed and create notes for new items
+        run: |
+          cat <<'EOF' > sync.js
+          const API_BASE = process.env.CB_API_BASE_URL;
+          const API_KEY = process.env.CB_API_KEY;
+          const WORKSPACE_ID = process.env.CB_WORKSPACE_ID;
+          const PARENT_ID = process.env.CB_PARENT_NOTE_ID || "";
+          const FEED_URL = process.env.INPUT_FEED_URL || process.env.RSS_FEED_URL;
+          const MAX_ITEMS = 10;
+
+          if (!API_BASE || !API_KEY || !FEED_URL) {
+            throw new Error("missing CB_API_BASE_URL / CB_API_KEY / RSS_FEED_URL");
+          }
+
+          function api(path, opts = {}) {
+            return fetch(`${API_BASE}${path}`, {
+              ...opts,
+              headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+                ...(opts.headers || {}),
+              },
+            });
+          }
+
+          function decodeEntities(s) {
+            return s
+              .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+              .replace(/&lt;/g, "<")
+              .replace(/&gt;/g, ">")
+              .replace(/&amp;/g, "&")
+              .replace(/&quot;/g, '"')
+              .replace(/&#39;/g, "'")
+              .trim();
+          }
+
+          function tag(block, name) {
+            const m = block.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`, "i"));
+            return m ? decodeEntities(m[1]) : "";
+          }
+
+          // Naive RSS 2.0 <item> parser - good enough for most feeds, not a
+          // full XML parser. Atom <entry> feeds are not handled here.
+          function parseItems(xml) {
+            const items = [...xml.matchAll(/<item[\s\S]*?<\/item>/gi)].map((m) => m[0]);
+            return items.slice(0, MAX_ITEMS).map((block) => ({
+              title: tag(block, "title") || "(untitled)",
+              link: tag(block, "link") || tag(block, "guid"),
+              pubDate: tag(block, "pubDate"),
+              description: tag(block, "description"),
+            }));
+          }
+
+          async function alreadyExists(link) {
+            if (!link) return false;
+            const res = await api(
+              `/api/v1/workspaces/${WORKSPACE_ID}/notes?pageSize=1&query=${encodeURIComponent(link)}`
+            );
+            if (!res.ok) throw new Error(`search notes failed: ${res.status} ${await res.text()}`);
+            const notes = await res.json();
+            return notes.length > 0;
+          }
+
+          async function createNote(item) {
+            const content = [
+              `**來源:** ${item.link}`,
+              "",
+              item.description,
+              "",
+              item.pubDate ? `---\n_發布於 ${item.pubDate}_` : "",
+            ].join("\n");
+
+            const res = await api(`/api/v1/workspaces/${WORKSPACE_ID}/notes`, {
+              method: "POST",
+              headers: { "X-Content-Format": "markdown" },
+              body: JSON.stringify({
+                visibility: "workspace",
+                title: item.title,
+                content,
+                parent_id: PARENT_ID,
+              }),
+            });
+            if (!res.ok) throw new Error(`create note failed: ${res.status} ${await res.text()}`);
+          }
+
+          (async () => {
+            const feedRes = await fetch(FEED_URL);
+            if (!feedRes.ok) throw new Error(`fetch feed failed: ${feedRes.status}`);
+            const items = parseItems(await feedRes.text());
+
+            let created = 0;
+            let skipped = 0;
+            for (const item of items) {
+              if (await alreadyExists(item.link)) {
+                skipped++;
+                continue;
+              }
+              await createNote(item);
+              created++;
+            }
+            console.log(`done: ${created} new note(s), ${skipped} already existed`);
+          })().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node sync.js
+        env:
+          RSS_FEED_URL: ${{ vars.RSS_FEED_URL }}
+          INPUT_FEED_URL: ${{ github.event.inputs.feed_url }}
+          CB_API_KEY: ${{ secrets.CB_API_KEY }}
+          CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
+          CB_PARENT_NOTE_ID: ${{ vars.CB_PARENT_NOTE_ID }}

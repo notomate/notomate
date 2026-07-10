@@ -1,0 +1,102 @@
+# GitHub Release 通知
+#
+# 監控指定 GitHub repo 的最新 release,有新版本時建立一則筆記。示範重點:
+# 用 vars 參數化要監控的目標(repo),並用搜尋既有筆記做去重判斷。
+#
+# 事前準備
+#   1. 到「使用者設定 > API Keys」建立一組 API key。
+#   2. 到 workspace 的「工作流」設定頁,新增:
+#        secrets: CB_API_KEY      = 上一步產生的 API key
+#                 (選填) GITHUB_TOKEN = GitHub personal access token,
+#                        避免匿名 API 呼叫的 rate limit 太低
+#        vars:    CB_API_BASE_URL = api 服務可連到的位址,例如
+#                                    http://collabreef-api:8080
+#                 GITHUB_REPO      = 要監控的 repo,格式 owner/name
+name: GitHub Releases Watch
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check latest release and create note if new
+        run: |
+          cat <<'EOF' > watch.js
+          const API_BASE = process.env.CB_API_BASE_URL;
+          const API_KEY = process.env.CB_API_KEY;
+          const WORKSPACE_ID = process.env.CB_WORKSPACE_ID;
+          const REPO = process.env.GITHUB_REPO;
+          const GH_TOKEN = process.env.GITHUB_TOKEN || "";
+
+          if (!API_BASE || !API_KEY || !REPO) {
+            throw new Error("missing CB_API_BASE_URL / CB_API_KEY / GITHUB_REPO");
+          }
+
+          function api(path, opts = {}) {
+            return fetch(`${API_BASE}${path}`, {
+              ...opts,
+              headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+                ...(opts.headers || {}),
+              },
+            });
+          }
+
+          async function alreadyExists(tag) {
+            const res = await api(
+              `/api/v1/workspaces/${WORKSPACE_ID}/notes?pageSize=1&query=${encodeURIComponent(tag)}`
+            );
+            if (!res.ok) throw new Error(`search notes failed: ${res.status} ${await res.text()}`);
+            const notes = await res.json();
+            return notes.length > 0;
+          }
+
+          (async () => {
+            const ghHeaders = { Accept: "application/vnd.github+json" };
+            if (GH_TOKEN) ghHeaders.Authorization = `Bearer ${GH_TOKEN}`;
+
+            const ghRes = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+              headers: ghHeaders,
+            });
+            if (!ghRes.ok) throw new Error(`fetch release failed: ${ghRes.status} ${await ghRes.text()}`);
+            const release = await ghRes.json();
+
+            if (await alreadyExists(release.tag_name)) {
+              console.log(`skip: note for ${release.tag_name} already exists`);
+              return;
+            }
+
+            const content = [
+              `**Repo:** ${REPO}`,
+              `**Tag:** ${release.tag_name}`,
+              `**發布時間:** ${release.published_at}`,
+              `**連結:** ${release.html_url}`,
+              "",
+              release.body || "(no release notes)",
+            ].join("\n");
+
+            const res = await api(`/api/v1/workspaces/${WORKSPACE_ID}/notes`, {
+              method: "POST",
+              headers: { "X-Content-Format": "markdown" },
+              body: JSON.stringify({
+                visibility: "workspace",
+                title: `${REPO} released ${release.tag_name}`,
+                content,
+              }),
+            });
+            if (!res.ok) throw new Error(`create note failed: ${res.status} ${await res.text()}`);
+            console.log(`done: created note for ${release.tag_name}`);
+          })().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node watch.js
+        env:
+          CB_API_KEY: ${{ secrets.CB_API_KEY }}
+          CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
+          GITHUB_REPO: ${{ vars.GITHUB_REPO }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
