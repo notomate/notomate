@@ -40,7 +40,6 @@ func New(db db.DB, storage storage.Storage, engine *workflow.Engine) (*echo.Echo
 	route.RegisterUser(api, *handler, *auth)
 	route.RegisterWorkspace(api, *handler, *auth, *workspace)
 	route.RegisterWorkflow(api, *handler, *auth, *workspace)
-	route.RegisterTool(api, *handler, *auth)
 
 	return e, nil
 }
