@@ -4,7 +4,7 @@
 
 # CollabReef
 
-一個簡單、可自行架設、功能完整的筆記軟體。
+可自行架設、功能完整的筆記軟體，內建類似 GitHub Actions 的工作流自動化引擎。
 
 [English](./README.md) · **繁體中文**
 

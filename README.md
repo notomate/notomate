@@ -4,7 +4,7 @@
 
 # CollabReef
 
-A simple, self-hosted, all-in-one note-taking app.
+Self-hosted, all-in-one note-taking app with a built-in GitHub-Actions-style workflow automation engine.
 
 **English** · [繁體中文](./README.zh-TW.md)
 
