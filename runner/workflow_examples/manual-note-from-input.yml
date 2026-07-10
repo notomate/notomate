@@ -28,6 +28,10 @@ on:
         description: "Body of the new note (Markdown)"
         required: false
         default: ""
+      visibility:
+        description: "private, workspace, or public"
+        required: false
+        default: "workspace"
 jobs:
   create-note:
     runs-on: ubuntu-latest
@@ -41,9 +45,13 @@ jobs:
           const PARENT_ID = process.env.CB_PARENT_NOTE_ID || "";
           const TITLE = process.env.INPUT_TITLE || "Untitled";
           const CONTENT = process.env.INPUT_CONTENT || "";
+          const VISIBILITY = process.env.INPUT_VISIBILITY || "workspace";
 
           if (!API_BASE || !API_KEY) {
             throw new Error("missing CB_API_BASE_URL / CB_API_KEY");
+          }
+          if (!["private", "workspace", "public"].includes(VISIBILITY)) {
+            throw new Error(`invalid visibility "${VISIBILITY}" (must be private, workspace, or public)`);
           }
 
           function api(path, opts = {}) {
@@ -68,7 +76,7 @@ jobs:
               method: "POST",
               headers: { "X-Content-Format": "markdown" },
               body: JSON.stringify({
-                visibility: "workspace",
+                visibility: VISIBILITY,
                 title: TITLE,
                 content,
                 parent_id: PARENT_ID,
@@ -85,6 +93,7 @@ jobs:
         env:
           INPUT_TITLE: ${{ github.event.inputs.title }}
           INPUT_CONTENT: ${{ github.event.inputs.content }}
+          INPUT_VISIBILITY: ${{ github.event.inputs.visibility }}
           CB_API_KEY: ${{ secrets.CB_API_KEY }}
           CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
           CB_PARENT_NOTE_ID: ${{ vars.CB_PARENT_NOTE_ID }}
