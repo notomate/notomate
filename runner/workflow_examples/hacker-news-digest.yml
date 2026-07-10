@@ -1,0 +1,88 @@
+# Hacker News Daily Digest
+#
+# Fetches the top Hacker News stories each day and rolls them up into a
+# single note. Demonstrates: calling a plain JSON API (no key needed), and
+# creating just one digest note instead of one per item.
+#
+# Setup
+#   1. Go to "User Settings > API Keys" and create an API key.
+#   2. Go to the workspace's "Workflows" settings page and add:
+#        secrets: CB_API_KEY      = the API key from step 1
+#        vars:    CB_API_BASE_URL = an address the runner container can
+#                                    reach, e.g. http://collabreef-api:8080
+#                 (optional) HN_STORY_COUNT = number of stories to include,
+#                        defaults to 10
+name: Hacker News Daily Digest
+on:
+  schedule:
+    - cron: "0 9 * * *"
+  workflow_dispatch: {}
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build and post digest note
+        run: |
+          cat <<'EOF' > digest.js
+          const API_BASE = process.env.CB_API_BASE_URL;
+          const API_KEY = process.env.CB_API_KEY;
+          const WORKSPACE_ID = process.env.CB_WORKSPACE_ID;
+          const COUNT = Number(process.env.HN_STORY_COUNT) || 10;
+
+          if (!API_BASE || !API_KEY) {
+            throw new Error("missing CB_API_BASE_URL / CB_API_KEY");
+          }
+
+          function api(path, opts = {}) {
+            return fetch(`${API_BASE}${path}`, {
+              ...opts,
+              headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+                ...(opts.headers || {}),
+              },
+            });
+          }
+
+          async function fetchJSON(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`fetch ${url} failed: ${res.status}`);
+            return res.json();
+          }
+
+          (async () => {
+            const ids = await fetchJSON("https://hacker-news.firebaseio.com/v0/topstories.json");
+            const stories = await Promise.all(
+              ids.slice(0, COUNT).map((id) =>
+                fetchJSON(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+              )
+            );
+
+            const today = new Date().toISOString().slice(0, 10);
+            const lines = stories.map((s, i) => {
+              const url = s.url || `https://news.ycombinator.com/item?id=${s.id}`;
+              return `${i + 1}. [${s.title}](${url}) - ${s.score} points, ${s.descendants || 0} comments`;
+            });
+            const content = [`# Hacker News Top ${stories.length} - ${today}`, "", ...lines].join("\n");
+
+            const res = await api(`/api/v1/workspaces/${WORKSPACE_ID}/notes`, {
+              method: "POST",
+              headers: { "X-Content-Format": "markdown" },
+              body: JSON.stringify({
+                visibility: "workspace",
+                title: `Hacker News Digest - ${today}`,
+                content,
+              }),
+            });
+            if (!res.ok) throw new Error(`create note failed: ${res.status} ${await res.text()}`);
+            console.log(`done: posted digest of ${stories.length} stories`);
+          })().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node digest.js
+        env:
+          CB_API_KEY: ${{ secrets.CB_API_KEY }}
+          CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
+          HN_STORY_COUNT: ${{ vars.HN_STORY_COUNT }}

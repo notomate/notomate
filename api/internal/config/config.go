@@ -37,19 +37,24 @@ type AppConfig struct {
 var C *viper.Viper
 
 const (
-	DB_DRIVER               = "db_driver"
-	DB_DSN                  = "db_dsn"
-	STORAGE_TYPE            = "storage_type"
-	STORAGE_ROOT            = "storage_root"
-	STORAGE_S3_ENDPOINT     = "storage_s3_endpoint"
-	STORAGE_S3_ACCESS_KEY   = "storage_s3_access_key"
-	STORAGE_S3_SECRET_KEY   = "storage_s3_secret_key"
-	STORAGE_S3_BUCKET       = "storage_s3_bucket"
-	STORAGE_S3_USE_SSL      = "storage_s3_use_ssl"
-	SERVER_API_ROOT_PATH    = "server_api_root_path"
-	APP_DISABLE_SIGNUP      = "app_disable_signup"
-	APP_SECRET              = "app_secret"
-	GRPC_PORT               = "grpc_port"
+	DB_DRIVER             = "db_driver"
+	DB_DSN                = "db_dsn"
+	STORAGE_TYPE          = "storage_type"
+	STORAGE_ROOT          = "storage_root"
+	STORAGE_S3_ENDPOINT   = "storage_s3_endpoint"
+	STORAGE_S3_ACCESS_KEY = "storage_s3_access_key"
+	STORAGE_S3_SECRET_KEY = "storage_s3_secret_key"
+	STORAGE_S3_BUCKET     = "storage_s3_bucket"
+	STORAGE_S3_USE_SSL    = "storage_s3_use_ssl"
+	SERVER_API_ROOT_PATH  = "server_api_root_path"
+	APP_DISABLE_SIGNUP    = "app_disable_signup"
+	APP_SECRET            = "app_secret"
+	GRPC_PORT             = "grpc_port"
+
+	RUNNER_REGISTRATION_TOKEN      = "runner_registration_token"
+	WORKFLOW_NOTE_DEBOUNCE_SECONDS = "workflow_note_debounce_seconds"
+	WORKFLOW_LOG_MAX_LINES         = "workflow_log_max_lines"
+	WORKFLOW_RUN_RETENTION_DAYS    = "workflow_run_retention_days"
 )
 
 func Init() {
@@ -68,6 +73,10 @@ func Init() {
 	C.SetDefault(APP_DISABLE_SIGNUP, false)
 	C.SetDefault(APP_SECRET, "default_secret")
 	C.SetDefault(GRPC_PORT, "50051")
+	C.SetDefault(RUNNER_REGISTRATION_TOKEN, "")
+	C.SetDefault(WORKFLOW_NOTE_DEBOUNCE_SECONDS, 10)
+	C.SetDefault(WORKFLOW_LOG_MAX_LINES, 10000)
+	C.SetDefault(WORKFLOW_RUN_RETENTION_DAYS, 30)
 
 	C.AutomaticEnv()
 }

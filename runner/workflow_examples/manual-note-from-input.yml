@@ -1,0 +1,99 @@
+# Manual Note from Input (template)
+#
+# Demonstrates using workflow_dispatch inputs: no schedule, run it by hand
+# from the workspace's "Workflows" page and fill in a title/content to
+# create a note with exactly that content. Good starting point for a
+# "quick capture" workflow, e.g. triggered from an external system via the
+# dispatch API instead of the UI.
+#
+# Setup
+#   1. Go to "User Settings > API Keys" and create an API key.
+#   2. Go to the workspace's "Workflows" settings page and add:
+#        secrets: CB_API_KEY        = the API key from step 1
+#        vars:    CB_API_BASE_URL   = an address the runner container can
+#                                      reach, e.g. http://collabreef-api:8080
+#                 (optional) CB_PARENT_NOTE_ID = the note to nest new notes
+#                        under
+#   3. The user the API key belongs to must be a member of this workspace.
+#   4. Save, then click "Run workflow" and fill in the title/content fields.
+name: Manual Note from Input
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "Title for the new note"
+        required: true
+        default: "Untitled"
+      content:
+        description: "Body of the new note (Markdown)"
+        required: false
+        default: ""
+      visibility:
+        description: "private, workspace, or public"
+        required: false
+        default: "workspace"
+jobs:
+  create-note:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create a note from the dispatch inputs
+        run: |
+          cat <<'EOF' > create-note.js
+          const API_BASE = process.env.CB_API_BASE_URL;
+          const API_KEY = process.env.CB_API_KEY;
+          const WORKSPACE_ID = process.env.CB_WORKSPACE_ID;
+          const PARENT_ID = process.env.CB_PARENT_NOTE_ID || "";
+          const TITLE = process.env.INPUT_TITLE || "Untitled";
+          const CONTENT = process.env.INPUT_CONTENT || "";
+          const VISIBILITY = process.env.INPUT_VISIBILITY || "workspace";
+
+          if (!API_BASE || !API_KEY) {
+            throw new Error("missing CB_API_BASE_URL / CB_API_KEY");
+          }
+          if (!["private", "workspace", "public"].includes(VISIBILITY)) {
+            throw new Error(`invalid visibility "${VISIBILITY}" (must be private, workspace, or public)`);
+          }
+
+          function api(path, opts = {}) {
+            return fetch(`${API_BASE}${path}`, {
+              ...opts,
+              headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+                ...(opts.headers || {}),
+              },
+            });
+          }
+
+          (async () => {
+            const content = [
+              CONTENT,
+              "",
+              `_Created manually via workflow_dispatch at ${new Date().toISOString()}_`,
+            ].join("\n");
+
+            const res = await api(`/api/v1/workspaces/${WORKSPACE_ID}/notes`, {
+              method: "POST",
+              headers: { "X-Content-Format": "markdown" },
+              body: JSON.stringify({
+                visibility: VISIBILITY,
+                title: TITLE,
+                content,
+                parent_id: PARENT_ID,
+              }),
+            });
+            if (!res.ok) throw new Error(`create note failed: ${res.status} ${await res.text()}`);
+            console.log(`done: created "${TITLE}"`);
+          })().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node create-note.js
+        env:
+          INPUT_TITLE: ${{ github.event.inputs.title }}
+          INPUT_CONTENT: ${{ github.event.inputs.content }}
+          INPUT_VISIBILITY: ${{ github.event.inputs.visibility }}
+          CB_API_KEY: ${{ secrets.CB_API_KEY }}
+          CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
+          CB_PARENT_NOTE_ID: ${{ vars.CB_PARENT_NOTE_ID }}

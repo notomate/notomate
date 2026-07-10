@@ -1,0 +1,101 @@
+# Scheduled Note (template)
+#
+# Demonstrates the most basic pattern: scheduled trigger -> call the
+# CollabReef API to create a new note in the *same* workspace. No external
+# data source involved, so it's a good starting point for any "create a
+# note periodically" need - daily logs, weekly reviews, on-call reminders,
+# etc. Just adjust the content to fit.
+#
+# Setup
+#   1. Go to "User Settings > API Keys" and create an API key.
+#   2. Go to the workspace's "Workflows" settings page and add:
+#        secrets: CB_API_KEY        = the API key from step 1
+#        vars:    CB_API_BASE_URL   = an address the runner container can
+#                                      reach, e.g. http://collabreef-api:8080
+#                 (optional) CB_PARENT_NOTE_ID = the note to nest new notes
+#                        under
+#   3. The user the API key belongs to must be a member of this workspace.
+name: Scheduled Note
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch: {}
+jobs:
+  create-note:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create today's note if it doesn't exist yet
+        run: |
+          cat <<'EOF' > create-note.js
+          const API_BASE = process.env.CB_API_BASE_URL;
+          const API_KEY = process.env.CB_API_KEY;
+          const WORKSPACE_ID = process.env.CB_WORKSPACE_ID;
+          const PARENT_ID = process.env.CB_PARENT_NOTE_ID || "";
+
+          if (!API_BASE || !API_KEY) {
+            throw new Error("missing CB_API_BASE_URL / CB_API_KEY");
+          }
+
+          function api(path, opts = {}) {
+            return fetch(`${API_BASE}${path}`, {
+              ...opts,
+              headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+                ...(opts.headers || {}),
+              },
+            });
+          }
+
+          // The schedule itself won't fire twice, but a manual
+          // workflow_dispatch re-run on the same day could - so dedupe by
+          // title via full-text search before creating anything.
+          async function alreadyExists(title) {
+            const res = await api(
+              `/api/v1/workspaces/${WORKSPACE_ID}/notes?pageSize=1&query=${encodeURIComponent(title)}`
+            );
+            if (!res.ok) throw new Error(`search notes failed: ${res.status} ${await res.text()}`);
+            const notes = await res.json();
+            return notes.some((n) => n.title === title);
+          }
+
+          (async () => {
+            const today = new Date().toISOString().slice(0, 10);
+            const title = `Daily Log - ${today}`;
+
+            if (await alreadyExists(title)) {
+              console.log(`skip: "${title}" already exists`);
+              return;
+            }
+
+            const content = [
+              `# ${title}`,
+              "",
+              "- [ ] ",
+              "- [ ] ",
+              "",
+              `_Auto-created by a scheduled workflow at ${new Date().toISOString()}_`,
+            ].join("\n");
+
+            const res = await api(`/api/v1/workspaces/${WORKSPACE_ID}/notes`, {
+              method: "POST",
+              headers: { "X-Content-Format": "markdown" },
+              body: JSON.stringify({
+                visibility: "workspace",
+                title,
+                content,
+                parent_id: PARENT_ID,
+              }),
+            });
+            if (!res.ok) throw new Error(`create note failed: ${res.status} ${await res.text()}`);
+            console.log(`done: created "${title}"`);
+          })().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node create-note.js
+        env:
+          CB_API_KEY: ${{ secrets.CB_API_KEY }}
+          CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
+          CB_PARENT_NOTE_ID: ${{ vars.CB_PARENT_NOTE_ID }}

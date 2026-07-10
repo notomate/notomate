@@ -11,9 +11,10 @@ import (
 	"github.com/collabreef/collabreef/internal/config"
 	"github.com/collabreef/collabreef/internal/db"
 	"github.com/collabreef/collabreef/internal/storage"
+	"github.com/collabreef/collabreef/internal/workflow"
 )
 
-func New(db db.DB, storage storage.Storage) (*echo.Echo, error) {
+func New(db db.DB, storage storage.Storage, engine *workflow.Engine) (*echo.Echo, error) {
 	e := echo.New()
 
 	// Middleware
@@ -24,6 +25,11 @@ func New(db db.DB, storage storage.Storage) (*echo.Echo, error) {
 	apiRoot := config.C.GetString(config.SERVER_API_ROOT_PATH)
 
 	handler := handler.NewHandler(db, storage)
+	if engine != nil {
+		// Must happen before route registration: routes capture a copy of
+		// the handler value.
+		handler.SetWorkflowEngine(engine)
+	}
 	auth := middlewares.NewAuthMiddleware(db)
 	workspace := middlewares.NewWorkspaceMiddleware(db)
 
@@ -33,7 +39,7 @@ func New(db db.DB, storage storage.Storage) (*echo.Echo, error) {
 	route.RegisterAdmin(api, *handler, *auth)
 	route.RegisterUser(api, *handler, *auth)
 	route.RegisterWorkspace(api, *handler, *auth, *workspace)
-	route.RegisterTool(api, *handler, *auth)
+	route.RegisterWorkflow(api, *handler, *auth, *workspace)
 
 	return e, nil
 }

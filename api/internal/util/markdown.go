@@ -96,9 +96,7 @@ func convertParagraph(n ast.Node, source []byte) *TipTapNode {
 	}
 
 	for child := n.FirstChild(); child != nil; child = child.NextSibling() {
-		if inlineNode := convertInlineNode(child, source); inlineNode != nil {
-			node.Content = append(node.Content, *inlineNode)
-		}
+		node.Content = append(node.Content, convertInlineNode(child, source)...)
 	}
 
 	return node
@@ -115,9 +113,7 @@ func convertHeading(n ast.Node, source []byte) *TipTapNode {
 	}
 
 	for child := n.FirstChild(); child != nil; child = child.NextSibling() {
-		if inlineNode := convertInlineNode(child, source); inlineNode != nil {
-			node.Content = append(node.Content, *inlineNode)
-		}
+		node.Content = append(node.Content, convertInlineNode(child, source)...)
 	}
 
 	return node
@@ -240,38 +236,70 @@ func convertListItem(n ast.Node, source []byte) *TipTapNode {
 	return node
 }
 
-func convertInlineNode(n ast.Node, source []byte) *TipTapNode {
+// convertInlineNode converts one inline AST node to zero or more TipTap
+// nodes. It returns a slice (rather than a single node) because emphasis/
+// strong spans can contain multiple child nodes - e.g. a literal delimiter
+// character goldmark couldn't pair (as in "workflow_dispatch" inside
+// "_..._"), or a nested mark like a link inside italic text - and every
+// child has to make it into the output, not just the first one.
+func convertInlineNode(n ast.Node, source []byte) []TipTapNode {
 	switch n.Kind() {
 	case ast.KindText:
-		return convertText(n, source, []TipTapMark{})
+		if node := convertText(n, source, nil); node != nil {
+			return []TipTapNode{*node}
+		}
+		return nil
 	case ast.KindEmphasis:
 		emphasis := n.(*ast.Emphasis)
-		if emphasis.Level == 1 {
-			// Italic (*)
-			return convertEmphasis(n, source)
-		} else if emphasis.Level == 2 {
-			// Bold (**)
-			return convertStrong(n, source)
+		mark := TipTapMark{Type: "italic"}
+		if emphasis.Level == 2 {
+			mark = TipTapMark{Type: "bold"}
 		}
-		return convertEmphasis(n, source)
+		return convertMarkedChildren(n, source, mark)
 	case ast.KindCodeSpan:
-		return convertCodeSpan(n, source)
+		if node := convertCodeSpan(n, source); node != nil {
+			return []TipTapNode{*node}
+		}
+		return nil
 	case ast.KindLink:
-		return convertLink(n, source)
+		if node := convertLink(n, source); node != nil {
+			return []TipTapNode{*node}
+		}
+		return nil
 	case ast.KindImage:
-		return convertImage(n, source)
+		if node := convertImage(n, source); node != nil {
+			return []TipTapNode{*node}
+		}
+		return nil
 	case ast.KindAutoLink:
-		return convertAutoLink(n, source)
+		if node := convertAutoLink(n, source); node != nil {
+			return []TipTapNode{*node}
+		}
+		return nil
 	default:
 		// For unknown inline nodes, try to extract text
 		if textNode, ok := n.(*ast.Text); ok {
-			return &TipTapNode{
+			return []TipTapNode{{
 				Type: "text",
 				Text: string(textNode.Segment.Value(source)),
-			}
+			}}
 		}
 		return nil
 	}
+}
+
+// convertMarkedChildren converts every child of an emphasis/strong node and
+// prepends mark to each resulting node, so nested spans (e.g. a link or a
+// nested emphasis for bold+italic) keep their own marks in addition to it.
+func convertMarkedChildren(n ast.Node, source []byte, mark TipTapMark) []TipTapNode {
+	var out []TipTapNode
+	for child := n.FirstChild(); child != nil; child = child.NextSibling() {
+		for _, node := range convertInlineNode(child, source) {
+			node.Marks = append([]TipTapMark{mark}, node.Marks...)
+			out = append(out, node)
+		}
+	}
+	return out
 }
 
 func convertText(n ast.Node, source []byte, marks []TipTapMark) *TipTapNode {
@@ -300,34 +328,6 @@ func convertText(n ast.Node, source []byte, marks []TipTapMark) *TipTapNode {
 	}
 
 	return node
-}
-
-func convertEmphasis(n ast.Node, source []byte) *TipTapNode {
-	emphasis := n.(*ast.Emphasis)
-	marks := []TipTapMark{{Type: "italic"}}
-
-	// Process child nodes with italic mark
-	for child := emphasis.FirstChild(); child != nil; child = child.NextSibling() {
-		if child.Kind() == ast.KindText {
-			return convertText(child, source, marks)
-		}
-	}
-
-	return nil
-}
-
-func convertStrong(n ast.Node, source []byte) *TipTapNode {
-	strong := n.(*ast.Emphasis)
-	marks := []TipTapMark{{Type: "bold"}}
-
-	// Process child nodes with bold mark
-	for child := strong.FirstChild(); child != nil; child = child.NextSibling() {
-		if child.Kind() == ast.KindText {
-			return convertText(child, source, marks)
-		}
-	}
-
-	return nil
 }
 
 func convertCodeSpan(n ast.Node, source []byte) *TipTapNode {

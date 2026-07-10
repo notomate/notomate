@@ -1,0 +1,103 @@
+# GitHub Release Watch
+#
+# Monitors the latest release of a given GitHub repo and creates a note when
+# a new one is published. Demonstrates: parameterizing the watch target via
+# vars, and deduping against existing notes with a search.
+#
+# Setup
+#   1. Go to "User Settings > API Keys" and create an API key.
+#   2. Go to the workspace's "Workflows" settings page and add:
+#        secrets: CB_API_KEY      = the API key from step 1
+#                 (optional) GITHUB_TOKEN = a GitHub personal access token,
+#                        to avoid the low rate limit on anonymous API calls
+#        vars:    CB_API_BASE_URL = an address the runner container can
+#                                    reach, e.g. http://collabreef-api:8080
+#                 GITHUB_REPO      = the repo to watch, as owner/name
+name: GitHub Releases Watch
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check latest release and create note if new
+        run: |
+          cat <<'EOF' > watch.js
+          const API_BASE = process.env.CB_API_BASE_URL;
+          const API_KEY = process.env.CB_API_KEY;
+          const WORKSPACE_ID = process.env.CB_WORKSPACE_ID;
+          const REPO = process.env.GITHUB_REPO;
+          const GH_TOKEN = process.env.GITHUB_TOKEN || "";
+
+          if (!API_BASE || !API_KEY || !REPO) {
+            throw new Error("missing CB_API_BASE_URL / CB_API_KEY / GITHUB_REPO");
+          }
+
+          function api(path, opts = {}) {
+            return fetch(`${API_BASE}${path}`, {
+              ...opts,
+              headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+                ...(opts.headers || {}),
+              },
+            });
+          }
+
+          async function alreadyExists(tag) {
+            const res = await api(
+              `/api/v1/workspaces/${WORKSPACE_ID}/notes?pageSize=1&query=${encodeURIComponent(tag)}`
+            );
+            if (!res.ok) throw new Error(`search notes failed: ${res.status} ${await res.text()}`);
+            const notes = await res.json();
+            return notes.length > 0;
+          }
+
+          (async () => {
+            const ghHeaders = { Accept: "application/vnd.github+json" };
+            if (GH_TOKEN) ghHeaders.Authorization = `Bearer ${GH_TOKEN}`;
+
+            const ghRes = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
+              headers: ghHeaders,
+            });
+            if (!ghRes.ok) throw new Error(`fetch release failed: ${ghRes.status} ${await ghRes.text()}`);
+            const release = await ghRes.json();
+
+            if (await alreadyExists(release.tag_name)) {
+              console.log(`skip: note for ${release.tag_name} already exists`);
+              return;
+            }
+
+            const content = [
+              `**Repo:** ${REPO}`,
+              `**Tag:** ${release.tag_name}`,
+              `**Published:** ${release.published_at}`,
+              `**URL:** ${release.html_url}`,
+              "",
+              release.body || "(no release notes)",
+            ].join("\n");
+
+            const res = await api(`/api/v1/workspaces/${WORKSPACE_ID}/notes`, {
+              method: "POST",
+              headers: { "X-Content-Format": "markdown" },
+              body: JSON.stringify({
+                visibility: "workspace",
+                title: `${REPO} released ${release.tag_name}`,
+                content,
+              }),
+            });
+            if (!res.ok) throw new Error(`create note failed: ${res.status} ${await res.text()}`);
+            console.log(`done: created note for ${release.tag_name}`);
+          })().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node watch.js
+        env:
+          CB_API_KEY: ${{ secrets.CB_API_KEY }}
+          CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
+          GITHUB_REPO: ${{ vars.GITHUB_REPO }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

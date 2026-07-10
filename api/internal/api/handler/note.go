@@ -272,6 +272,8 @@ func (h Handler) CreateNote(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	h.notifyNoteEvent(model.WorkflowEventNoteCreated, n, user.ID)
+
 	return c.JSON(http.StatusCreated, n)
 }
 
@@ -298,6 +300,8 @@ func (h Handler) DeleteNote(c echo.Context) error {
 	if err := h.db.DeleteNote(Note); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	h.notifyNoteEvent(model.WorkflowEventNoteDeleted, existingNote, user.ID)
 
 	return c.NoContent(http.StatusNoContent)
 }
@@ -365,6 +369,8 @@ func (h Handler) UpdateNote(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	h.notifyNoteEvent(model.WorkflowEventNoteUpdated, n, user.ID)
+
 	return c.JSON(http.StatusOK, existingNote)
 }
 
@@ -417,6 +423,8 @@ func (h Handler) UpdateNoteVisibility(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+
+	h.notifyNoteEvent(model.WorkflowEventNoteUpdated, n, user.ID)
 
 	return c.JSON(http.StatusOK, n)
 }

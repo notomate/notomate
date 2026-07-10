@@ -12,6 +12,7 @@ import (
 	"github.com/collabreef/collabreef/internal/config"
 	grpcserver "github.com/collabreef/collabreef/internal/grpc"
 	"github.com/collabreef/collabreef/internal/server"
+	"github.com/collabreef/collabreef/internal/workflow"
 )
 
 // Version is set at build time via ldflags
@@ -36,7 +37,10 @@ func main() {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
 
-	e, err := server.New(db, storage)
+	engine := workflow.NewEngine(db)
+	engine.Start()
+
+	e, err := server.New(db, storage, engine)
 	if err != nil {
 		log.Fatalf("Failed to setup server: %v", err)
 	}
@@ -47,7 +51,7 @@ func main() {
 	}
 
 	grpcPort := config.C.GetString(config.GRPC_PORT)
-	go grpcserver.Start(db, grpcPort)
+	go grpcserver.Start(db, grpcPort, engine)
 
 	// Start server in a goroutine
 	go func() {
@@ -63,6 +67,8 @@ func main() {
 	<-quit
 
 	log.Println("Shutting down server...")
+
+	engine.Stop()
 
 	// Gracefully shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

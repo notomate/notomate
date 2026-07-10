@@ -29,6 +29,12 @@ services:
       - DB_DSN=/usr/local/app/bin/collabreef.db
       - APP_DISABLE_SIGNUP=${APP_DISABLE_SIGNUP}
       - APP_SECRET=${APP_SECRET}
+    ports:
+      # gRPC port for the runner (docker-compose.runner.yml), which lives in
+      # a separate compose project and can't reach collabreef-api by service
+      # name. Bound to localhost only: the runner protocol has token auth
+      # but no TLS.
+      - "127.0.0.1:50051:50051"
     restart: unless-stopped
 
   collabreef-collab:

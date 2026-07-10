@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/collabreef/collabreef/internal/db"
 	"github.com/collabreef/collabreef/internal/model"
+	"github.com/collabreef/collabreef/internal/workflow"
 )
 
 // ---------- Request / Response types (JSON-serialized) ----------
@@ -90,7 +92,7 @@ type CollabServiceServer interface {
 // ---------- Unary handler wrappers ----------
 
 func makeHandler[Req any](fullMethod string, impl func(context.Context, *Req) (interface{}, error)) grpc.MethodDesc {
-	name := fullMethod[len("/collab.CollabService/"):]
+	name := fullMethod[strings.LastIndex(fullMethod, "/")+1:]
 	return grpc.MethodDesc{
 		MethodName: name,
 		Handler: func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -145,7 +147,8 @@ func registerCollabServiceServer(s *grpc.Server, srv CollabServiceServer) {
 // ---------- Implementation ----------
 
 type collabServer struct {
-	db db.DB
+	db     db.DB
+	engine *workflow.Engine
 }
 
 func (s *collabServer) GetUser(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
@@ -228,6 +231,9 @@ func (s *collabServer) UpdateNote(ctx context.Context, req *UpdateNoteRequest) (
 	if err := s.db.UpdateNote(note); err != nil {
 		return nil, status.Errorf(codes.Internal, "update note: %v", err)
 	}
+	if s.engine != nil {
+		s.engine.NotifyNoteEvent(model.WorkflowEventNoteUpdated, note, req.UpdatedBy)
+	}
 	return &UpdateNoteResponse{}, nil
 }
 
@@ -242,14 +248,22 @@ func (s *collabServer) UpdateViewData(ctx context.Context, req *UpdateViewDataRe
 
 // ---------- Start ----------
 
-func Start(database db.DB, port string) {
+// NewServer builds the gRPC server with both the collab service and the
+// runner service registered. Shared with tests.
+func NewServer(database db.DB, engine *workflow.Engine) *grpc.Server {
+	srv := grpc.NewServer(grpc.ChainUnaryInterceptor(runnerAuthInterceptor(database)))
+	registerCollabServiceServer(srv, &collabServer{db: database, engine: engine})
+	registerRunnerServiceServer(srv, &runnerServer{db: database, engine: engine})
+	return srv
+}
+
+func Start(database db.DB, port string, engine *workflow.Engine) {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("[gRPC] listen on :%s failed: %v", port, err)
 	}
-	srv := grpc.NewServer()
-	registerCollabServiceServer(srv, &collabServer{db: database})
-	log.Printf("[gRPC] ColabService listening on :%s", port)
+	srv := NewServer(database, engine)
+	log.Printf("[gRPC] CollabService and RunnerService listening on :%s", port)
 	if err := srv.Serve(lis); err != nil {
 		log.Fatalf("[gRPC] serve failed: %v", err)
 	}

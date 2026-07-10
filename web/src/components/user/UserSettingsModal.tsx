@@ -6,6 +6,7 @@ import { useState, useEffect } from "react"
 import { updatePreferences } from "@/api/user"
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, CreateAPIKeyRequest } from "@/api/apikey"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
+import RunnersSection from "@/pages/workspace/settings/RunnersSection"
 import Card from "@/components/card/Card"
 import Select from "@/components/select/Select"
 import { Modal } from "@/components/ui/modal"
@@ -23,7 +24,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()!
 
     // Tab state
-    const [activeTab, setActiveTab] = useState<'preferences' | 'apiKeys' | 'users'>('preferences')
+    const [activeTab, setActiveTab] = useState<'preferences' | 'apiKeys' | 'users' | 'system'>('preferences')
     const isOwner = user?.role === 'owner'
 
     // Preferences state
@@ -360,6 +361,18 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     {t("pages.preferences.userManagement")}
                                 </button>
                             )}
+                            {isOwner && (
+                                <button
+                                    onClick={() => setActiveTab('system')}
+                                    className={`px-4 py-2 font-medium transition-colors ${
+                                        activeTab === 'system'
+                                            ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
+                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                    }`}
+                                >
+                                    {t("pages.preferences.systemSettings")}
+                                </button>
+                            )}
                         </div>
 
                         <div className="space-y-4 overflow-y-auto flex-1">
@@ -597,6 +610,11 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                         </div>
                                     )}
                                 </div>
+                            )}
+
+                            {/* System Settings Tab */}
+                            {activeTab === 'system' && isOwner && (
+                                <RunnersSection />
                             )}
                         </div>
             </Modal>

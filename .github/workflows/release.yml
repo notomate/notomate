@@ -15,6 +15,7 @@ env:
   REGISTRY: docker.io
   IMAGE_APP: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef
   IMAGE_NGINX: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-nginx
+  IMAGE_RUNNER: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-runner
 
 jobs:
   build-and-release:
@@ -71,6 +72,15 @@ jobs:
             type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
             type=raw,value=latest
 
+      - name: Extract metadata (runner)
+        id: meta-runner
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_RUNNER }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
+            type=raw,value=latest
+
       - name: Build and push app image (app-runtime)
         uses: docker/build-push-action@v5
         with:
@@ -101,6 +111,20 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
+      - name: Build and push runner image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./runner
+          file: ./runner/Dockerfile
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.version.outputs.VERSION }}
+          tags: ${{ steps.meta-runner.outputs.tags }}
+          labels: ${{ steps.meta-runner.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -124,6 +148,10 @@ jobs:
           echo "**Nginx (static frontend):**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_NGINX }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_NGINX }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Runner (workflow runner):**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_RUNNER }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_RUNNER }}:latest\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Download" >> $GITHUB_STEP_SUMMARY
           echo "- [Release Page](https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.VERSION }})" >> $GITHUB_STEP_SUMMARY

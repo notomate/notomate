@@ -11,6 +11,10 @@ import NoteDetailPage from './pages/workspace/notes/NoteDetailPage';
 import FilesPage from './pages/workspace/files/FilesPage';
 import SearchPage from './pages/workspace/notes/SearchPage';
 import Settings from './pages/workspace/settings/SettingsPage';
+import WorkflowsPage from './pages/workspace/workflows/WorkflowsPage';
+import WorkflowEditPage from './pages/workspace/workflows/WorkflowEditPage';
+import RunsPage from './pages/workspace/workflows/RunsPage';
+import RunDetailPage from './pages/workspace/workflows/RunDetailPage';
 import { Toast } from './components/toast/Toast'
 import { useToastStore } from './stores/toast';
 import WorkspaceLayout from './components/workspacelayout/WorkspaceLayout';
@@ -73,6 +77,11 @@ function App() {
               <Route path=':noteId' element={<NoteDetailPage />} ></Route>
               <Route path='files' element={<FilesPage />} />
               <Route path='settings' element={<Settings />} />
+              <Route path='workflows' element={<WorkflowsPage />} />
+              <Route path='workflows/new' element={<WorkflowEditPage />} />
+              <Route path='workflows/:workflowId' element={<WorkflowEditPage />} />
+              <Route path='workflows/:workflowId/runs' element={<RunsPage />} />
+              <Route path='workflows/:workflowId/runs/:runId' element={<RunDetailPage />} />
             </Route>
             <Route element={<ViewsLayout />}>
               <Route path='calendar/:calendarId' element={<CalendarPage />}>

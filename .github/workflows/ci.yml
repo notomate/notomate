@@ -38,6 +38,37 @@ jobs:
         working-directory: ./api
         run: go build -o bin/api ./cmd/api/main.go
 
+  runner-test:
+    name: Runner Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+          cache-dependency-path: runner/go.sum
+
+      - name: Install dependencies
+        working-directory: ./runner
+        run: go mod download
+
+      - name: Run go vet
+        working-directory: ./runner
+        run: go vet ./...
+
+      - name: Run go test
+        working-directory: ./runner
+        run: go test -v -race ./...
+
+      - name: Build runner
+        working-directory: ./runner
+        run: go build -o bin/collabreef-runner .
+
   frontend-test:
     name: Frontend Build & Lint
     runs-on: ubuntu-latest
@@ -83,22 +114,48 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  runner-docker-build-test:
+    name: Runner Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [runner-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build runner Docker image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./runner
+          file: ./runner/Dockerfile
+          push: false
+          tags: collabreef-runner:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   pr-summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test, docker-build-test]
+    needs: [backend-test, runner-test, frontend-test, docker-build-test, runner-docker-build-test]
     if: always()
 
     steps:
       - name: Check results
         run: |
           echo "Backend Test: ${{ needs.backend-test.result }}"
+          echo "Runner Test: ${{ needs.runner-test.result }}"
           echo "Frontend Test: ${{ needs.frontend-test.result }}"
           echo "Docker Build Test: ${{ needs.docker-build-test.result }}"
+          echo "Runner Docker Build Test: ${{ needs.runner-docker-build-test.result }}"
 
           if [ "${{ needs.backend-test.result }}" != "success" ] || \
+             [ "${{ needs.runner-test.result }}" != "success" ] || \
              [ "${{ needs.frontend-test.result }}" != "success" ] || \
-             [ "${{ needs.docker-build-test.result }}" != "success" ]; then
+             [ "${{ needs.docker-build-test.result }}" != "success" ] || \
+             [ "${{ needs.runner-docker-build-test.result }}" != "success" ]; then
             echo "❌ CI checks failed"
             exit 1
           else

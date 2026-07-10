@@ -9,6 +9,7 @@ import { Loader, RotateCcw, Trash2, UserPlus, X } from "lucide-react"
 import OneColumn from "@/components/onecolumn/OneColumn"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { toast } from "@/stores/toast"
+import WorkflowVarsSecretsSection from "./WorkflowVarsSecretsSection"
 
 const Settings = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
@@ -152,7 +153,7 @@ const Settings = () => {
                         {t("menu.workspaceSettings")}
                     </div>
                 </div>
-                <div className="grow flex justify-start">
+                <div className="grow flex justify-start pb-5">
                     <div className="flex-1">
                         <div className="w-full">
                             <div className="bg-white dark:bg-neutral-800 rounded shadow-sm w-full p-5 max-w-3xl">
@@ -289,6 +290,11 @@ const Settings = () => {
                                             })}
                                         </div>
                                     </div>
+
+                                    {/* Workspace-scoped workflow variables & secrets */}
+                                    {isOwnerOrAdmin && (
+                                        <WorkflowVarsSecretsSection />
+                                    )}
 
                                     {isOwner && (
                                         <div className="flex gap-2 items-center justify-between">

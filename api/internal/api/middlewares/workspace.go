@@ -42,6 +42,45 @@ func (m WorkspaceMiddleware) CheckWorkspaceExists() echo.MiddlewareFunc {
 	}
 }
 
+// RequireWorkspaceRole restricts a route to workspace members whose role is
+// in the given list. This checks the per-workspace role from workspace_users,
+// not the instance-level user role.
+func (m WorkspaceMiddleware) RequireWorkspaceRole(roles ...string) echo.MiddlewareFunc {
+	allowed := make(map[string]struct{}, len(roles))
+	for _, r := range roles {
+		allowed[r] = struct{}{}
+	}
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			workspaceId := c.Param("workspaceId")
+			user, ok := c.Get("user").(model.User)
+			if !ok {
+				return c.JSON(http.StatusUnauthorized, map[string]string{
+					"error": "Authentication required",
+				})
+			}
+
+			members, err := m.db.FindWorkspaceUsers(model.WorkspaceUserFilter{
+				WorkspaceID: workspaceId,
+				UserID:      user.ID,
+			})
+			if err != nil || len(members) == 0 {
+				return c.JSON(http.StatusForbidden, map[string]string{
+					"error": "Restricted to workspace members only",
+				})
+			}
+
+			if _, ok := allowed[members[0].Role]; !ok {
+				return c.JSON(http.StatusForbidden, map[string]string{
+					"error": "Insufficient workspace role",
+				})
+			}
+
+			return next(c)
+		}
+	}
+}
+
 func (m WorkspaceMiddleware) RestrictWorkspaceMember(config config.AppConfig) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) (returnErr error) {

@@ -19,4 +19,7 @@ func RegisterAdmin(api *echo.Group, h handler.Handler, authMiddleware middleware
 	g.PUT("/users/:id/enable", h.EnableUser)
 	g.DELETE("/users/:id", h.DeleteUser)
 
+	g.GET("/runners", h.ListRunners)
+	g.DELETE("/runners/:id", h.DeleteRunner)
+	g.GET("/runners/registration-token", h.GetRunnerRegistrationToken)
 }

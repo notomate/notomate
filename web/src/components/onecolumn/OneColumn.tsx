@@ -8,7 +8,7 @@ interface Props {
 
 const OneColumn: FC<Props> = ({ children }) => {
     const { isCollapse } = useSidebar()
-    return <div className={twMerge(isCollapse ? "" : "xl:pl-4", "px-0 w-full")}>
+    return <div className={twMerge(isCollapse ? "" : "xl:pl-4", "px-0 w-full h-full overflow-y-auto")}>
         {children}
     </div>
 }
