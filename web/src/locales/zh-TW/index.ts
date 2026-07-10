@@ -30,6 +30,7 @@ export default {
   },
   pages: {
     workflows: {
+      runCancelled: "已取消執行",
       title: "工作流",
       newWorkflow: "新增工作流",
       runs: "執行紀錄",
@@ -57,6 +58,12 @@ export default {
       "alreadyHaveAccount": "已有帳號?"
     },
     settings: {
+      runners: "Runners",
+      runnersHint: "工作流 runner 為整個站台共用。註冊 runner 需要以下 token。",
+      registrationToken: "註冊 token",
+      noRunners: "尚未註冊任何 runner。",
+      runnerDeleted: "Runner 已刪除",
+      deleteRunnerConfirm: "確定刪除這個 runner?它需要以新的狀態檔重新註冊。",
       workspaceSettings: "工作區設定",
       workspaceName: "工作區名稱",
       deleteThisWorkspace: "刪除這個工作區",

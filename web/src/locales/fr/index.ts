@@ -30,6 +30,7 @@ export default {
   },
   pages: {
     workflows: {
+      runCancelled: "Run cancelled",
       title: "Workflows",
       newWorkflow: "New Workflow",
       runs: "Runs",
@@ -57,6 +58,12 @@ export default {
       "alreadyHaveAccount": "Vous avez déjà un compte ?"
     },
     settings: {
+      runners: "Runners",
+      runnersHint: "Workflow runners are shared across the whole instance. Registration requires the token below.",
+      registrationToken: "Registration token",
+      noRunners: "No runners registered.",
+      runnerDeleted: "Runner deleted",
+      deleteRunnerConfirm: "Delete this runner? It will need to re-register with a fresh state file.",
       workspaceSettings: "Paramètres de l'espace de travail",
       workspaceName: "Nom de l'espace de travail",
       deleteThisWorkspace: "Supprimer cet espace de travail",

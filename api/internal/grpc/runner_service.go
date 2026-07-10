@@ -357,6 +357,13 @@ func (s *runnerServer) rollUpRunStatus(runID string) error {
 		}
 	}
 
+	// A user-cancelled run stays cancelled even if its last job managed to
+	// finish before the runner noticed.
+	if run, err := s.db.FindWorkflowRun(model.WorkflowRun{ID: runID}); err == nil &&
+		run.Status == model.WorkflowRunStatusCancelled {
+		runStatus = model.WorkflowRunStatusCancelled
+	}
+
 	if err := s.db.UpdateWorkflowRunStatus(runID, runStatus, "", time.Now().UTC().Format(time.RFC3339)); err != nil {
 		return status.Errorf(codes.Internal, "finish run: %v", err)
 	}

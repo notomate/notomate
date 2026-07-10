@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation } from "@tanstack/react-query"
+import { CircleSlash } from "lucide-react"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import { getWorkflow, getWorkflowRun, getWorkflowJobLogs, WorkflowJobData, WorkflowJobLogLine } from "@/api/workflow"
+import { cancelWorkflowRun } from "@/api/runner"
+import { getWorkspaceMembers } from "@/api/workspace"
+import { useCurrentUserStore } from "@/stores/current-user"
+import { toast } from "@/stores/toast"
 import OneColumn from "@/components/onecolumn/OneColumn"
 import StatusBadge from "./StatusBadge"
 
@@ -72,13 +77,33 @@ const RunDetailPage = () => {
         enabled: !!currentWorkspaceId && !!workflowId
     })
 
-    const { data: run } = useQuery({
+    const { data: run, refetch: refetchRun } = useQuery({
         queryKey: ['workflowRun', currentWorkspaceId, runId],
         queryFn: () => getWorkflowRun(currentWorkspaceId, runId!),
         enabled: !!currentWorkspaceId && !!runId,
         refetchInterval: (query) => {
             const status = query.state.data?.status
             return status === 'queued' || status === 'running' ? 3000 : false
+        }
+    })
+
+    const { user: currentUser } = useCurrentUserStore()
+    const { data: members = [] } = useQuery({
+        queryKey: ['workspaceMembers', currentWorkspaceId],
+        queryFn: () => getWorkspaceMembers(currentWorkspaceId),
+        enabled: !!currentWorkspaceId
+    })
+    const currentMember = members.find(m => m.user_id === currentUser?.id)
+    const isOwnerOrAdmin = currentMember?.role === 'owner' || currentMember?.role === 'admin'
+
+    const cancelMutation = useMutation({
+        mutationFn: () => cancelWorkflowRun(currentWorkspaceId, runId!),
+        onSuccess: () => {
+            toast.success(t("pages.workflows.runCancelled"))
+            refetchRun()
+        },
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || error?.message || "Failed to cancel run")
         }
     })
 
@@ -106,6 +131,16 @@ const RunDetailPage = () => {
                         <span className="text-sm text-gray-400 dark:text-gray-500">
                             {run?.event} · {run && new Date(run.created_at).toLocaleString()}
                         </span>
+                        {isOwnerOrAdmin && run && (run.status === 'queued' || run.status === 'running') && (
+                            <button
+                                onClick={() => cancelMutation.mutate()}
+                                disabled={cancelMutation.isPending}
+                                className="ml-auto px-3 py-1.5 flex gap-2 items-center text-sm text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded disabled:opacity-50"
+                            >
+                                <CircleSlash size={15} />
+                                {t("actions.cancel")}
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex flex-col gap-3">

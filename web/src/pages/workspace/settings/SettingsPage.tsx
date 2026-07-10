@@ -9,6 +9,7 @@ import { Loader, RotateCcw, Trash2, UserPlus, X } from "lucide-react"
 import OneColumn from "@/components/onecolumn/OneColumn"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { toast } from "@/stores/toast"
+import RunnersSection from "./RunnersSection"
 
 const Settings = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
@@ -289,6 +290,11 @@ const Settings = () => {
                                             })}
                                         </div>
                                     </div>
+
+                                    {/* Instance-level runner management */}
+                                    {(currentUser?.role === 'owner' || currentUser?.role === 'admin') && (
+                                        <RunnersSection />
+                                    )}
 
                                     {isOwner && (
                                         <div className="flex gap-2 items-center justify-between">

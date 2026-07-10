@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -86,6 +87,49 @@ func (h Handler) GetWorkflowRun(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, WorkflowRunDetailResponse{WorkflowRun: run, Jobs: jobs})
+}
+
+func (h Handler) CancelWorkflowRun(c echo.Context) error {
+	run, err := h.findWorkspaceWorkflowRun(c)
+	if err != nil {
+		return err
+	}
+
+	if model.IsTerminalWorkflowRunStatus(run.Status) {
+		return echo.NewHTTPError(http.StatusConflict, "run is already finished")
+	}
+
+	jobs, err := h.db.FindWorkflowJobs(model.WorkflowJobFilter{RunID: run.ID})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	stillRunning := false
+	for _, job := range jobs {
+		switch job.Status {
+		case model.WorkflowRunStatusQueued:
+			// Cancelled queued jobs are never claimed by a runner.
+			if err := h.db.UpdateWorkflowJobStatus(job.ID, model.WorkflowRunStatusCancelled, "", now); err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+		case model.WorkflowRunStatusRunning:
+			// The runner sees Cancelled on its next heartbeat/log flush,
+			// aborts and confirms with a terminal UpdateTask.
+			stillRunning = true
+		}
+	}
+
+	finishedAt := now
+	if stillRunning {
+		finishedAt = ""
+	}
+	if err := h.db.UpdateWorkflowRunStatus(run.ID, model.WorkflowRunStatusCancelled, "", finishedAt); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	run.Status = model.WorkflowRunStatusCancelled
+	return c.JSON(http.StatusOK, run)
 }
 
 func (h Handler) GetWorkflowJobLogs(c echo.Context) error {

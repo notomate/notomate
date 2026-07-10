@@ -35,4 +35,5 @@ func RegisterWorkflow(api *echo.Group, h handler.Handler, authMiddleware middlew
 	g.GET("/:workspaceId/workflows/:workflowId/runs", h.GetWorkflowRuns, member)
 	g.GET("/:workspaceId/runs/:runId", h.GetWorkflowRun, member)
 	g.GET("/:workspaceId/runs/:runId/jobs/:jobId/logs", h.GetWorkflowJobLogs, member)
+	g.POST("/:workspaceId/runs/:runId/cancel", h.CancelWorkflowRun, ownerOrAdmin)
 }

@@ -30,6 +30,7 @@ export default {
   },
   pages: {
     workflows: {
+      runCancelled: "Run cancelled",
       title: "Workflows",
       newWorkflow: "New Workflow",
       runs: "Runs",
@@ -57,6 +58,12 @@ export default {
       "alreadyHaveAccount": "이미 계정이 있으신가요?"
     },
     settings: {
+      runners: "Runners",
+      runnersHint: "Workflow runners are shared across the whole instance. Registration requires the token below.",
+      registrationToken: "Registration token",
+      noRunners: "No runners registered.",
+      runnerDeleted: "Runner deleted",
+      deleteRunnerConfirm: "Delete this runner? It will need to re-register with a fresh state file.",
       workspaceSettings: "워크스페이스 설정",
       workspaceName: "워크스페이스 이름",
       deleteThisWorkspace: "이 워크스페이스 삭제",

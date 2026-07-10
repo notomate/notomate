@@ -1,8 +1,11 @@
 package workflow
 
 import (
+	"log"
 	"sync"
+	"time"
 
+	"github.com/collabreef/collabreef/internal/config"
 	"github.com/collabreef/collabreef/internal/db"
 	"github.com/collabreef/collabreef/internal/model"
 )
@@ -15,6 +18,7 @@ type Engine struct {
 	queue      *Queue
 	dispatcher *Dispatcher
 	scheduler  *Scheduler
+	stopPrune  chan struct{}
 }
 
 func NewEngine(database db.DB) *Engine {
@@ -24,17 +28,49 @@ func NewEngine(database db.DB) *Engine {
 		queue:      q,
 		dispatcher: NewDispatcher(database, q),
 		scheduler:  NewScheduler(database, q),
+		stopPrune:  make(chan struct{}),
 	}
 }
 
-// Start loads cron schedules and begins firing them.
+// Start loads cron schedules, begins firing them and starts the retention
+// pruner.
 func (e *Engine) Start() {
 	e.scheduler.Reload()
+	go e.pruneLoop()
 }
 
 func (e *Engine) Stop() {
 	e.scheduler.Stop()
 	e.dispatcher.Stop()
+	close(e.stopPrune)
+}
+
+// pruneLoop deletes terminal runs (with their jobs and logs) older than
+// WORKFLOW_RUN_RETENTION_DAYS, once at startup and then every 12 hours.
+func (e *Engine) pruneLoop() {
+	retentionDays := config.C.GetInt(config.WORKFLOW_RUN_RETENTION_DAYS)
+	if retentionDays <= 0 {
+		return
+	}
+
+	prune := func() {
+		cutoff := time.Now().UTC().AddDate(0, 0, -retentionDays).Format(time.RFC3339)
+		if err := e.db.DeleteWorkflowRunsBefore(cutoff); err != nil {
+			log.Printf("[workflow] prune runs before %s: %v", cutoff, err)
+		}
+	}
+
+	prune()
+	ticker := time.NewTicker(12 * time.Hour)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			prune()
+		case <-e.stopPrune:
+			return
+		}
+	}
 }
 
 // ReloadSchedules rebuilds cron entries after workflow definitions change.
