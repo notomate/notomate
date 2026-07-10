@@ -12,7 +12,12 @@ import (
 func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middlewares.AuthMiddleware, workspaceMiddleware middlewares.WorkspaceMiddleware) {
 	g := api.Group("/workspaces")
 	g.Use(middlewares.Skippable(authMiddleware.CheckJWT(), func(c echo.Context) bool {
-		// Skip JWT auth for routes intended to be publicly accessible
+		// Skip JWT cookie auth for routes intended to be publicly accessible,
+		// and for API-key requests (Authorization: Bearer ...) - ParseJWT
+		// below fully authenticates (and rejects) those on its own.
+		if strings.HasPrefix(c.Request().Header.Get("Authorization"), "Bearer ") {
+			return true
+		}
 		return strings.HasSuffix(c.Path(), "/:workspaceId/files/:id")
 	}))
 	g.Use(authMiddleware.ParseJWT())
