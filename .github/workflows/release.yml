@@ -13,7 +13,8 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_APP: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef
+  IMAGE_API: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-api
+  IMAGE_COLLAB: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-collab
   IMAGE_NGINX: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-nginx
   IMAGE_RUNNER: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-runner
 
@@ -54,11 +55,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata (app)
-        id: meta-app
+      - name: Extract metadata (api)
+        id: meta-api
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.IMAGE_APP }}
+          images: ${{ env.IMAGE_API }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
+            type=raw,value=latest
+
+      - name: Extract metadata (collab)
+        id: meta-collab
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_COLLAB }}
           tags: |
             type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
             type=raw,value=latest
@@ -81,17 +91,30 @@ jobs:
             type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
             type=raw,value=latest
 
-      - name: Build and push app image (app-runtime)
+      - name: Build and push api image (api-runtime)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          target: app-runtime
+          target: api-runtime
           push: true
           build-args: |
             APP_VERSION=${{ steps.version.outputs.VERSION }}
-          tags: ${{ steps.meta-app.outputs.tags }}
-          labels: ${{ steps.meta-app.outputs.labels }}
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push collab image (collab-runtime)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: collab-runtime
+          push: true
+          tags: ${{ steps.meta-collab.outputs.tags }}
+          labels: ${{ steps.meta-collab.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
@@ -141,9 +164,13 @@ jobs:
           echo "## Release ${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Docker Images" >> $GITHUB_STEP_SUMMARY
-          echo "**App (API + Collab):**" >> $GITHUB_STEP_SUMMARY
-          echo "- \`${{ env.IMAGE_APP }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- \`${{ env.IMAGE_APP }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "**API:**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_API }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_API }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Collab:**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_COLLAB }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_COLLAB }}:latest\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Nginx (static frontend):**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_NGINX }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY

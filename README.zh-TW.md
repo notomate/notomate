@@ -19,9 +19,8 @@
 ```yaml
 services:
   api:
-    image: ti777777/collabreef
+    image: ti777777/collabreef-api
     container_name: collabreef-api
-    command: ["./api"]
     volumes:
       - collabreef_data:/usr/local/app/bin
     environment:
@@ -30,9 +29,8 @@ services:
     restart: unless-stopped
 
   collab:
-    image: ti777777/collabreef
+    image: ti777777/collabreef-collab
     container_name: collabreef-collab
-    command: ["node", "collab/src/index.js"]
     environment:
       GRPC_ADDR: collabreef-api:50051
       # APP_SECRET: your-secret-key
