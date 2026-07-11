@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/model"
 	"gorm.io/gorm"
 )
 

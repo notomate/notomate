@@ -1,4 +1,4 @@
-module github.com/collabreef/collabreef-runner
+module github.com/notomate/notomate-runner
 
 go 1.26
 

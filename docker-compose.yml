@@ -1,52 +1,52 @@
 services:
-  collabreef-nginx:
+  notomate-nginx:
     build:
       context: .
       dockerfile: Dockerfile
       target: nginx-runtime
-    image: collabreef/collabreef-nginx:local
-    container_name: collabreef-nginx
+    image: notomate/notomate-nginx:local
+    container_name: notomate-nginx
     ports:
       - "8080:80"
     depends_on:
-      - collabreef-api
-      - collabreef-collab
+      - notomate-api
+      - notomate-collab
     restart: unless-stopped
 
-  collabreef-api:
+  notomate-api:
     build:
       context: .
       dockerfile: Dockerfile
       target: api-runtime
-    image: collabreef/collabreef-api:local
-    container_name: collabreef-api
+    image: notomate/notomate-api:local
+    container_name: notomate-api
     volumes:
       - "./bin:/usr/local/app/bin"
     environment:
       - PORT=8080
       - DB_DRIVER=sqlite3
-      - DB_DSN=/usr/local/app/bin/collabreef.db
+      - DB_DSN=/usr/local/app/bin/notomate.db
       - APP_DISABLE_SIGNUP=${APP_DISABLE_SIGNUP}
       - APP_SECRET=${APP_SECRET}
     ports:
       # gRPC port for the runner (docker-compose.runner.yml), which lives in
-      # a separate compose project and can't reach collabreef-api by service
+      # a separate compose project and can't reach notomate-api by service
       # name. Bound to localhost only: the runner protocol has token auth
       # but no TLS.
       - "127.0.0.1:50051:50051"
     restart: unless-stopped
 
-  collabreef-collab:
+  notomate-collab:
     build:
       context: .
       dockerfile: Dockerfile
       target: collab-runtime
-    image: collabreef/collabreef-collab:local
-    container_name: collabreef-collab
+    image: notomate/notomate-collab:local
+    container_name: notomate-collab
     environment:
       - PORT=3000
       - APP_SECRET=${APP_SECRET}
-      - GRPC_ADDR=collabreef-api:50051
+      - GRPC_ADDR=notomate-api:50051
     depends_on:
-      - collabreef-api
+      - notomate-api
     restart: unless-stopped

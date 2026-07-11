@@ -7,7 +7,7 @@ import (
 )
 
 // jsonCodec replaces the default protobuf codec with JSON encoding, mirroring
-// api/internal/grpc/codec.go in the CollabReef API — both sides register a
+// api/internal/grpc/codec.go in the Notomate API — both sides register a
 // JSON codec under the name "proto" so the standard grpc content-type works
 // without protoc-generated code. Keep the two files in sync.
 type jsonCodec struct{}

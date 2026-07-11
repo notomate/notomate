@@ -8,9 +8,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/model"
 )
 
 // EnsureRegistrationToken resolves the runner registration token: the

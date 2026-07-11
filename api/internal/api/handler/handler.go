@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/storage"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/storage"
 )
 
 type Handler struct {

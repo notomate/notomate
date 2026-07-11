@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/model"
 )
 
 // maxRunsPerWorkflowPerMinute is the loop-protection backstop: a workflow

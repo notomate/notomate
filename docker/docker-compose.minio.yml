@@ -1,7 +1,7 @@
 services:
   minio:
     image: minio/minio:latest
-    container_name: collabreef-minio
+    container_name: notomate-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -20,58 +20,58 @@ services:
 
   minio-init:
     image: minio/mc:latest
-    container_name: collabreef-minio-init
+    container_name: notomate-minio-init
     depends_on:
       minio:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
       mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      mc mb myminio/collabreef --ignore-existing;
-      mc anonymous set download myminio/collabreef;
+      mc mb myminio/notomate --ignore-existing;
+      mc anonymous set download myminio/notomate;
       exit 0;
       "
 
-  collabreef-nginx:
+  notomate-nginx:
     build:
       context: ..
       dockerfile: Dockerfile
       target: nginx-runtime
-    image: collabreef/collabreef-nginx:local
-    container_name: collabreef-nginx
+    image: notomate/notomate-nginx:local
+    container_name: notomate-nginx
     restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
-      - collabreef-api
-      - collabreef-collab
+      - notomate-api
+      - notomate-collab
 
-  collabreef-collab:
+  notomate-collab:
     build:
       context: ..
       dockerfile: Dockerfile
       target: collab-runtime
-    image: collabreef/collabreef-collab:local
-    container_name: collabreef-collab
+    image: notomate/notomate-collab:local
+    container_name: notomate-collab
     restart: unless-stopped
     volumes:
       - ../bin:/usr/local/app/bin
     environment:
       PORT: 3000
       DB_DRIVER: sqlite3
-      DB_DSN: /usr/local/app/bin/collabreef.db
+      DB_DSN: /usr/local/app/bin/notomate.db
       APP_SECRET: ${APP_SECRET}
     depends_on:
       minio:
         condition: service_healthy
 
-  collabreef-api:
+  notomate-api:
     build:
       context: ..
       dockerfile: Dockerfile
       target: api-runtime
-    image: collabreef/collabreef-api:local
-    container_name: collabreef-api
+    image: notomate/notomate-api:local
+    container_name: notomate-api
     restart: unless-stopped
     volumes:
       - ../bin:/usr/local/app/bin
@@ -80,7 +80,7 @@ services:
       STORAGE_S3_ENDPOINT: minio:9000
       STORAGE_S3_ACCESS_KEY: minioadmin
       STORAGE_S3_SECRET_KEY: minioadmin
-      STORAGE_S3_BUCKET: collabreef
+      STORAGE_S3_BUCKET: notomate
       STORAGE_S3_USE_SSL: "false"
       PORT: 8080
       APP_DISABLE_SIGNUP: ${APP_DISABLE_SIGNUP}
@@ -88,7 +88,7 @@ services:
     depends_on:
       minio:
         condition: service_healthy
-      collabreef-collab:
+      notomate-collab:
         condition: service_started
 
 volumes:

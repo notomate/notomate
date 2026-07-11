@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="web/src/assets/app.svg" width="88" alt="CollabReef" />
+<img src="web/src/assets/app.svg" width="88" alt="Notomate" />
 
-# CollabReef
+# Notomate
 
 Self-hosted, all-in-one note-taking app with a built-in GitHub-Actions-style workflow automation engine.
 
@@ -19,28 +19,28 @@ Write anything, anywhere — memos, journals, work notes, checklists, or a blog.
 ```yaml
 services:
   api:
-    image: ti777777/collabreef-api
-    container_name: collabreef-api
+    image: ti777777/notomate-api
+    container_name: notomate-api
     volumes:
-      - collabreef_data:/usr/local/app/bin
+      - notomate_data:/usr/local/app/bin
     environment:
       # APP_SECRET: your-secret-key
       # APP_DISABLE_SIGNUP: true
     restart: unless-stopped
 
   collab:
-    image: ti777777/collabreef-collab
-    container_name: collabreef-collab
+    image: ti777777/notomate-collab
+    container_name: notomate-collab
     environment:
-      GRPC_ADDR: collabreef-api:50051
+      GRPC_ADDR: notomate-api:50051
       # APP_SECRET: your-secret-key
     depends_on:
       - api
     restart: unless-stopped
 
   nginx:
-    image: ti777777/collabreef-nginx
-    container_name: collabreef-nginx
+    image: ti777777/notomate-nginx
+    container_name: notomate-nginx
     ports:
       - "80:80"
     depends_on:
@@ -49,7 +49,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  collabreef_data:
+  notomate_data:
     driver: local
 ```
 
@@ -61,7 +61,7 @@ The app will be available at `http://localhost`. See [`.env.example`](./.env.exa
 
 ## Workflows (beta)
 
-CollabReef ships a built-in, GitHub-Actions-style workflow engine. Workflows are defined per workspace (Workflows page in the sidebar) with GitHub-Actions-compatible YAML and executed by a separate runner service that runs each job in a Docker container via [act](https://github.com/nektos/act) — since a job can run any CLI or call any HTTP API, you can freely compose automations for scenarios like:
+Notomate ships a built-in, GitHub-Actions-style workflow engine. Workflows are defined per workspace (Workflows page in the sidebar) with GitHub-Actions-compatible YAML and executed by a separate runner service that runs each job in a Docker container via [act](https://github.com/nektos/act) — since a job can run any CLI or call any HTTP API, you can freely compose automations for scenarios like:
 
 - **AI-powered digests** — call an LLM API on a schedule to summarize an RSS feed, GitHub issues, or a pile of notes into one readable note
 - **Data aggregation** — poll public or internal APIs periodically and roll the results into a running log or daily digest note
@@ -92,11 +92,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo "event=$CB_EVENT_NAME workspace=$CB_WORKSPACE_ID note=$CB_NOTE_ID"
+          echo "event=$NM_EVENT_NAME workspace=$NM_WORKSPACE_ID note=$NM_NOTE_ID"
           cat "$GITHUB_EVENT_PATH"   # full event payload JSON
 ```
 
-Jobs see the event payload at `$GITHUB_EVENT_PATH` plus `CB_EVENT_NAME`, `CB_WORKSPACE_ID`, `CB_NOTE_ID`, `CB_RUN_ID` and `CB_RUN_NUMBER`.
+Jobs see the event payload at `$GITHUB_EVENT_PATH` plus `NM_EVENT_NAME`, `NM_WORKSPACE_ID`, `NM_NOTE_ID`, `NM_RUN_ID` and `NM_RUN_NUMBER`.
 
 ### Workflow examples
 
@@ -116,19 +116,19 @@ The runner is opt-in and lives in its own compose project (`docker-compose.runne
 docker compose -f docker-compose.runner.yml up -d
 ```
 
-`docker-compose.yml` publishes the api's gRPC port to `127.0.0.1:50051` so a runner on the same host can reach it at `host.docker.internal:50051` (the default). If the runner runs on a different host, publish the port more broadly (mind the security note below) and point `CB_INSTANCE_ADDR` at that host:
+`docker-compose.yml` publishes the api's gRPC port to `127.0.0.1:50051` so a runner on the same host can reach it at `host.docker.internal:50051` (the default). If the runner runs on a different host, publish the port more broadly (mind the security note below) and point `NM_INSTANCE_ADDR` at that host:
 
 ```yaml
-  collabreef-runner:
-    image: ti777777/collabreef-runner
-    container_name: collabreef-runner
+  notomate-runner:
+    image: ti777777/notomate-runner
+    container_name: notomate-runner
     environment:
-      CB_INSTANCE_ADDR: host.docker.internal:50051 # or remote-host:50051
-      CB_RUNNER_REGISTRATION_TOKEN: your-registration-token
-      CB_RUNNER_LABELS: ubuntu-latest:docker://node:20-bullseye
+      NM_INSTANCE_ADDR: host.docker.internal:50051 # or remote-host:50051
+      NM_RUNNER_REGISTRATION_TOKEN: your-registration-token
+      NM_RUNNER_LABELS: ubuntu-latest:docker://node:20-bullseye
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - collabreef_runner_data:/data
+      - notomate_runner_data:/data
     restart: unless-stopped
 ```
 
@@ -137,7 +137,7 @@ Instance admins can see registered runners and the registration token in workspa
 **Security notes**
 
 - Workflows execute arbitrary commands on the runner host's Docker daemon. Only workspace owners/admins can create or edit workflows, and the runner host is part of your trust boundary.
-- Don't paste secrets into workflow YAML — definitions are readable by all workspace members. If a job needs to call the CollabReef API, use an API key and be aware that a workflow that modifies notes can retrigger itself (a per-workflow rate limit of 30 runs/minute is the backstop).
+- Don't paste secrets into workflow YAML — definitions are readable by all workspace members. If a job needs to call the Notomate API, use an API key and be aware that a workflow that modifies notes can retrigger itself (a per-workflow rate limit of 30 runs/minute is the backstop).
 - The runner protocol has token auth but no TLS. Keep the gRPC port (50051) off the public internet — the default `127.0.0.1:50051` binding in `docker-compose.yml` only allows same-host access; widen it only over a trusted network (VPN, private network) if the runner is remote.
 
 ## Contributing
@@ -146,4 +146,4 @@ Contributions are welcome! Fork the repo, create a feature branch, and open a pu
 
 ## License
 
-CollabReef is licensed under the **MIT License**.
+Notomate is licensed under the **MIT License**.

@@ -1,7 +1,7 @@
 package route
 
 import (
-	"github.com/collabreef/collabreef/internal/api/handler"
+	"github.com/notomate/notomate/internal/api/handler"
 
 	"github.com/labstack/echo/v4"
 )

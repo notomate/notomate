@@ -10,8 +10,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/collabreef/collabreef-runner/internal/client"
-	"github.com/collabreef/collabreef-runner/internal/config"
+	"github.com/notomate/notomate-runner/internal/client"
+	"github.com/notomate/notomate-runner/internal/config"
 )
 
 type State struct {
@@ -54,7 +54,7 @@ func Ensure(ctx context.Context, cfg config.Config, c *client.Client, version st
 	}
 
 	if cfg.RegistrationToken == "" {
-		return State{}, fmt.Errorf("runner is not registered and CB_RUNNER_REGISTRATION_TOKEN is not set")
+		return State{}, fmt.Errorf("runner is not registered and NM_RUNNER_REGISTRATION_TOKEN is not set")
 	}
 
 	regCtx, cancel := context.WithTimeout(ctx, 30*time.Second)

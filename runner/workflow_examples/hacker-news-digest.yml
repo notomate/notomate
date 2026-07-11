@@ -7,9 +7,9 @@
 # Setup
 #   1. Go to "User Settings > API Keys" and create an API key.
 #   2. Go to the workspace's "Workflows" settings page and add:
-#        secrets: CB_API_KEY      = the API key from step 1
-#        vars:    CB_API_BASE_URL = an address the runner container can
-#                                    reach, e.g. http://collabreef-api:8080
+#        secrets: NM_API_KEY      = the API key from step 1
+#        vars:    NM_API_BASE_URL = an address the runner container can
+#                                    reach, e.g. http://notomate-api:8080
 #                 (optional) HN_STORY_COUNT = number of stories to include,
 #                        defaults to 10
 name: Hacker News Daily Digest
@@ -24,13 +24,13 @@ jobs:
       - name: Build and post digest note
         run: |
           cat <<'EOF' > digest.js
-          const API_BASE = process.env.CB_API_BASE_URL;
-          const API_KEY = process.env.CB_API_KEY;
-          const WORKSPACE_ID = process.env.CB_WORKSPACE_ID;
+          const API_BASE = process.env.NM_API_BASE_URL;
+          const API_KEY = process.env.NM_API_KEY;
+          const WORKSPACE_ID = process.env.NM_WORKSPACE_ID;
           const COUNT = Number(process.env.HN_STORY_COUNT) || 10;
 
           if (!API_BASE || !API_KEY) {
-            throw new Error("missing CB_API_BASE_URL / CB_API_KEY");
+            throw new Error("missing NM_API_BASE_URL / NM_API_KEY");
           }
 
           function api(path, opts = {}) {
@@ -83,6 +83,6 @@ jobs:
           EOF
           node digest.js
         env:
-          CB_API_KEY: ${{ secrets.CB_API_KEY }}
-          CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
+          NM_API_KEY: ${{ secrets.NM_API_KEY }}
+          NM_API_BASE_URL: ${{ vars.NM_API_BASE_URL }}
           HN_STORY_COUNT: ${{ vars.HN_STORY_COUNT }}

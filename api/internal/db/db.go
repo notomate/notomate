@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/model"
 )
 
 type DB interface {

@@ -4,14 +4,14 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/collabreef/collabreef/internal/api/handler"
-	"github.com/collabreef/collabreef/internal/api/middlewares"
-	"github.com/collabreef/collabreef/internal/api/route"
-	"github.com/collabreef/collabreef/internal/api/validate"
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/storage"
-	"github.com/collabreef/collabreef/internal/workflow"
+	"github.com/notomate/notomate/internal/api/handler"
+	"github.com/notomate/notomate/internal/api/middlewares"
+	"github.com/notomate/notomate/internal/api/route"
+	"github.com/notomate/notomate/internal/api/validate"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/storage"
+	"github.com/notomate/notomate/internal/workflow"
 )
 
 func New(db db.DB, storage storage.Storage, engine *workflow.Engine) (*echo.Echo, error) {

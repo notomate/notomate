@@ -3,7 +3,7 @@
 A handful of examples you can copy-paste straight into a workspace's
 "Workflows" page, demonstrating the most common pattern: periodically
 fetching external data and writing the result into a note via the
-CollabReef HTTP API.
+Notomate HTTP API.
 
 (Traditional Chinese: [README.zh-TW.md](./README.zh-TW.md))
 
@@ -25,11 +25,11 @@ CollabReef HTTP API.
    (plain parameters, e.g. a feed URL) and **secrets** (sensitive values,
    e.g. the API key from step 2) noted in the comment at the top of each
    example file. Every example needs:
-   - `secrets.CB_API_KEY` — the API key used to call the CollabReef API
-   - `vars.CB_API_BASE_URL` — an address the runner container can reach for
+   - `secrets.NM_API_KEY` — the API key used to call the Notomate API
+   - `vars.NM_API_BASE_URL` — an address the runner container can reach for
      the api service. If api and runner are in the same docker compose
-     project, this is usually `http://collabreef-api:8080` (matching
-     `container_name: collabreef-api`, `PORT: 8080` in the compose example
+     project, this is usually `http://notomate-api:8080` (matching
+     `container_name: notomate-api`, `PORT: 8080` in the compose example
      in the root [`README.md`](../../README.md)).
 4. Save and run it once (`workflow_dispatch`) to confirm it works, then let
    the schedule take over.

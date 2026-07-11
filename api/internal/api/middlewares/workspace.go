@@ -3,9 +3,9 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/model"
 
 	"github.com/labstack/echo/v4"
 )

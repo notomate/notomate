@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package runner;
 
-// RunnerService is the act_runner-style protocol between the CollabReef API
+// RunnerService is the act_runner-style protocol between the Notomate API
 // and workflow runners. Like collab.proto this file is documentation only:
 // the implementation uses JSON encoding over gRPC transport (the Go server
 // registers a JSON codec under the "proto" name), so no protoc generation is

@@ -1,7 +1,7 @@
 # Scheduled Note (template)
 #
 # Demonstrates the most basic pattern: scheduled trigger -> call the
-# CollabReef API to create a new note in the *same* workspace. No external
+# Notomate API to create a new note in the *same* workspace. No external
 # data source involved, so it's a good starting point for any "create a
 # note periodically" need - daily logs, weekly reviews, on-call reminders,
 # etc. Just adjust the content to fit.
@@ -9,10 +9,10 @@
 # Setup
 #   1. Go to "User Settings > API Keys" and create an API key.
 #   2. Go to the workspace's "Workflows" settings page and add:
-#        secrets: CB_API_KEY        = the API key from step 1
-#        vars:    CB_API_BASE_URL   = an address the runner container can
-#                                      reach, e.g. http://collabreef-api:8080
-#                 (optional) CB_PARENT_NOTE_ID = the note to nest new notes
+#        secrets: NM_API_KEY        = the API key from step 1
+#        vars:    NM_API_BASE_URL   = an address the runner container can
+#                                      reach, e.g. http://notomate-api:8080
+#                 (optional) NM_PARENT_NOTE_ID = the note to nest new notes
 #                        under
 #   3. The user the API key belongs to must be a member of this workspace.
 name: Scheduled Note
@@ -27,13 +27,13 @@ jobs:
       - name: Create today's note if it doesn't exist yet
         run: |
           cat <<'EOF' > create-note.js
-          const API_BASE = process.env.CB_API_BASE_URL;
-          const API_KEY = process.env.CB_API_KEY;
-          const WORKSPACE_ID = process.env.CB_WORKSPACE_ID;
-          const PARENT_ID = process.env.CB_PARENT_NOTE_ID || "";
+          const API_BASE = process.env.NM_API_BASE_URL;
+          const API_KEY = process.env.NM_API_KEY;
+          const WORKSPACE_ID = process.env.NM_WORKSPACE_ID;
+          const PARENT_ID = process.env.NM_PARENT_NOTE_ID || "";
 
           if (!API_BASE || !API_KEY) {
-            throw new Error("missing CB_API_BASE_URL / CB_API_KEY");
+            throw new Error("missing NM_API_BASE_URL / NM_API_KEY");
           }
 
           function api(path, opts = {}) {
@@ -96,6 +96,6 @@ jobs:
           EOF
           node create-note.js
         env:
-          CB_API_KEY: ${{ secrets.CB_API_KEY }}
-          CB_API_BASE_URL: ${{ vars.CB_API_BASE_URL }}
-          CB_PARENT_NOTE_ID: ${{ vars.CB_PARENT_NOTE_ID }}
+          NM_API_KEY: ${{ secrets.NM_API_KEY }}
+          NM_API_BASE_URL: ${{ vars.NM_API_BASE_URL }}
+          NM_PARENT_NOTE_ID: ${{ vars.NM_PARENT_NOTE_ID }}

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/util"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/util"
 
 	"github.com/labstack/echo/v4"
 )

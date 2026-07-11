@@ -12,9 +12,9 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/workflow"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/workflow"
 )
 
 // ---------- Request / Response types (JSON-serialized) ----------

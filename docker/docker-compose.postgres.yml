@@ -1,48 +1,48 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: collabreef-postgres
+    container_name: notomate-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: collabreef
-      POSTGRES_USER: collabreef
-      POSTGRES_PASSWORD: collabreef_password
+      POSTGRES_DB: notomate
+      POSTGRES_USER: notomate
+      POSTGRES_PASSWORD: notomate_password
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U collabreef"]
+      test: ["CMD-SHELL", "pg_isready -U notomate"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  collabreef-nginx:
+  notomate-nginx:
     build:
       context: ..
       dockerfile: Dockerfile
       target: nginx-runtime
-    image: collabreef/collabreef-nginx:local
-    container_name: collabreef-nginx
+    image: notomate/notomate-nginx:local
+    container_name: notomate-nginx
     restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
-      - collabreef-api
-      - collabreef-collab
+      - notomate-api
+      - notomate-collab
 
-  collabreef-api:
+  notomate-api:
     build:
       context: ..
       dockerfile: Dockerfile
       target: api-runtime
-    image: collabreef/collabreef-api:local
-    container_name: collabreef-api
+    image: notomate/notomate-api:local
+    container_name: notomate-api
     restart: unless-stopped
     environment:
       DB_DRIVER: postgres
-      DB_DSN: "host=postgres port=5432 user=collabreef password=collabreef_password dbname=collabreef sslmode=disable TimeZone=UTC"
+      DB_DSN: "host=postgres port=5432 user=notomate password=notomate_password dbname=notomate sslmode=disable TimeZone=UTC"
       DB_MIGRATIONS_PATH: "file://migrations/postgres"
       PORT: 8080
       APP_DISABLE_SIGNUP: ${APP_DISABLE_SIGNUP}
@@ -51,20 +51,20 @@ services:
       postgres:
         condition: service_healthy
 
-  collabreef-collab:
+  notomate-collab:
     build:
       context: ..
       dockerfile: Dockerfile
       target: collab-runtime
-    image: collabreef/collabreef-collab:local
-    container_name: collabreef-collab
+    image: notomate/notomate-collab:local
+    container_name: notomate-collab
     restart: unless-stopped
     environment:
       PORT: 3000
       APP_SECRET: ${APP_SECRET}
-      GRPC_ADDR: collabreef-api:50051
+      GRPC_ADDR: notomate-api:50051
     depends_on:
-      - collabreef-api
+      - notomate-api
 
 volumes:
   postgres_data:

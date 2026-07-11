@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/workflow"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/workflow"
 )
 
 // runnerOnlineWindow is how recently a runner must have polled to be shown

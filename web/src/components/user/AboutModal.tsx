@@ -12,7 +12,7 @@ const AboutModal = ({ open, onOpenChange }: AboutModalProps) => {
     const { t } = useTranslation()
 
     const appVersion = import.meta.env.VITE_APP_VERSION || "0.0.0"
-    const appName = "Collabreef"
+    const appName = "Notomate"
 
     return (
         <Modal open={open} onOpenChange={onOpenChange} title={t("menu.about")} className="max-w-[450px]">

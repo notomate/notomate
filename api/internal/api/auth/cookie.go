@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/model"
 
 	"github.com/golang-jwt/jwt/v5"
 )

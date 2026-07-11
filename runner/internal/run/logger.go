@@ -9,7 +9,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/collabreef/collabreef-runner/internal/client"
+	"github.com/notomate/notomate-runner/internal/client"
 )
 
 const (

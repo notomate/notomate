@@ -8,9 +8,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/util"
-	"github.com/collabreef/collabreef/internal/workflow"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/util"
+	"github.com/notomate/notomate/internal/workflow"
 )
 
 type CreateWorkflowRequest struct {

@@ -1,4 +1,4 @@
-// Package client implements the CollabReef runner protocol
+// Package client implements the Notomate runner protocol
 // (api/proto/runner.proto): JSON-over-gRPC with a session token in the
 // authorization metadata.
 package client

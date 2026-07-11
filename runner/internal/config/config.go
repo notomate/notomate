@@ -14,7 +14,7 @@ type Label struct {
 }
 
 type Config struct {
-	// InstanceAddr is the CollabReef API gRPC address (host:port).
+	// InstanceAddr is the Notomate API gRPC address (host:port).
 	InstanceAddr string
 	// RegistrationToken must match the instance's runner registration token.
 	RegistrationToken string
@@ -31,11 +31,11 @@ const defaultLabels = "ubuntu-latest:docker://node:20-bullseye"
 
 func Load() (Config, error) {
 	cfg := Config{
-		InstanceAddr:      envOr("CB_INSTANCE_ADDR", "localhost:50051"),
-		RegistrationToken: os.Getenv("CB_RUNNER_REGISTRATION_TOKEN"),
-		Name:              os.Getenv("CB_RUNNER_NAME"),
-		StateFile:         envOr("CB_RUNNER_STATE_FILE", ".runner"),
-		DaemonSocket:      os.Getenv("CB_RUNNER_DAEMON_SOCKET"),
+		InstanceAddr:      envOr("NM_INSTANCE_ADDR", "localhost:50051"),
+		RegistrationToken: os.Getenv("NM_RUNNER_REGISTRATION_TOKEN"),
+		Name:              os.Getenv("NM_RUNNER_NAME"),
+		StateFile:         envOr("NM_RUNNER_STATE_FILE", ".runner"),
+		DaemonSocket:      os.Getenv("NM_RUNNER_DAEMON_SOCKET"),
 	}
 
 	if cfg.Name == "" {
@@ -46,7 +46,7 @@ func Load() (Config, error) {
 		}
 	}
 
-	labels, err := ParseLabels(envOr("CB_RUNNER_LABELS", defaultLabels))
+	labels, err := ParseLabels(envOr("NM_RUNNER_LABELS", defaultLabels))
 	if err != nil {
 		return cfg, err
 	}

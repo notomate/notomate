@@ -1,7 +1,7 @@
 # 工作流範例
 
 這裡是幾個可以直接複製貼上到 workspace「工作流」頁面的範例,示範最常見的
-用法:定期抓取外部資料,再透過 CollabReef HTTP API 把結果寫成筆記。
+用法:定期抓取外部資料,再透過 Notomate HTTP API 把結果寫成筆記。
 
 | 檔案 | 觸發方式 | 說明 |
 | --- | --- | --- |
@@ -19,11 +19,11 @@
 3. 到 workspace 的「工作流」設定頁,依照每個範例檔開頭的註解新增對應的
    **vars**(一般參數,例如 feed 網址)與 **secrets**(機密值,例如上一步的
    API key)。所有範例都需要:
-   - `secrets.CB_API_KEY` — 呼叫 CollabReef API 用的 API key
-   - `vars.CB_API_BASE_URL` — runner 容器可以連到的 api 服務位址。若 api 與
-     runner 在同一個 docker compose 專案內,通常是 `http://collabreef-api:8080`
+   - `secrets.NM_API_KEY` — 呼叫 Notomate API 用的 API key
+   - `vars.NM_API_BASE_URL` — runner 容器可以連到的 api 服務位址。若 api 與
+     runner 在同一個 docker compose 專案內,通常是 `http://notomate-api:8080`
      (對照 [`README.zh-TW.md`](../../README.zh-TW.md) 的 compose 範例中
-     `container_name: collabreef-api`、`PORT: 8080`)。
+     `container_name: notomate-api`、`PORT: 8080`)。
 4. 儲存並執行一次(`workflow_dispatch`)確認成功,再交給排程跑。
 
 ## 備註

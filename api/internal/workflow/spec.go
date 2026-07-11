@@ -7,7 +7,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"gopkg.in/yaml.v3"
 
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/model"
 )
 
 // Spec is the server-side view of a workflow definition. Only the trigger

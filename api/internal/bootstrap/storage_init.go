@@ -3,10 +3,10 @@ package bootstrap
 import (
 	"fmt"
 
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/storage"
-	"github.com/collabreef/collabreef/internal/storage/localfile"
-	"github.com/collabreef/collabreef/internal/storage/s3storage"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/storage"
+	"github.com/notomate/notomate/internal/storage/localfile"
+	"github.com/notomate/notomate/internal/storage/s3storage"
 )
 
 func NewStorage() (storage.Storage, error) {

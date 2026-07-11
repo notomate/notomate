@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/db"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/db"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/collabreef/collabreef/internal/storage"
+	"github.com/notomate/notomate/internal/storage"
 )
 
 type LocalFile struct {

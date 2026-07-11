@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/util"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/util"
 )
 
 func (h Handler) Upload(c echo.Context) error {

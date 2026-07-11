@@ -3,7 +3,7 @@ package sqlitedb
 import (
 	"context"
 
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/model"
 	"gorm.io/gorm"
 )
 

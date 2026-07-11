@@ -21,7 +21,7 @@ jobs:
   hello:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "event=$CB_EVENT_NAME note=$CB_NOTE_ID"
+      - run: echo "event=$NM_EVENT_NAME note=$NM_NOTE_ID"
 `
 
 const WorkflowEditPage = () => {

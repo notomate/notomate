@@ -13,7 +13,7 @@
             "cwd": "${workspaceFolder}\\api",
             "envFile": "${workspaceFolder}\\.env",
             "env": {
-                "DB_DSN": "../bin/collabreef.db",
+                "DB_DSN": "../bin/notomate.db",
                 "STORAGE_ROOT": "../bin/uploads/"
             }
         },

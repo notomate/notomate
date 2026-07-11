@@ -18,8 +18,8 @@ import (
 	"github.com/nektos/act/pkg/runner"
 	"github.com/sirupsen/logrus"
 
-	"github.com/collabreef/collabreef-runner/internal/client"
-	"github.com/collabreef/collabreef-runner/internal/config"
+	"github.com/notomate/notomate-runner/internal/client"
+	"github.com/notomate/notomate-runner/internal/config"
 )
 
 const (
@@ -119,7 +119,7 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 	}
 
 	// Jobs get an empty scratch workdir; there is no repository to check out.
-	workdir, err := os.MkdirTemp("", "collabreef-job")
+	workdir, err := os.MkdirTemp("", "notomate-job")
 	if err != nil {
 		return fmt.Errorf("create workdir: %w", err)
 	}
@@ -138,7 +138,7 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 		LogOutput:             true,
 		AutoRemove:            true,
 		GitHubInstance:        "github.com",
-		ContainerNamePrefix:   fmt.Sprintf("collabreef-run-%d-%s", task.RunNumber, task.JobName),
+		ContainerNamePrefix:   fmt.Sprintf("notomate-run-%d-%s", task.RunNumber, task.JobName),
 		// Jobs run against a scratch workdir with no git checkout (see the
 		// MkdirTemp above), so act's usual "inspect the workdir with git"
 		// fallback for repo/ref/sha always fails and floods the job log with
@@ -188,9 +188,9 @@ func (r *Runner) githubContext(task *client.TaskPayload) *model.GithubContext {
 		RunID:           task.RunID,
 		RunNumber:       fmt.Sprintf("%d", task.RunNumber),
 		RunAttempt:      "1",
-		Actor:           "collabreef",
-		Repository:      "collabreef/" + task.WorkspaceID,
-		RepositoryOwner: "collabreef",
+		Actor:           "notomate",
+		Repository:      "notomate/" + task.WorkspaceID,
+		RepositoryOwner: "notomate",
 		Ref:             "refs/heads/main",
 		RefName:         "main",
 		RefType:         "branch",
@@ -199,16 +199,16 @@ func (r *Runner) githubContext(task *client.TaskPayload) *model.GithubContext {
 	}
 }
 
-// jobEnv is the CollabReef context exposed to job steps.
+// jobEnv is the Notomate context exposed to job steps.
 func (r *Runner) jobEnv(task *client.TaskPayload) map[string]string {
 	env := map[string]string{
-		"CB_EVENT_NAME":   task.EventName,
-		"CB_WORKSPACE_ID": task.WorkspaceID,
-		"CB_RUN_ID":       task.RunID,
-		"CB_RUN_NUMBER":   fmt.Sprintf("%d", task.RunNumber),
+		"NM_EVENT_NAME":   task.EventName,
+		"NM_WORKSPACE_ID": task.WorkspaceID,
+		"NM_RUN_ID":       task.RunID,
+		"NM_RUN_NUMBER":   fmt.Sprintf("%d", task.RunNumber),
 	}
-	if serverURL := os.Getenv("CB_SERVER_URL"); serverURL != "" {
-		env["CB_SERVER_URL"] = serverURL
+	if serverURL := os.Getenv("NM_SERVER_URL"); serverURL != "" {
+		env["NM_SERVER_URL"] = serverURL
 	}
 
 	var payload struct {
@@ -217,7 +217,7 @@ func (r *Runner) jobEnv(task *client.TaskPayload) map[string]string {
 		} `json:"note"`
 	}
 	if err := json.Unmarshal([]byte(task.EventPayloadJSON), &payload); err == nil && payload.Note != nil {
-		env["CB_NOTE_ID"] = payload.Note.ID
+		env["NM_NOTE_ID"] = payload.Note.ID
 	}
 
 	return env

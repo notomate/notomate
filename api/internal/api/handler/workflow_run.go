@@ -9,7 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/model"
 )
 
 type WorkflowRunDetailResponse struct {

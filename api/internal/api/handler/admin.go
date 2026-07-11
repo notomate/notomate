@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/util"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/util"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/labstack/echo/v4"

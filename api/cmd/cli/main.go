@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/collabreef/collabreef/internal/bootstrap"
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/bootstrap"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/model"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
@@ -20,7 +20,7 @@ import (
 var Version = "dev"
 
 func main() {
-	log.Printf("Collabreef CLI version: %s", Version)
+	log.Printf("Notomate CLI version: %s", Version)
 
 	if len(os.Args) < 2 {
 		printUsage()
@@ -42,7 +42,7 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println("Collabreef CLI - Command line tools for Collabreef")
+	fmt.Println("Notomate CLI - Command line tools for Notomate")
 	fmt.Println()
 	fmt.Println("Usage:")
 	fmt.Println("  cli <command>")
@@ -54,7 +54,7 @@ func printUsage() {
 }
 
 func resetPassword() {
-	fmt.Println("=== Collabreef Password Reset Tool ===")
+	fmt.Println("=== Notomate Password Reset Tool ===")
 	fmt.Println()
 
 	// Initialize config

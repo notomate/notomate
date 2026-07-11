@@ -1,9 +1,9 @@
 package route
 
 import (
-	"github.com/collabreef/collabreef/internal/api/handler"
-	"github.com/collabreef/collabreef/internal/api/middlewares"
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/api/handler"
+	"github.com/notomate/notomate/internal/api/middlewares"
+	"github.com/notomate/notomate/internal/model"
 
 	"github.com/labstack/echo/v4"
 )

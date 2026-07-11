@@ -3,10 +3,10 @@ package bootstrap
 import (
 	"fmt"
 
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/db/postgresdb"
-	"github.com/collabreef/collabreef/internal/db/sqlitedb"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/db/postgresdb"
+	"github.com/notomate/notomate/internal/db/sqlitedb"
 )
 
 func NewDB() (db.DB, error) {

@@ -54,9 +54,9 @@ const SignIn: React.FC = () => {
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent items-center justify-center p-12">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
                 <div className="relative z-10 flex flex-col items-center gap-8 text-center max-w-md">
-                    <img src={logo} className="w-24 h-24 object-contain drop-shadow-lg" alt="Collabreef" />
+                    <img src={logo} className="w-24 h-24 object-contain drop-shadow-lg" alt="Notomate" />
                     <div className="space-y-3">
-                        <h1 className="text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">Collabreef</h1>
+                        <h1 className="text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">Notomate</h1>
                         <p className="text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed">
                             Your collaborative workspace for notes, ideas, and more.
                         </p>
@@ -77,8 +77,8 @@ const SignIn: React.FC = () => {
                 <div className="w-full max-w-sm space-y-8">
                     {/* Mobile logo */}
                     <div className="flex flex-col items-center gap-3 lg:hidden">
-                        <img src={logo} className="w-16 h-16 object-contain" alt="Collabreef" />
-                        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Collabreef</h1>
+                        <img src={logo} className="w-16 h-16 object-contain" alt="Notomate" />
+                        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Notomate</h1>
                     </div>
 
                     <div className="space-y-2">

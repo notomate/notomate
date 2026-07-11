@@ -6,8 +6,8 @@ import (
 
 	"github.com/robfig/cron/v3"
 
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/model"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/model"
 )
 
 // Scheduler fires schedule-triggered workflows. Reload rebuilds the whole

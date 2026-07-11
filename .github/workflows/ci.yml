@@ -67,7 +67,7 @@ jobs:
 
       - name: Build runner
         working-directory: ./runner
-        run: go build -o bin/collabreef-runner .
+        run: go build -o bin/notomate-runner .
 
   frontend-test:
     name: Frontend Build & Lint
@@ -110,7 +110,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
-          tags: collabreef:test
+          tags: notomate:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -132,7 +132,7 @@ jobs:
           context: ./runner
           file: ./runner/Dockerfile
           push: false
-          tags: collabreef-runner:test
+          tags: notomate-runner:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

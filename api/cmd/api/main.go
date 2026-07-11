@@ -8,18 +8,18 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/collabreef/collabreef/internal/bootstrap"
-	"github.com/collabreef/collabreef/internal/config"
-	grpcserver "github.com/collabreef/collabreef/internal/grpc"
-	"github.com/collabreef/collabreef/internal/server"
-	"github.com/collabreef/collabreef/internal/workflow"
+	"github.com/notomate/notomate/internal/bootstrap"
+	"github.com/notomate/notomate/internal/config"
+	grpcserver "github.com/notomate/notomate/internal/grpc"
+	"github.com/notomate/notomate/internal/server"
+	"github.com/notomate/notomate/internal/workflow"
 )
 
 // Version is set at build time via ldflags
 var Version = "dev"
 
 func main() {
-	log.Printf("Starting Collabreef Web Server version: %s", Version)
+	log.Printf("Starting Notomate Web Server version: %s", Version)
 
 	config.Init()
 

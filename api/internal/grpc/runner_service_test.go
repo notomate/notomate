@@ -20,11 +20,11 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
 
-	"github.com/collabreef/collabreef/internal/config"
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/db/sqlitedb"
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/workflow"
+	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/db/sqlitedb"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/workflow"
 )
 
 const testRegistrationToken = "test-registration-token"

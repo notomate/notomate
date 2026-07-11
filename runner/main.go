@@ -1,5 +1,5 @@
-// collabreef-runner is the CollabReef workflow runner: it registers with a
-// CollabReef instance, long-polls for queued workflow jobs and executes them
+// notomate-runner is the Notomate workflow runner: it registers with a
+// Notomate instance, long-polls for queued workflow jobs and executes them
 // in Docker containers via the embedded act library, in the style of Gitea's
 // act_runner.
 package main
@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/collabreef/collabreef-runner/internal/client"
-	"github.com/collabreef/collabreef-runner/internal/config"
-	"github.com/collabreef/collabreef-runner/internal/registration"
-	"github.com/collabreef/collabreef-runner/internal/run"
+	"github.com/notomate/notomate-runner/internal/client"
+	"github.com/notomate/notomate-runner/internal/config"
+	"github.com/notomate/notomate-runner/internal/registration"
+	"github.com/notomate/notomate-runner/internal/run"
 )
 
 // Version is set at build time via ldflags.
@@ -27,7 +27,7 @@ const (
 )
 
 func main() {
-	log.Printf("Starting CollabReef runner version: %s", Version)
+	log.Printf("Starting Notomate runner version: %s", Version)
 
 	cfg, err := config.Load()
 	if err != nil {

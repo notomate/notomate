@@ -13,10 +13,10 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_API: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-api
-  IMAGE_COLLAB: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-collab
-  IMAGE_NGINX: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-nginx
-  IMAGE_RUNNER: ${{ secrets.DOCKERHUB_USERNAME }}/collabreef-runner
+  IMAGE_API: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-api
+  IMAGE_COLLAB: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-collab
+  IMAGE_NGINX: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-nginx
+  IMAGE_RUNNER: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-runner
 
 jobs:
   build-and-release:

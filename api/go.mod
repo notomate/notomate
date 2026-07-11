@@ -1,4 +1,4 @@
-module github.com/collabreef/collabreef
+module github.com/notomate/notomate
 
 go 1.25.0
 

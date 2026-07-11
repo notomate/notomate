@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/collabreef/collabreef/internal/db"
-	"github.com/collabreef/collabreef/internal/model"
-	"github.com/collabreef/collabreef/internal/util"
+	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/util"
 )
 
 // EventPayload is the JSON document a run is created with. It is exposed to

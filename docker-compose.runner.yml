@@ -3,24 +3,24 @@
 # host) instead of always being bundled with the core stack:
 #   docker compose -f docker-compose.runner.yml up -d
 #
-# Requires collabreef-api's gRPC port to be published on the host (see the
-# `ports` entry on collabreef-api in docker-compose.yml).
+# Requires notomate-api's gRPC port to be published on the host (see the
+# `ports` entry on notomate-api in docker-compose.yml).
 services:
-  collabreef-runner:
+  notomate-runner:
     build:
       context: ./runner
       dockerfile: Dockerfile
-    image: collabreef/collabreef-runner:local
-    container_name: collabreef-runner
+    image: notomate/notomate-runner:local
+    container_name: notomate-runner
     environment:
       # Defaults to the main stack's published gRPC port on the same host.
       # Point this at a remote host:port if the runner runs elsewhere.
-      - CB_INSTANCE_ADDR=${CB_INSTANCE_ADDR:-host.docker.internal:50051}
-      # Must match RUNNER_REGISTRATION_TOKEN on collabreef-api (or omit both
+      - NM_INSTANCE_ADDR=${NM_INSTANCE_ADDR:-host.docker.internal:50051}
+      # Must match RUNNER_REGISTRATION_TOKEN on notomate-api (or omit both
       # and register with the token from GET /api/v1/admin/runners/registration-token).
-      - CB_RUNNER_REGISTRATION_TOKEN=${RUNNER_REGISTRATION_TOKEN}
-      - CB_RUNNER_NAME=default-runner
-      - CB_RUNNER_LABELS=ubuntu-latest:docker://node:20-bullseye
+      - NM_RUNNER_REGISTRATION_TOKEN=${RUNNER_REGISTRATION_TOKEN}
+      - NM_RUNNER_NAME=default-runner
+      - NM_RUNNER_LABELS=ubuntu-latest:docker://node:20-bullseye
     extra_hosts:
       # host.docker.internal is native on Docker Desktop; this makes it
       # resolve on Linux Docker Engine too.
