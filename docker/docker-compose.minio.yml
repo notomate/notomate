@@ -50,10 +50,9 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-      target: app-runtime
-    image: collabreef/collabreef:local
+      target: collab-runtime
+    image: collabreef/collabreef-collab:local
     container_name: collabreef-collab
-    command: ["node", "collab/src/index.js"]
     restart: unless-stopped
     volumes:
       - ../bin:/usr/local/app/bin
@@ -70,10 +69,9 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-      target: app-runtime
-    image: collabreef/collabreef:local
+      target: api-runtime
+    image: collabreef/collabreef-api:local
     container_name: collabreef-api
-    command: ["./api"]
     restart: unless-stopped
     volumes:
       - ../bin:/usr/local/app/bin

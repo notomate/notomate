@@ -52,8 +52,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -ldflags "-X main.Version=${APP_VERSION}" \
     -o /out/cli ./cmd/cli/main.go
 
-# ---------- Stage 4: app runtime (Go API + Collab service) ----------
-FROM node:20-alpine AS app-runtime
+# ---------- Stage 4: api runtime (Go API) ----------
+FROM alpine:3.20 AS api-runtime
 WORKDIR /usr/local/app
 
 RUN apk add --no-cache tzdata
@@ -66,15 +66,25 @@ COPY ./api/migrations /usr/local/app/migrations
 COPY --from=backend /out/api ./api
 COPY --from=backend /out/cli ./cli
 
+RUN mkdir -p ./bin
+VOLUME /usr/local/app/bin
+CMD ["./api"]
+
+# ---------- Stage 5: collab runtime (Collab service) ----------
+FROM node:20-alpine AS collab-runtime
+WORKDIR /usr/local/app
+
+RUN apk add --no-cache tzdata
+
+ENV TZ="UTC"
+
 # Copy collab service
 COPY --from=collab-deps /app/collab/node_modules ./collab/node_modules
 COPY collab/src ./collab/src
 COPY collab/package.json ./collab/package.json
+CMD ["node", "collab/src/index.js"]
 
-RUN mkdir -p ./bin
-VOLUME /usr/local/app/bin
-
-# ---------- Stage 5: nginx with static frontend ----------
+# ---------- Stage 6: nginx with static frontend ----------
 FROM nginx:alpine AS nginx-runtime
 ENV CLIENT_MAX_BODY_SIZE=100m
 COPY nginx/nginx.conf.template /etc/nginx/templates/default.conf.template
