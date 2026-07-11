@@ -1,4 +1,4 @@
-import { Plus, Search, FileText, Folder, PanelRight, Workflow } from "lucide-react"
+import { Plus, Search, FileText, Folder, PanelRight, Workflow, Menu, Edit } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { getNotes, NoteData, createNote } from "@/api/note"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
@@ -216,15 +216,34 @@ const NotesLayout = () => {
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Mobile header */}
                 <div className="shrink-0 py-3 pl-4 pr-5  lg:hidden flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700">
+                    <button
+                        aria-label="open sidebar"
+                        className="p-2 -ml-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-600 dark:text-gray-400"
+                        onClick={() => setIsSidebarOpen(prev => !prev)}
+                    >
+                        <Menu size={16} />
+                    </button>
                     <span className="font-semibold text-gray-700 dark:text-gray-200">
                         {currentWorkspaceName ?? t("menu.notes")}
                     </span>
-                    <button
-                        className="p-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-600 dark:text-gray-400"
-                        onClick={() => setIsSidebarOpen(prev => !prev)}
-                    >
-                        <PanelRight size={16} />
-                    </button>
+                    {isSearchActive ? (
+                        <button
+                            aria-label={t("actions.newNote")}
+                            className="p-2 -mr-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-600 dark:text-gray-400 disabled:opacity-40"
+                            onClick={handleCreateNote}
+                            disabled={createNoteMutation.isPending}
+                        >
+                            <Edit size={16} />
+                        </button>
+                    ) : (
+                        <Link
+                            to="search"
+                            aria-label={t("placeholder.search")}
+                            className="p-2 -mr-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-600 dark:text-gray-400"
+                        >
+                            <Search size={16} />
+                        </Link>
+                    )}
                 </div>
                 <div className="flex-1 overflow-hidden">
                     <Outlet />
