@@ -4,13 +4,15 @@
 
 # Notomate
 
+*筆記（note）+ 自動化（automate）。*
+
 可自行架設、功能完整的筆記軟體，內建類似 GitHub Actions 的工作流自動化引擎。
 
 [English](./README.md) · **繁體中文**
 
 </div>
 
-隨手記下任何內容 — memos、日記、工作筆記、checklist 或部落格。以區塊（block）為基礎的編輯器支援富文本、媒體、嵌入等多種內容，讓你在同一處寫下完整的筆記。內建類似 GitHub Actions 的[工作流引擎](#工作流beta)，讓筆記也能自動化 — 排程 AI 彙整摘要、彙整外部資料，或串接通知。完全自行架設，資料始終屬於你自己。
+隨手記下任何內容 — 從一則短短的備忘到一篇完整的部落格文章都行。以區塊（block）為基礎的編輯器支援富文本、媒體、嵌入等內容。內建[工作流引擎](#工作流beta)讓筆記也能自動化：排程 AI 摘要、彙整外部資料，或觸發通知。完全自行架設，資料始終屬於你自己。
 
 ## 安裝
 
@@ -98,16 +100,6 @@ jobs:
 
 Job 可透過 `$GITHUB_EVENT_PATH` 讀取事件內容,並有 `NM_EVENT_NAME`、`NM_WORKSPACE_ID`、`NM_NOTE_ID`、`NM_RUN_ID`、`NM_RUN_NUMBER` 等環境變數。
 
-### 工作流範例
-
-更多可直接使用的範例請參閱 [`runner/workflow_examples`](./runner/workflow_examples):
-
-- [`scheduled-note.yml`](./runner/workflow_examples/scheduled-note.yml) — 最小範本,定期在同一個 workspace 建立一則新筆記
-- [`manual-note-from-input.yml`](./runner/workflow_examples/manual-note-from-input.yml) — 以 `workflow_dispatch` 輸入內容建立筆記
-- [`rss-to-notes.yml`](./runner/workflow_examples/rss-to-notes.yml) — 訂閱 RSS feed,每篇新文章建立一則筆記
-- [`hacker-news-digest.yml`](./runner/workflow_examples/hacker-news-digest.yml) — 每天彙整 Hacker News 熱門文章成單一摘要筆記
-- [`github-releases-watch.yml`](./runner/workflow_examples/github-releases-watch.yml) — 監控 repo 最新 GitHub release 並發出通知筆記
-
 ### 啟用 Runner
 
 Runner 為選用服務,自成一個獨立的 compose 專案(`docker-compose.runner.yml`),可以不依附核心服務單獨啟動,甚至跑在不同主機上:
@@ -133,6 +125,16 @@ docker compose -f docker-compose.runner.yml up -d
 ```
 
 站台管理員可在 workspace 設定頁查看已註冊的 runner 與註冊 token。
+
+### 工作流範例
+
+更多可直接使用的範例請參閱 [`runner/workflow_examples`](./runner/workflow_examples):
+
+- [`scheduled-note.yml`](./runner/workflow_examples/scheduled-note.yml) — 最小範本,定期在同一個 workspace 建立一則新筆記
+- [`manual-note-from-input.yml`](./runner/workflow_examples/manual-note-from-input.yml) — 以 `workflow_dispatch` 輸入內容建立筆記
+- [`rss-to-notes.yml`](./runner/workflow_examples/rss-to-notes.yml) — 訂閱 RSS feed,每篇新文章建立一則筆記
+- [`hacker-news-digest.yml`](./runner/workflow_examples/hacker-news-digest.yml) — 每天彙整 Hacker News 熱門文章成單一摘要筆記
+- [`github-releases-watch.yml`](./runner/workflow_examples/github-releases-watch.yml) — 監控 repo 最新 GitHub release 並發出通知筆記
 
 **安全性注意事項**
 
