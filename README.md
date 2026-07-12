@@ -4,13 +4,15 @@
 
 # Notomate
 
+*Note + automate.*
+
 Self-hosted, all-in-one note-taking app with a built-in GitHub-Actions-style workflow automation engine.
 
 **English** · [繁體中文](./README.zh-TW.md)
 
 </div>
 
-Write anything, anywhere — memos, journals, work notes, checklists, or a blog. The block-based editor supports rich text, media, embeds, and more, so you can capture complete notes in one place. A built-in, GitHub-Actions-style [workflow engine](#workflows-beta) lets you automate note-taking too — schedule AI-powered digests, aggregate external data, or wire up notifications. Fully self-hosted, so your data stays yours.
+Write anything, anywhere — from a quick memo to a full blog post. The block-based editor supports rich text, media, and embeds. A built-in [workflow engine](#workflows-beta) automates your notes too: schedule AI digests, aggregate external data, or trigger notifications. Self-hosted, so your data stays yours.
 
 ## Installation
 
@@ -98,16 +100,6 @@ jobs:
 
 Jobs see the event payload at `$GITHUB_EVENT_PATH` plus `NM_EVENT_NAME`, `NM_WORKSPACE_ID`, `NM_NOTE_ID`, `NM_RUN_ID` and `NM_RUN_NUMBER`.
 
-### Workflow examples
-
-See [`runner/workflow_examples`](./runner/workflow_examples) for ready-to-use examples:
-
-- [`scheduled-note.yml`](./runner/workflow_examples/scheduled-note.yml) — minimal template that creates a note on a schedule
-- [`manual-note-from-input.yml`](./runner/workflow_examples/manual-note-from-input.yml) — `workflow_dispatch` inputs to a note
-- [`rss-to-notes.yml`](./runner/workflow_examples/rss-to-notes.yml) — subscribes to an RSS feed and creates a note per new item
-- [`hacker-news-digest.yml`](./runner/workflow_examples/hacker-news-digest.yml) — rolls up top Hacker News stories into a daily digest note
-- [`github-releases-watch.yml`](./runner/workflow_examples/github-releases-watch.yml) — notifies when a repo publishes a new release
-
 ### Running a runner
 
 The runner is opt-in and lives in its own compose project (`docker-compose.runner.yml`) so it can be started independently of the core stack, even on a different host:
@@ -133,6 +125,16 @@ docker compose -f docker-compose.runner.yml up -d
 ```
 
 Instance admins can see registered runners and the registration token in workspace settings.
+
+### Workflow examples
+
+See [`runner/workflow_examples`](./runner/workflow_examples) for ready-to-use examples:
+
+- [`scheduled-note.yml`](./runner/workflow_examples/scheduled-note.yml) — minimal template that creates a note on a schedule
+- [`manual-note-from-input.yml`](./runner/workflow_examples/manual-note-from-input.yml) — `workflow_dispatch` inputs to a note
+- [`rss-to-notes.yml`](./runner/workflow_examples/rss-to-notes.yml) — subscribes to an RSS feed and creates a note per new item
+- [`hacker-news-digest.yml`](./runner/workflow_examples/hacker-news-digest.yml) — rolls up top Hacker News stories into a daily digest note
+- [`github-releases-watch.yml`](./runner/workflow_examples/github-releases-watch.yml) — notifies when a repo publishes a new release
 
 **Security notes**
 
