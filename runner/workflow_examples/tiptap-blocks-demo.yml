@@ -1,0 +1,194 @@
+# TipTap Blocks Demo (template)
+#
+# Demonstrates creating a note with raw TipTap JSON content instead of
+# Markdown - one block of each type the web editor supports. Unlike
+# manual-note-from-input.yml (which sends Markdown and sets the
+# "X-Content-Format: markdown" header so the API converts it server-side),
+# this example builds the TipTap document directly and posts it with no
+# X-Content-Format header, which is what the API expects by default (see
+# api/internal/api/handler/note.go CreateNote/UpdateNote).
+#
+# The exact JSON shape for every node/mark below was captured by driving the
+# real editor in a browser (window.__editor.getJSON() after inserting each
+# block) and reading web/src/components/editor/Editor.tsx +
+# web/src/components/editor/extensions/*/*.ts for the custom node schemas
+# (image, video, attachment, carouselNode, youtubeEmbed, threadsEmbed,
+# instagramEmbed, tiktokEmbed, calendarNode, locationNode, tagsNode,
+# ratingNode, subPage, viewNode) - so it matches what the app actually
+# produces, not just what the TipTap docs describe in general.
+#
+# Setup
+#   1. Go to "User Settings > API Keys" and create an API key.
+#   2. Go to the workspace's "Workflows" settings page and add:
+#        secrets: NM_API_KEY        = the API key from step 1
+#        vars:    NM_API_BASE_URL   = an address the runner container can
+#                                      reach, e.g. http://notomate-api:8080
+#                                      if api+runner share a docker compose
+#                                      project, or http://host.docker.internal:8080
+#                                      if the runner is a separate compose
+#                                      project (docker-compose.runner.yml)
+#                                      and the api's nginx is published on
+#                                      the host.
+#   3. The user the API key belongs to must be a member of this workspace.
+#   4. Save, then click "Run workflow".
+#
+# Notes on the "advanced" blocks (subPage, viewNode):
+#   - subPage / viewNode normally auto-create a linked note/view the moment
+#     their `noteId`/`viewId` attr is null (see SubPageComponent.tsx /
+#     ViewComponent.tsx). To keep this a pure content demo, both are seeded
+#     with a placeholder id here so opening the note won't try to navigate
+#     anywhere real - replace with a real note/view id to link them properly.
+#   - image/video/attachment/carouselNode reference file paths under
+#     /api/v1/workspaces/:id/files/:filename - normally produced by the
+#     upload endpoint (see api/file.ts's uploadFile on the web side); the
+#     placeholders here won't resolve to a real file.
+name: TipTap Blocks Demo
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "Title for the new note"
+        required: true
+        default: "TipTap Blocks Demo"
+jobs:
+  create-note:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create a note with one of every TipTap block type
+        run: |
+          cat <<'EOF' > create-note.js
+          const API_BASE = process.env.NM_API_BASE_URL;
+          const API_KEY = process.env.NM_API_KEY;
+          const WORKSPACE_ID = process.env.NM_WORKSPACE_ID;
+          const TITLE = process.env.INPUT_TITLE || "TipTap Blocks Demo";
+
+          if (!API_BASE || !API_KEY) {
+            throw new Error("missing NM_API_BASE_URL / NM_API_KEY");
+          }
+
+          function api(path, opts = {}) {
+            return fetch(`${API_BASE}${path}`, {
+              ...opts,
+              headers: {
+                Authorization: `Bearer ${API_KEY}`,
+                "Content-Type": "application/json",
+                // No X-Content-Format header: `content` below is sent as
+                // TipTap JSON as-is, not Markdown.
+                ...(opts.headers || {}),
+              },
+            });
+          }
+
+          const doc = {
+            type: "doc",
+            content: [
+              { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Heading 1" }] },
+              { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Heading 2" }] },
+              { type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: "Heading 3" }] },
+              {
+                type: "paragraph",
+                content: [
+                  { type: "text", marks: [{ type: "bold" }], text: "Bold " },
+                  { type: "text", marks: [{ type: "italic" }], text: "Italic " },
+                  { type: "text", marks: [{ type: "strike" }], text: "Strike " },
+                  { type: "text", marks: [{ type: "code" }], text: "Code " },
+                  { type: "text", marks: [{ type: "underline" }], text: "Underline " },
+                  {
+                    type: "text",
+                    marks: [{ type: "link", attrs: { href: "https://example.com", target: "_blank", rel: "noopener noreferrer nofollow", class: null, title: null } }],
+                    text: "Link",
+                  },
+                ],
+              },
+              {
+                type: "bulletList",
+                content: [
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Bullet item 1" }] }] },
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Bullet item 2" }] }] },
+                ],
+              },
+              {
+                type: "orderedList",
+                attrs: { start: 1, type: null },
+                content: [
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Ordered item 1" }] }] },
+                  { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Ordered item 2" }] }] },
+                ],
+              },
+              {
+                type: "taskList",
+                content: [
+                  { type: "taskItem", attrs: { checked: false }, content: [{ type: "paragraph", content: [{ type: "text", text: "Todo item" }] }] },
+                  { type: "taskItem", attrs: { checked: true }, content: [{ type: "paragraph", content: [{ type: "text", text: "Done item" }] }] },
+                ],
+              },
+              { type: "blockquote", content: [{ type: "paragraph", content: [{ type: "text", text: "This is a quote" }] }] },
+              { type: "codeBlock", attrs: { language: "javascript" }, content: [{ type: "text", text: 'console.log("hello")' }] },
+              { type: "horizontalRule" },
+              {
+                type: "table",
+                content: [
+                  {
+                    type: "tableRow",
+                    content: [
+                      { type: "tableHeader", attrs: { colspan: 1, rowspan: 1, colwidth: null }, content: [{ type: "paragraph", content: [{ type: "text", text: "Col A" }] }] },
+                      { type: "tableHeader", attrs: { colspan: 1, rowspan: 1, colwidth: null }, content: [{ type: "paragraph", content: [{ type: "text", text: "Col B" }] }] },
+                    ],
+                  },
+                  {
+                    type: "tableRow",
+                    content: [
+                      { type: "tableCell", attrs: { colspan: 1, rowspan: 1, colwidth: null }, content: [{ type: "paragraph", content: [{ type: "text", text: "A1" }] }] },
+                      { type: "tableCell", attrs: { colspan: 1, rowspan: 1, colwidth: null }, content: [{ type: "paragraph", content: [{ type: "text", text: "B1" }] }] },
+                    ],
+                  },
+                ],
+              },
+              { type: "image", attrs: { src: "/api/v1/workspaces/demo/files/example.png", name: "example.png" } },
+              { type: "video", attrs: { src: "/api/v1/workspaces/demo/files/example.mp4", name: "example.mp4" } },
+              { type: "attachment", attrs: { src: "/api/v1/workspaces/demo/files/example.pdf", name: "example.pdf" } },
+              {
+                type: "carouselNode",
+                attrs: {
+                  items: [
+                    { src: "/api/v1/workspaces/demo/files/a.png", name: "a.png", type: "image" },
+                    { src: "/api/v1/workspaces/demo/files/b.mp4", name: "b.mp4", type: "video" },
+                  ],
+                },
+              },
+              { type: "youtubeEmbed", attrs: { url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" } },
+              { type: "threadsEmbed", attrs: { url: "https://www.threads.net/@example/post/123" } },
+              { type: "instagramEmbed", attrs: { url: "https://www.instagram.com/p/example/" } },
+              { type: "tiktokEmbed", attrs: { url: "https://www.tiktok.com/@example/video/123" } },
+              { type: "calendarNode", attrs: { date: "2026-07-15", title: "Team sync", description: "Weekly planning" } },
+              { type: "locationNode", attrs: { lat: 25.033, lng: 121.5654, name: "Taipei 101", address: "Taipei, Taiwan", zoom: 15 } },
+              { type: "tagsNode", attrs: { tags: ["work", "urgent", "2026"] } },
+              { type: "ratingNode", attrs: { rating: 4, maxRating: 5, label: "Overall" } },
+              { type: "subPage", attrs: { noteId: "demo-note-id-000", title: "Sub note (placeholder id)" } },
+              { type: "viewNode", attrs: { viewId: "demo-view-id-000", viewType: "kanban", name: "My Kanban (placeholder id)" } },
+            ],
+          };
+
+          (async () => {
+            const res = await api(`/api/v1/workspaces/${WORKSPACE_ID}/notes`, {
+              method: "POST",
+              body: JSON.stringify({
+                visibility: "workspace",
+                title: TITLE,
+                content: JSON.stringify(doc),
+                parent_id: "",
+              }),
+            });
+            if (!res.ok) throw new Error(`create note failed: ${res.status} ${await res.text()}`);
+            const note = await res.json();
+            console.log(`done: created "${TITLE}" (${note.id})`);
+          })().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          EOF
+          node create-note.js
+        env:
+          INPUT_TITLE: ${{ github.event.inputs.title }}
+          NM_API_KEY: ${{ secrets.NM_API_KEY }}
+          NM_API_BASE_URL: ${{ vars.NM_API_BASE_URL }}

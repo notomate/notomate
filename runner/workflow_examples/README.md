@@ -11,6 +11,7 @@ Notomate HTTP API.
 | --- | --- | --- |
 | [`scheduled-note.yml`](./scheduled-note.yml) | `schedule` / `workflow_dispatch` | Minimal template: no external data, just creates a new note in the same workspace on a schedule (e.g. a daily log), deduping by title so a manual re-run doesn't create a duplicate. |
 | [`manual-note-from-input.yml`](./manual-note-from-input.yml) | `workflow_dispatch` | No schedule - run it by hand and fill in `title`/`content` inputs to create a note with exactly that content; demonstrates reading `workflow_dispatch` inputs via `github.event.inputs`. |
+| [`tiptap-blocks-demo.yml`](./tiptap-blocks-demo.yml) | `workflow_dispatch` | Creates a note with one of every TipTap block type (headings, marks, lists, table, embeds, etc.) sent as raw TipTap JSON - no `X-Content-Format` header - instead of Markdown. |
 | [`rss-to-notes.yml`](./rss-to-notes.yml) | `schedule` / `workflow_dispatch` | Subscribes to an RSS feed and creates a note per new item, deduping with full-text content search. |
 | [`hacker-news-digest.yml`](./hacker-news-digest.yml) | `schedule` / `workflow_dispatch` | Rolls up top Hacker News stories into a single daily digest note; demonstrates a plain JSON API (no key needed). |
 | [`github-releases-watch.yml`](./github-releases-watch.yml) | `schedule` / `workflow_dispatch` | Watches a repo's latest GitHub release and creates a notification note when a new one is published. |
