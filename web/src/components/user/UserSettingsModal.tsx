@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
+import { useMutation } from "@tanstack/react-query"
 import { useTheme, Theme } from "@/providers/Theme"
 import { useCurrentUserStore } from "@/stores/current-user"
+import { useWorkspaceStore } from "@/stores/workspace"
+import { signOut } from "@/api/auth"
 import { toast } from "@/stores/toast"
 import { useState, useEffect } from "react"
 import { updatePreferences } from "@/api/user"
@@ -11,7 +15,7 @@ import Card from "@/components/card/Card"
 import Select from "@/components/select/Select"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check } from "lucide-react"
+import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut } from "lucide-react"
 
 interface UserSettingsModalProps {
     open: boolean
@@ -19,12 +23,14 @@ interface UserSettingsModalProps {
 }
 
 const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
-    const { user } = useCurrentUserStore()
+    const { user, resetCurrentUser } = useCurrentUserStore()
+    const { resetWorkspaces } = useWorkspaceStore()
     const { t, i18n } = useTranslation()
+    const navigate = useNavigate()
     const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()!
 
     // Tab state
-    const [activeTab, setActiveTab] = useState<'preferences' | 'apiKeys' | 'users' | 'system'>('preferences')
+    const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'apiKeys' | 'users' | 'system'>('account')
     const isOwner = user?.role === 'owner'
 
     // Preferences state
@@ -305,6 +311,20 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
         setShowPasswordDialog(true)
     }
 
+    const signoutMutation = useMutation({
+        mutationFn: () => signOut(),
+        onSuccess: () => {
+            try {
+                onOpenChange(false)
+                resetWorkspaces()
+                resetCurrentUser()
+                navigate("/")
+            } catch (error) {
+                console.error("Error during sign out:", error)
+            }
+        },
+    })
+
     useEffect(() => {
         if (!user || !open) return
         savePreferences()
@@ -325,10 +345,20 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                 open={open}
                 onOpenChange={onOpenChange}
                 title={t("menu.settings")}
-                className="max-w-[800px] max-h-[85vh] flex flex-col"
+                className="max-w-[800px] h-[85vh] flex flex-col"
             >
                         {/* Tabs */}
                         <div className="flex gap-2 border-b border-gray-200 dark:border-neutral-700 mb-4">
+                            <button
+                                onClick={() => setActiveTab('account')}
+                                className={`px-4 py-2 font-medium transition-colors ${
+                                    activeTab === 'account'
+                                        ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                }`}
+                            >
+                                {t("menu.user")}
+                            </button>
                             <button
                                 onClick={() => setActiveTab('preferences')}
                                 className={`px-4 py-2 font-medium transition-colors ${
@@ -376,6 +406,27 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                         </div>
 
                         <div className="space-y-4 overflow-y-auto flex-1">
+                            {/* Account Tab */}
+                            {activeTab === 'account' && (
+                                <Card className="w-full p-4">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-sm truncate">{user?.name}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="shrink-0 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                            onClick={() => signoutMutation.mutate()}
+                                        >
+                                            <LogOut size={16} />
+                                            {t("actions.signout")}
+                                        </Button>
+                                    </div>
+                                </Card>
+                            )}
+
                             {/* Preferences Tab */}
                             {activeTab === 'preferences' && (
                                 <Card className="w-full p-0">

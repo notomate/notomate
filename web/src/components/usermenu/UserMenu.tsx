@@ -1,20 +1,15 @@
 import { useRef, useState, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { Settings, Info, Compass, LogOut, User as UserIcon } from "lucide-react"
+import { Settings, Info, Compass, User as UserIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import { Link, useNavigate } from "react-router-dom"
-import { useMutation } from "@tanstack/react-query"
+import { Link } from "react-router-dom"
 import { useCurrentUserStore } from "@/stores/current-user"
-import { useWorkspaceStore } from "@/stores/workspace"
-import { signOut } from "@/api/auth"
 import UserSettingsModal from "@/components/user/UserSettingsModal"
 import AboutModal from "@/components/user/AboutModal"
 
 const UserMenu = () => {
     const { t } = useTranslation()
-    const navigate = useNavigate()
-    const { user, resetCurrentUser } = useCurrentUserStore()
-    const { resetWorkspaces } = useWorkspaceStore()
+    const { user } = useCurrentUserStore()
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
     const [isAboutModalOpen, setIsAboutModalOpen] = useState(false)
@@ -28,19 +23,6 @@ const UserMenu = () => {
         mq.addEventListener("change", handler)
         return () => mq.removeEventListener("change", handler)
     }, [])
-
-    const signoutMutation = useMutation({
-        mutationFn: () => signOut(),
-        onSuccess: () => {
-            try {
-                resetWorkspaces()
-                resetCurrentUser()
-                navigate("/")
-            } catch (error) {
-                console.error("Error during sign out:", error)
-            }
-        },
-    })
 
     useEffect(() => {
         if (!isLg || !isMenuOpen) return
@@ -57,44 +39,30 @@ const UserMenu = () => {
     if (!user) return null
 
     const menuContent = (
-        <>
-            <div className="px-3 py-2 border-b dark:border-neutral-600">
-                <p className="font-semibold text-sm">{user.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-            </div>
-            <div className="flex flex-col p-1">
-                <button
-                    onClick={() => { setIsUserSettingsOpen(true); setIsMenuOpen(false) }}
-                    className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                >
-                    <Settings size={16} />
-                    {t("menu.settings")}
-                </button>
-                <button
-                    onClick={() => { setIsAboutModalOpen(true); setIsMenuOpen(false) }}
-                    className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                >
-                    <Info size={16} />
-                    {t("menu.about")}
-                </button>
-                <Link
-                    to="/explore"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                >
-                    <Compass size={16} />
-                    {t("menu.explore")}
-                </Link>
-                <div className="h-px bg-neutral-200 dark:bg-neutral-600 my-1" />
-                <button
-                    onClick={() => signoutMutation.mutate()}
-                    className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                    <LogOut size={16} />
-                    {t("actions.signout")}
-                </button>
-            </div>
-        </>
+        <div className="flex flex-col p-1">
+            <button
+                onClick={() => { setIsUserSettingsOpen(true); setIsMenuOpen(false) }}
+                className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+                <Settings size={16} />
+                {t("menu.settings")}
+            </button>
+            <button
+                onClick={() => { setIsAboutModalOpen(true); setIsMenuOpen(false) }}
+                className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+                <Info size={16} />
+                {t("menu.about")}
+            </button>
+            <Link
+                to="/explore"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+                <Compass size={16} />
+                {t("menu.explore")}
+            </Link>
+        </div>
     )
 
     return (
