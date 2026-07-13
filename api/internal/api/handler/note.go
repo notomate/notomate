@@ -219,6 +219,7 @@ func (h Handler) GetNote(c echo.Context) error {
 		WorkspaceID: b.WorkspaceID,
 		ParentID:    b.ParentID,
 		Visibility:  b.Visibility,
+		Pinned:      b.Pinned,
 		Title:       b.Title,
 		Content:     b.Content,
 		CreatedAt:   b.CreatedAt,
