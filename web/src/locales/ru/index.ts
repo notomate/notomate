@@ -54,10 +54,17 @@ export default {
       settingsNoAccess: "Настройки workflow может просматривать только владелец или администратор рабочего пространства."
     },
     signin: {
-      "noAccount": "Нет учётной записи?"
+      "noAccount": "Нет учётной записи?",
+      "continueAsGuest": "Продолжить как гость"
     },
     signup: {
       "alreadyHaveAccount": "Уже есть учётная запись?"
+    },
+    explore: {
+      searchPlaceholder: "Поиск публичных заметок…",
+      noPublicNotes: "Публичных заметок пока нет.",
+      noSearchResults: "Нет заметок, соответствующих запросу.",
+      backToWorkspace: "Вернуться в рабочее пространство"
     },
     settings: {
       runners: "Runners",

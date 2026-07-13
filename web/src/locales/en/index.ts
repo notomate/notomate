@@ -54,10 +54,17 @@ export default {
       settingsNoAccess: "Only workspace owners and admins can view workflow settings."
     },
     signin: {
-      "noAccount": "Don't have an account?"
+      "noAccount": "Don't have an account?",
+      "continueAsGuest": "Continue without an account"
     },
     signup: {
       "alreadyHaveAccount": "Already have an account?"
+    },
+    explore: {
+      searchPlaceholder: "Search public notes…",
+      noPublicNotes: "No public notes yet.",
+      noSearchResults: "No notes match your search.",
+      backToWorkspace: "Back to workspace"
     },
     settings: {
       runners: "Runners",

@@ -6,12 +6,14 @@ import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
 import NoteListSkeleton from '@/components/notecard/NoteListSkeleton';
 import logo from '@/assets/app.svg';
-import { LogIn, House, Search, X } from 'lucide-react';
+import { LogIn, ArrowLeft, Search, X } from 'lucide-react';
 import { useCurrentUserStore } from '@/stores/current-user';
+import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 20;
 
 const ExplorePage: React.FC = () => {
+    const { t } = useTranslation();
     const observerRef = useRef<IntersectionObserver | null>(null);
 
     const [search, setSearch] = useState('');
@@ -92,20 +94,20 @@ const ExplorePage: React.FC = () => {
                     to="/"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    title="Back to workspace"
+                    title={t("pages.explore.backToWorkspace")}
                 >
-                    <House size={16} strokeWidth={2.5} />
-                    Home
+                    <ArrowLeft size={16} strokeWidth={2.5} />
+                    {t("pages.explore.backToWorkspace")}
                 </Link>
             ) : (
                 <Link
                     to="/signin"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    title="Sign in"
+                    title={t("actions.signin")}
                 >
                     <LogIn size={16} strokeWidth={2.5} />
-                    Sign in
+                    {t("actions.signin")}
                 </Link>
             )}
         </div>
@@ -172,7 +174,7 @@ const ExplorePage: React.FC = () => {
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search public notes…"
+                                placeholder={t("pages.explore.searchPlaceholder")}
                                 className="w-full pl-9 pr-9 py-2 text-sm rounded-lg bg-neutral-100 dark:bg-neutral-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
                             />
                             {search && (
@@ -191,7 +193,7 @@ const ExplorePage: React.FC = () => {
                         <NoteListSkeleton />
                     ) : notes.length === 0 ? (
                         <div className="text-center text-gray-500 dark:text-gray-400 py-20">
-                            {debouncedSearch ? 'No notes match your search.' : 'No public notes yet.'}
+                            {debouncedSearch ? t("pages.explore.noSearchResults") : t("pages.explore.noPublicNotes")}
                         </div>
                     ) : (
                         <>

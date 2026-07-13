@@ -54,10 +54,17 @@ export default {
       settingsNoAccess: "只有工作區擁有者和管理員可以查看工作流設定。"
     },
     signin: {
-      "noAccount": "沒有帳號?"
+      "noAccount": "沒有帳號?",
+      "continueAsGuest": "以訪客身份繼續"
     },
     signup: {
       "alreadyHaveAccount": "已有帳號?"
+    },
+    explore: {
+      searchPlaceholder: "搜尋公開筆記…",
+      noPublicNotes: "目前還沒有公開筆記。",
+      noSearchResults: "沒有符合搜尋條件的筆記。",
+      backToWorkspace: "回到工作區"
     },
     settings: {
       runners: "Runners",

@@ -54,10 +54,17 @@ export default {
       settingsNoAccess: "워크플로 설정은 워크스페이스 소유자와 관리자만 볼 수 있습니다."
     },
     signin: {
-      "noAccount": "계정이 없으신가요?"
+      "noAccount": "계정이 없으신가요?",
+      "continueAsGuest": "게스트로 계속하기"
     },
     signup: {
       "alreadyHaveAccount": "이미 계정이 있으신가요?"
+    },
+    explore: {
+      searchPlaceholder: "공개 노트 검색…",
+      noPublicNotes: "아직 공개된 노트가 없습니다.",
+      noSearchResults: "검색 조건에 맞는 노트가 없습니다.",
+      backToWorkspace: "워크스페이스로 돌아가기"
     },
     settings: {
       runners: "Runners",

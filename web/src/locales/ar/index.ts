@@ -54,10 +54,17 @@ export default {
       settingsNoAccess: "يمكن فقط لمالكي مساحة العمل والمشرفين عرض إعدادات سير العمل."
     },
     signin: {
-      "noAccount": "ليس لديك حساب؟"
+      "noAccount": "ليس لديك حساب؟",
+      "continueAsGuest": "المتابعة كضيف"
     },
     signup: {
       "alreadyHaveAccount": "هل لديك حساب بالفعل؟"
+    },
+    explore: {
+      searchPlaceholder: "بحث في الملاحظات العامة…",
+      noPublicNotes: "لا توجد ملاحظات عامة بعد.",
+      noSearchResults: "لا توجد ملاحظات تطابق بحثك.",
+      backToWorkspace: "العودة إلى مساحة العمل"
     },
     settings: {
       runners: "Runners",
