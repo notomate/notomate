@@ -20,6 +20,7 @@ type DB interface {
 	WorkflowRunRepository
 	WorkflowVarRepository
 	WorkflowSecretRepository
+	WorkflowFileRepository
 	RunnerRepository
 	SettingRepository
 }
@@ -123,6 +124,13 @@ type WorkflowSecretRepository interface {
 	FindWorkflowSecrets(workspaceID string) ([]model.WorkflowSecret, error)
 	UpdateWorkflowSecret(workspaceID, key, valueEncrypted, updatedAt, updatedBy string) error
 	DeleteWorkflowSecret(workspaceID, key string) error
+}
+type WorkflowFileRepository interface {
+	CreateWorkflowFile(f model.WorkflowFile) error
+	FindWorkflowFiles(workspaceID string) ([]model.WorkflowFile, error)
+	FindWorkflowFileByID(f model.WorkflowFileFilter) (model.WorkflowFile, error)
+	FindWorkflowFileByPath(workspaceID, path string) (model.WorkflowFile, error)
+	DeleteWorkflowFile(f model.WorkflowFileFilter) error
 }
 type RunnerRepository interface {
 	CreateRunner(r model.Runner) error

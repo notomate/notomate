@@ -55,6 +55,10 @@ const (
 	WORKFLOW_NOTE_DEBOUNCE_SECONDS = "workflow_note_debounce_seconds"
 	WORKFLOW_LOG_MAX_LINES         = "workflow_log_max_lines"
 	WORKFLOW_RUN_RETENTION_DAYS    = "workflow_run_retention_days"
+
+	WORKFLOW_FILE_MAX_SIZE_BYTES  = "workflow_file_max_size_bytes"
+	WORKFLOW_FILE_MAX_COUNT       = "workflow_file_max_count"
+	WORKFLOW_FILE_MAX_TOTAL_BYTES = "workflow_file_max_total_bytes"
 )
 
 func Init() {
@@ -77,6 +81,9 @@ func Init() {
 	C.SetDefault(WORKFLOW_NOTE_DEBOUNCE_SECONDS, 10)
 	C.SetDefault(WORKFLOW_LOG_MAX_LINES, 10000)
 	C.SetDefault(WORKFLOW_RUN_RETENTION_DAYS, 30)
+	C.SetDefault(WORKFLOW_FILE_MAX_SIZE_BYTES, 5*1024*1024)
+	C.SetDefault(WORKFLOW_FILE_MAX_COUNT, 200)
+	C.SetDefault(WORKFLOW_FILE_MAX_TOTAL_BYTES, 20*1024*1024)
 
 	C.AutomaticEnv()
 }

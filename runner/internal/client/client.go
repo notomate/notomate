@@ -30,17 +30,28 @@ type FetchTaskResponse struct {
 	Job   *TaskPayload `json:"job,omitempty"`
 }
 type TaskPayload struct {
-	JobID            string            `json:"job_id"`
-	RunID            string            `json:"run_id"`
-	RunNumber        int               `json:"run_number"`
-	WorkspaceID      string            `json:"workspace_id"`
-	WorkflowName     string            `json:"workflow_name"`
-	JobName          string            `json:"job_name"`
-	WorkflowYAML     string            `json:"workflow_yaml"`
-	EventName        string            `json:"event_name"`
-	EventPayloadJSON string            `json:"event_payload_json"`
-	Vars             map[string]string `json:"vars,omitempty"`
-	Secrets          map[string]string `json:"secrets,omitempty"`
+	JobID            string             `json:"job_id"`
+	RunID            string             `json:"run_id"`
+	RunNumber        int                `json:"run_number"`
+	WorkspaceID      string             `json:"workspace_id"`
+	WorkflowName     string             `json:"workflow_name"`
+	JobName          string             `json:"job_name"`
+	WorkflowYAML     string             `json:"workflow_yaml"`
+	EventName        string             `json:"event_name"`
+	EventPayloadJSON string             `json:"event_payload_json"`
+	Vars             map[string]string  `json:"vars,omitempty"`
+	Secrets          map[string]string  `json:"secrets,omitempty"`
+	Files            []WorkflowFileData `json:"files,omitempty"`
+}
+
+// WorkflowFileData is one codebase file attached to a workflow, delivered
+// inline so the runner can materialize it into the job's scratch workdir.
+// Path is expected to already be a validated relative path, but the runner
+// must not trust that and re-validates before touching the filesystem (see
+// writeWorkflowFiles in internal/run).
+type WorkflowFileData struct {
+	Path    string `json:"path"`
+	Content []byte `json:"content"`
 }
 
 type UpdateTaskRequest struct {

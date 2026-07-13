@@ -24,6 +24,7 @@ import (
 	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/db/sqlitedb"
 	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/storage/localfile"
 	"github.com/notomate/notomate/internal/workflow"
 )
 
@@ -69,8 +70,10 @@ func setupRunnerTest(t *testing.T) (db.DB, *workflow.Engine, *grpc.ClientConn) {
 
 	engine := workflow.NewEngine(database)
 
+	store := localfile.NewLocalFileStorage(filepath.ToSlash(dir) + "/uploads/")
+
 	lis := bufconn.Listen(1024 * 1024)
-	srv := NewServer(database, engine)
+	srv := NewServer(database, engine, store)
 	go srv.Serve(lis)
 	t.Cleanup(srv.Stop)
 

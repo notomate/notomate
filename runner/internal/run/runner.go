@@ -125,6 +125,13 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 	}
 	defer os.RemoveAll(workdir)
 
+	// Materialize the workflow's codebase files into the workdir so steps
+	// see a directory layout equivalent to a git checkout, even though no
+	// git checkout ever happens.
+	if err := writeWorkflowFiles(workdir, task.Files); err != nil {
+		return fmt.Errorf("write workflow files: %w", err)
+	}
+
 	jobLoggerLevel := logrus.InfoLevel
 	actConfig := &runner.Config{
 		Workdir:               workdir,

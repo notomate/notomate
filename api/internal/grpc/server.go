@@ -14,6 +14,7 @@ import (
 
 	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/storage"
 	"github.com/notomate/notomate/internal/workflow"
 )
 
@@ -250,19 +251,19 @@ func (s *collabServer) UpdateViewData(ctx context.Context, req *UpdateViewDataRe
 
 // NewServer builds the gRPC server with both the collab service and the
 // runner service registered. Shared with tests.
-func NewServer(database db.DB, engine *workflow.Engine) *grpc.Server {
+func NewServer(database db.DB, engine *workflow.Engine, store storage.Storage) *grpc.Server {
 	srv := grpc.NewServer(grpc.ChainUnaryInterceptor(runnerAuthInterceptor(database)))
 	registerCollabServiceServer(srv, &collabServer{db: database, engine: engine})
-	registerRunnerServiceServer(srv, &runnerServer{db: database, engine: engine})
+	registerRunnerServiceServer(srv, &runnerServer{db: database, engine: engine, storage: store})
 	return srv
 }
 
-func Start(database db.DB, port string, engine *workflow.Engine) {
+func Start(database db.DB, port string, engine *workflow.Engine, store storage.Storage) {
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("[gRPC] listen on :%s failed: %v", port, err)
 	}
-	srv := NewServer(database, engine)
+	srv := NewServer(database, engine, store)
 	log.Printf("[gRPC] CollabService and RunnerService listening on :%s", port)
 	if err := srv.Serve(lis); err != nil {
 		log.Fatalf("[gRPC] serve failed: %v", err)

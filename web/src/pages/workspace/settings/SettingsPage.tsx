@@ -10,6 +10,7 @@ import OneColumn from "@/components/onecolumn/OneColumn"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { toast } from "@/stores/toast"
 import WorkflowVarsSecretsSection from "./WorkflowVarsSecretsSection"
+import WorkflowFilesSection from "./WorkflowFilesSection"
 import ConnectedRunnersSection from "./ConnectedRunnersSection"
 
 const Settings = () => {
@@ -298,6 +299,11 @@ const Settings = () => {
                                     {/* Workspace-scoped workflow variables & secrets */}
                                     {isOwnerOrAdmin && (
                                         <WorkflowVarsSecretsSection />
+                                    )}
+
+                                    {/* Codebase files shared by every workflow in the workspace */}
+                                    {isOwnerOrAdmin && (
+                                        <WorkflowFilesSection />
                                     )}
 
                                     {/* Instance-wide runners, shown read-only for workflow authoring */}

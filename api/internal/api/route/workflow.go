@@ -6,6 +6,7 @@ import (
 	"github.com/notomate/notomate/internal/model"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func RegisterWorkflow(api *echo.Group, h handler.Handler, authMiddleware middlewares.AuthMiddleware, workspaceMiddleware middlewares.WorkspaceMiddleware) {
@@ -46,4 +47,10 @@ func RegisterWorkflow(api *echo.Group, h handler.Handler, authMiddleware middlew
 	g.POST("/:workspaceId/secrets", h.CreateWorkflowSecret, ownerOrAdmin)
 	g.PUT("/:workspaceId/secrets/:key", h.UpdateWorkflowSecret, ownerOrAdmin)
 	g.DELETE("/:workspaceId/secrets/:key", h.DeleteWorkflowSecret, ownerOrAdmin)
+
+	// Codebase files: shared by every workflow in the workspace, same scope
+	// as vars/secrets above.
+	g.GET("/:workspaceId/workflow-files", h.ListWorkflowFiles, member)
+	g.POST("/:workspaceId/workflow-files", h.UploadWorkflowFile, ownerOrAdmin, middleware.BodyLimit("6M"))
+	g.DELETE("/:workspaceId/workflow-files/:fileId", h.DeleteWorkflowFile, ownerOrAdmin)
 }

@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"strings"
 	"sync"
@@ -22,6 +23,7 @@ import (
 	"github.com/notomate/notomate/internal/config"
 	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/storage"
 	"github.com/notomate/notomate/internal/util"
 	"github.com/notomate/notomate/internal/workflow"
 )
@@ -51,17 +53,26 @@ type FetchTaskResponse struct {
 	Job   *TaskPayload `json:"job,omitempty"`
 }
 type TaskPayload struct {
-	JobID            string            `json:"job_id"`
-	RunID            string            `json:"run_id"`
-	RunNumber        int               `json:"run_number"`
-	WorkspaceID      string            `json:"workspace_id"`
-	WorkflowName     string            `json:"workflow_name"`
-	JobName          string            `json:"job_name"`
-	WorkflowYAML     string            `json:"workflow_yaml"`
-	EventName        string            `json:"event_name"`
-	EventPayloadJSON string            `json:"event_payload_json"`
-	Vars             map[string]string `json:"vars,omitempty"`
-	Secrets          map[string]string `json:"secrets,omitempty"`
+	JobID            string             `json:"job_id"`
+	RunID            string             `json:"run_id"`
+	RunNumber        int                `json:"run_number"`
+	WorkspaceID      string             `json:"workspace_id"`
+	WorkflowName     string             `json:"workflow_name"`
+	JobName          string             `json:"job_name"`
+	WorkflowYAML     string             `json:"workflow_yaml"`
+	EventName        string             `json:"event_name"`
+	EventPayloadJSON string             `json:"event_payload_json"`
+	Vars             map[string]string  `json:"vars,omitempty"`
+	Secrets          map[string]string  `json:"secrets,omitempty"`
+	Files            []WorkflowFileData `json:"files,omitempty"`
+}
+
+// WorkflowFileData is one codebase file attached to a workflow. Path is a
+// server-validated relative path (see util.SanitizeRelativePath); Content is
+// base64-encoded automatically by encoding/json since it's a []byte field.
+type WorkflowFileData struct {
+	Path    string `json:"path"`
+	Content []byte `json:"content"`
 }
 
 type UpdateTaskRequest struct {
@@ -86,8 +97,9 @@ type UpdateLogResponse struct {
 // ---------- Service ----------
 
 type runnerServer struct {
-	db     db.DB
-	engine *workflow.Engine
+	db      db.DB
+	engine  *workflow.Engine
+	storage storage.Storage
 }
 
 func registerRunnerServiceServer(s *grpc.Server, srv *runnerServer) {
@@ -227,6 +239,11 @@ func (s *runnerServer) buildTaskPayload(job model.WorkflowJob) (*TaskPayload, er
 		return nil, err
 	}
 
+	files, err := s.loadWorkflowFiles(job.WorkspaceID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &TaskPayload{
 		JobID:            job.ID,
 		RunID:            run.ID,
@@ -239,7 +256,47 @@ func (s *runnerServer) buildTaskPayload(job model.WorkflowJob) (*TaskPayload, er
 		EventPayloadJSON: run.EventPayload,
 		Vars:             vars,
 		Secrets:          secrets,
+		Files:            files,
 	}, nil
+}
+
+// loadWorkflowFiles fetches and loads the workspace's codebase files (shared
+// by every workflow in the workspace) so they can be shipped inline to the
+// claiming runner, which writes them into the job's scratch workdir before
+// executing steps. Paths are re-validated here (defense in depth) even
+// though UploadWorkflowFile already validated them on the way in - never
+// trust a stored value to still be safe just because it came from our own
+// write path.
+func (s *runnerServer) loadWorkflowFiles(workspaceID string) ([]WorkflowFileData, error) {
+	rows, err := s.db.FindWorkflowFiles(workspaceID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "load workflow files: %v", err)
+	}
+	if len(rows) == 0 {
+		return nil, nil
+	}
+
+	files := make([]WorkflowFileData, 0, len(rows))
+	for _, row := range rows {
+		cleanPath, err := util.SanitizeRelativePath(row.Path)
+		if err != nil {
+			log.Printf("[gRPC] skipping workflow file %s with invalid stored path %q: %v", row.ID, row.Path, err)
+			continue
+		}
+
+		rc, err := s.storage.Load([]string{"workflow-files", workspaceID, row.StorageKey})
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "load workflow file %s: %v", row.ID, err)
+		}
+		content, err := io.ReadAll(rc)
+		rc.Close()
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "read workflow file %s: %v", row.ID, err)
+		}
+
+		files = append(files, WorkflowFileData{Path: cleanPath, Content: content})
+	}
+	return files, nil
 }
 
 // loadVarsAndSecrets fetches the workspace's workflow vars/secrets and

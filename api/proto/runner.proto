@@ -30,6 +30,15 @@ message TaskPayload {
   // Workspace-scoped vars/secrets, exposed to the job as vars.*/secrets.*.
   // Secrets are decrypted server-side just before being sent here.
   map<string, string> vars = 10; map<string, string> secrets = 11;
+  // The workflow's codebase files, written into the job's scratch workdir
+  // before steps run so a checked-out-repo-like layout exists without git.
+  // Paths are server-validated relative paths (no "..", not absolute).
+  repeated WorkflowFileData files = 12;
+}
+
+message WorkflowFileData {
+  string path = 1;
+  bytes content = 2;
 }
 
 message FetchTaskRequest  {}

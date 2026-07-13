@@ -51,7 +51,7 @@ func main() {
 	}
 
 	grpcPort := config.C.GetString(config.GRPC_PORT)
-	go grpcserver.Start(db, grpcPort, engine)
+	go grpcserver.Start(db, grpcPort, engine, storage)
 
 	// Start server in a goroutine
 	go func() {
