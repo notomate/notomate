@@ -15,7 +15,7 @@ func (s PostgresDB) CreateNote(n model.Note) error {
 func (s PostgresDB) UpdateNote(n model.Note) error {
 	_, err := gorm.G[model.Note](s.getDB()).
 		Where("id = ?", n.ID).
-		Select("title", "content", "visibility", "parent_id", "updated_at", "updated_by").
+		Select("title", "content", "visibility", "parent_id", "pinned", "updated_at", "updated_by").
 		Updates(context.Background(), n)
 	return err
 }
@@ -67,6 +67,11 @@ func (s PostgresDB) FindNotes(f model.NoteFilter) ([]model.Note, error) {
 	} else if f.ParentID != "" {
 		conds = append(conds, "parent_id = ?")
 		args = append(args, f.ParentID)
+	}
+
+	if f.PinnedOnly {
+		conds = append(conds, "pinned = ?")
+		args = append(args, true)
 	}
 
 	query := s.getDB().Model(&model.Note{})

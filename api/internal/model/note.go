@@ -9,6 +9,7 @@ type NoteFilter struct {
 	Query       string
 	SortBy      string // "updated_at" or "created_at" (default)
 	ParentID    string // filter by parent note id; use "null" to get root notes
+	PinnedOnly  bool   // filter to only pinned notes
 }
 
 type Note struct {
@@ -18,6 +19,7 @@ type Note struct {
 	Title       string `json:"title"`
 	Content     string `json:"content"`
 	Visibility  string `json:"visibility"`
+	Pinned      bool   `json:"pinned"`
 	CreatedAt   string `json:"created_at"`
 	CreatedBy   string `json:"created_by"`
 	UpdatedAt   string `json:"updated_at"`

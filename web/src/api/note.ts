@@ -12,6 +12,7 @@ export interface NoteData {
   title?: string;
   content: string;
   visibility?: Visibility;
+  pinned?: boolean;
 }
 
 
@@ -22,10 +23,11 @@ export const getPublicNotes = async (pageNum: number, pageSize: number, query = 
   return response.data;
 };
 
-export const getNotes = async (workspaceId: string, pageNum: number, pageSize: number, query: string, sort?: string, parentId?: string) => {
+export const getNotes = async (workspaceId: string, pageNum: number, pageSize: number, query: string, sort?: string, parentId?: string, pinnedOnly?: boolean) => {
   const params = new URLSearchParams({ pageSize: String(pageSize), pageNumber: String(pageNum), query });
   if (sort) params.set('sort', sort);
   if (parentId !== undefined) params.set('parentId', parentId);
+  if (pinnedOnly) params.set('pinned', 'true');
   const response = await axios.get(`/api/v1/workspaces/${workspaceId}/notes?${params}`, { withCredentials: true });
   return response.data;
 };
@@ -53,4 +55,9 @@ export const deleteNote = async (workspaceId: string, id: string) => {
 export const updateNoteVisibility = async (workspaceId: string, id: string, visibility: Visibility) => {
   const response = await axios.patch(`/api/v1/workspaces/${workspaceId}/notes/${id}/visibility/${visibility}`);
   return response.data;
-}; 
+};
+
+export const updateNotePinned = async (workspaceId: string, id: string, pinned: boolean) => {
+  const response = await axios.patch(`/api/v1/workspaces/${workspaceId}/notes/${id}/pin/${pinned}`);
+  return response.data;
+};

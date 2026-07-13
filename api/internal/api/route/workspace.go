@@ -35,6 +35,7 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 	g.PUT("/:workspaceId/notes/:id", h.UpdateNote)
 	g.DELETE("/:workspaceId/notes/:id", h.DeleteNote)
 	g.PATCH("/:workspaceId/notes/:id/visibility/:visibility", h.UpdateNoteVisibility)
+	g.PATCH("/:workspaceId/notes/:id/pin/:pinned", h.UpdateNotePin)
 	// Note-scoped views: returns all views belonging to a specific note
 	g.GET("/:workspaceId/notes/:noteId/views", h.GetNoteViews)
 

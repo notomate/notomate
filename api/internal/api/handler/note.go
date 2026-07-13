@@ -30,6 +30,7 @@ type GetNoteResponse struct {
 	WorkspaceID string   `json:"workspace_id"`
 	ParentID    string   `json:"parent_id"`
 	Visibility  string   `json:"visibility"`
+	Pinned      bool     `json:"pinned"`
 	Title       string   `json:"title"`
 	Content     string   `json:"content"`
 	Tags        []string `json:"tags"`
@@ -107,6 +108,7 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 			WorkspaceID: b.WorkspaceID,
 			ParentID:    b.ParentID,
 			Visibility:  b.Visibility,
+			Pinned:      b.Pinned,
 			Title:       b.Title,
 			Content:     b.Content,
 			CreatedAt:   b.CreatedAt,
@@ -140,6 +142,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 		sortBy = "created_at"
 	}
 	parentID := c.QueryParam("parentId")
+	pinnedOnly := c.QueryParam("pinned") == "true"
 
 	user := c.Get("user").(model.User)
 
@@ -151,6 +154,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 		Query:       query,
 		SortBy:      sortBy,
 		ParentID:    parentID,
+		PinnedOnly:  pinnedOnly,
 	}
 
 	notes, err := h.db.FindNotes(filter)
@@ -166,6 +170,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 			WorkspaceID: b.WorkspaceID,
 			ParentID:    b.ParentID,
 			Visibility:  b.Visibility,
+			Pinned:      b.Pinned,
 			Title:       b.Title,
 			Content:     b.Content,
 			CreatedAt:   b.CreatedAt,
@@ -411,6 +416,63 @@ func (h Handler) UpdateNoteVisibility(c echo.Context) error {
 	n.ID = existingNote.ID
 	n.ParentID = existingNote.ParentID
 	n.Visibility = visibility
+	n.Pinned = existingNote.Pinned
+	n.Title = existingNote.Title
+	n.Content = existingNote.Content
+	n.CreatedAt = existingNote.CreatedAt
+	n.CreatedBy = existingNote.CreatedBy
+	n.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	n.UpdatedBy = user.ID
+
+	err = h.db.UpdateNote(n)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	h.notifyNoteEvent(model.WorkflowEventNoteUpdated, n, user.ID)
+
+	return c.JSON(http.StatusOK, n)
+}
+
+func (h Handler) UpdateNotePin(c echo.Context) error {
+	workspaceId := c.Param("workspaceId")
+	if workspaceId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "workspace id is required")
+	}
+	id := c.Param("id")
+	if id == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Note id is required")
+	}
+
+	var pinned bool
+	switch c.Param("pinned") {
+	case "true":
+		pinned = true
+	case "false":
+		pinned = false
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, "Note pinned value is invalid")
+	}
+
+	existingNote, err := h.db.FindNote(model.Note{ID: id})
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	user := c.Get("user").(model.User)
+
+	if existingNote.CreatedBy != user.ID {
+		return echo.NewHTTPError(http.StatusUnauthorized)
+	}
+	var n model.Note
+
+	n.WorkspaceID = workspaceId
+	n.ID = existingNote.ID
+	n.ParentID = existingNote.ParentID
+	n.Visibility = existingNote.Visibility
+	n.Pinned = pinned
 	n.Title = existingNote.Title
 	n.Content = existingNote.Content
 	n.CreatedAt = existingNote.CreatedAt

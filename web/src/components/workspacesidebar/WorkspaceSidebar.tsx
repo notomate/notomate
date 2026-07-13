@@ -1,16 +1,14 @@
-import { Plus, Search, FileText, Folder, PanelRight, Workflow, Settings } from "lucide-react"
+import { Plus, Search, Folder, PanelRight, Workflow, Settings, Pin } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { getNotes, NoteData } from "@/api/note"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import useCreateNote from "@/hooks/use-create-note"
-import { Link, useParams, useLocation } from "react-router-dom"
-import { useInfiniteQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { Link, useLocation } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
 import WorkspaceMenu from "@/components/workspacemenu/WorkspaceMenu"
 import UserMenu from "@/components/usermenu/UserMenu"
 
 const PAGE_SIZE = 30
-const INITIAL_DISPLAY = 5
 
 function getNoteTitle(note: NoteData): string {
     if (note.title) return note.title
@@ -31,29 +29,19 @@ interface WorkspaceSidebarProps {
 
 const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
     const currentWorkspaceId = useCurrentWorkspaceId()
-    const [displayCount, setDisplayCount] = useState(INITIAL_DISPLAY)
     const { t } = useTranslation()
-    const { noteId } = useParams()
     const location = useLocation()
     const { handleCreateNote, isPending: isCreatingNote } = useCreateNote()
 
     const notesBase = `/workspaces/${currentWorkspaceId}/notes`
 
-    const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-        queryKey: ['notes', currentWorkspaceId],
-        queryFn: async ({ pageParam = 1 }: { pageParam?: unknown }) =>
-            await getNotes(currentWorkspaceId, Number(pageParam), PAGE_SIZE, "", undefined, "null"),
+    const { data: pinnedNotes = [] } = useQuery<NoteData[]>({
+        queryKey: ['notes', currentWorkspaceId, 'pinned'],
+        queryFn: () => getNotes(currentWorkspaceId, 1, PAGE_SIZE, "", undefined, undefined, true),
         enabled: !!currentWorkspaceId,
-        getNextPageParam: (lastPage, allPages) =>
-            lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
         refetchOnWindowFocus: false,
         staleTime: 0,
-        initialPageParam: 1
     })
-
-    const notes = data?.pages.flat() || []
-    const visibleNotes = notes.slice(0, displayCount)
-    const remaining = notes.length - displayCount
 
     const isSearchActive = location.pathname.endsWith('/search')
     const isFilesActive = location.pathname.endsWith('/files')
@@ -140,58 +128,25 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     <Settings className="shrink-0 size-4 lg:size-3.5" />
                     <span className="leading-snug">{t("menu.workspaceSettings")}</span>
                 </Link>
-                {isLoading ? (
-                    <div className="flex flex-col gap-0.5 py-1">
-                        {Array.from({ length: INITIAL_DISPLAY }).map((_, i) => (
-                            <div key={i} className="h-7 rounded-md bg-neutral-200 dark:bg-neutral-800 animate-pulse" style={{ width: `${60 + (i * 13) % 35}%` }} />
-                        ))}
-                    </div>
-                ) : notes.length === 0 ? (
-                    <div className="px-5 py-4 lg:px-3 text-xs text-gray-400 dark:text-neutral-600">
-                        {t("messages.noMoreNotes")}
-                    </div>
-                ) : (
-                    <>
-                        {visibleNotes.map((note: NoteData) => (
+                {pinnedNotes.length > 0 && (
+                    <div className="mb-2">
+                        <div className="px-1 py-2 text-xs font-medium text-gray-400 dark:text-neutral-600 select-none">
+                            {t("common.pinned")}
+                        </div>
+                        {pinnedNotes.map((note: NoteData) => (
                             <Link
                                 key={note.id}
                                 to={`${notesBase}/${note.id}`}
                                 onClick={onClose}
-                                className={(() => {
-                                    const isActive = noteId === note.id
-                                    return [
-                                        "flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 group",
-                                        isActive
-                                            ? "bg-neutral-200 dark:bg-neutral-700 text-gray-900 dark:text-gray-100 font-medium"
-                                            : "text-gray-600 dark:text-gray-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-gray-100"
-                                    ].join(" ")
-                                })()}
+                                className="flex items-center gap-2 py-2.5 px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 group text-gray-600 dark:text-gray-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-gray-100"
                             >
-                                <FileText className="shrink-0 opacity-50 size-4 lg:size-3.5" />
+                                <Pin className="shrink-0 opacity-50 size-4 lg:size-3.5" />
                                 <span className="truncate leading-snug">
                                     {getNoteTitle(note)}
                                 </span>
                             </Link>
                         ))}
-                        {(remaining > 0 || hasNextPage) && (
-                            <button
-                                onClick={() => {
-                                    if (remaining > 0) {
-                                        setDisplayCount(c => c + INITIAL_DISPLAY)
-                                    } else if (hasNextPage && !isFetchingNextPage) {
-                                        fetchNextPage()
-                                        setDisplayCount(c => c + INITIAL_DISPLAY)
-                                    }
-                                }}
-                                disabled={isFetchingNextPage}
-                                className="w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
-                            >
-                                <span className="leading-snug pl-6 lg:pl-5">
-                                    {isFetchingNextPage ? "..." : `+${remaining > 0 ? Math.min(remaining, INITIAL_DISPLAY) : INITIAL_DISPLAY} more`}
-                                </span>
-                            </button>
-                        )}
-                    </>
+                    </div>
                 )}
             </nav>
 

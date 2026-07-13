@@ -1,9 +1,9 @@
 import { FC, useRef, useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { deleteNote, NoteData, updateNoteVisibility } from "@/api/note"
+import { deleteNote, NoteData, updateNoteVisibility, updateNotePinned } from "@/api/note"
 import { useTranslation } from "react-i18next"
-import { Trash2, Ellipsis, Globe2, Lock, Building } from "lucide-react"
+import { Trash2, Ellipsis, Globe2, Lock, Building, Pin, PinOff } from "lucide-react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useToastStore } from "@/stores/toast"
 import { Visibility } from "@/types/visibility"
@@ -60,6 +60,22 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
         },
     })
 
+    const updatePinnedMutation = useMutation({
+        mutationFn: (pinned: boolean) => {
+            if (!workspaceId || !note.id) throw new Error('Missing required parameters')
+            return updateNotePinned(workspaceId, note.id, pinned)
+        },
+        onSuccess: async () => {
+            try {
+                await queryClient.invalidateQueries({ queryKey: ['note', workspaceId, note.id] })
+                await queryClient.invalidateQueries({ queryKey: ['notes', workspaceId] })
+                setIsMenuOpened(false)
+            } catch {
+                addToast({ title: t('messages.updatePinnedFailed'), type: 'error' })
+            }
+        },
+    })
+
     const handleDelete = () => {
         if (confirm(t('messages.confirmDelete'))) {
             deleteNoteMutation.mutate()
@@ -70,6 +86,10 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
     const handleUpdateVisibility = (visibility: Visibility) => {
         if (visibility === note.visibility) return
         updateVisibilityMutation.mutate(visibility)
+    }
+
+    const handleTogglePin = () => {
+        updatePinnedMutation.mutate(!note.pinned)
     }
 
     const handleOpenMenu = () => {
@@ -96,6 +116,13 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
 
     const menuItems = workspaceId && (
         <>
+            <button
+                className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                onClick={handleTogglePin}
+            >
+                {note.pinned ? <PinOff size={16} /> : <Pin size={16} />}
+                {note.pinned ? t("actions.unpin") : t("actions.pin")}
+            </button>
             {note.visibility !== "private" && (
                 <button
                     className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
