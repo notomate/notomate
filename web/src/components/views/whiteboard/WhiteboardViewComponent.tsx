@@ -1000,8 +1000,8 @@ const WhiteboardViewComponent = ({
                     </button>
                 </div>
 
-                {/* Toolbar and tool properties (hidden when locked) */}
-                {!isLocked && (
+                {/* Toolbar and tool properties (hidden when locked or read-only) */}
+                {!isLocked && !isReadOnly && (
                     <>
                         <WhiteboardToolbar
                             currentTool={currentTool}
