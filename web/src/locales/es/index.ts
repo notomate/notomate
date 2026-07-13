@@ -54,10 +54,17 @@ export default {
       settingsNoAccess: "Solo los propietarios y administradores del espacio de trabajo pueden ver la configuración de los workflows."
     },
     signin: {
-      "noAccount": "¿No tienes cuenta?"
+      "noAccount": "¿No tienes cuenta?",
+      "continueAsGuest": "Continuar como invitado"
     },
     signup: {
       "alreadyHaveAccount": "¿Ya tienes cuenta?"
+    },
+    explore: {
+      searchPlaceholder: "Buscar notas públicas…",
+      noPublicNotes: "Aún no hay notas públicas.",
+      noSearchResults: "Ninguna nota coincide con tu búsqueda.",
+      backToWorkspace: "Volver al espacio de trabajo"
     },
     settings: {
       runners: "Runners",

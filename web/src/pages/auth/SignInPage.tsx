@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { signIn } from '@/api/auth';
 import logo from '@/assets/app.svg'
+import BrandIcons from '@/components/illustrations/BrandIcons';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/stores/toast';
 import { useCurrentUserStore } from '@/stores/current-user';
@@ -53,22 +54,14 @@ const SignIn: React.FC = () => {
             {/* Left branding panel */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent items-center justify-center p-12">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
-                <div className="relative z-10 flex flex-col items-center gap-8 text-center max-w-md">
-                    <img src={logo} className="w-24 h-24 object-contain drop-shadow-lg" alt="Notomate" />
-                    <div className="space-y-3">
-                        <h1 className="text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">Notomate</h1>
-                        <p className="text-lg text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                            Your collaborative workspace for notes, ideas, and more.
-                        </p>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <BrandIcons className="w-[85%] max-w-xl aspect-square" />
+                </div>
+                <div className="relative z-10 flex flex-col items-center gap-6 text-center max-w-md">
+                    <div className="w-24 h-24 rounded-3xl bg-white shadow-lg ring-1 ring-black/5 flex items-center justify-center p-4">
+                        <img src={logo} className="w-full h-full object-contain" alt="Notomate" />
                     </div>
-                    <div className="flex flex-col gap-3 w-full max-w-xs">
-                        {['Rich text editing', 'Real-time collaboration', 'Multiple views'].map((feature) => (
-                            <div key={feature} className="flex items-center gap-3 bg-white/60 dark:bg-white/5 rounded-xl px-4 py-3 backdrop-blur-sm border border-white/20 dark:border-white/10">
-                                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                                <span className="text-sm text-neutral-700 dark:text-neutral-300 font-medium">{feature}</span>
-                            </div>
-                        ))}
-                    </div>
+                    <h1 className="text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">Notomate</h1>
                 </div>
             </div>
 
@@ -77,7 +70,9 @@ const SignIn: React.FC = () => {
                 <div className="w-full max-w-sm space-y-8">
                     {/* Mobile logo */}
                     <div className="flex flex-col items-center gap-3 lg:hidden">
-                        <img src={logo} className="w-16 h-16 object-contain" alt="Notomate" />
+                        <div className="w-16 h-16 rounded-2xl bg-white shadow-md ring-1 ring-black/5 flex items-center justify-center p-2.5">
+                            <img src={logo} className="w-full h-full object-contain" alt="Notomate" />
+                        </div>
                         <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Notomate</h1>
                     </div>
 
@@ -146,7 +141,7 @@ const SignIn: React.FC = () => {
                             href="/explore"
                             className="text-sm text-neutral-400 dark:text-neutral-500 hover:text-primary transition-colors"
                         >
-                            Explore without account →
+                            {t("pages.signin.continueAsGuest")} →
                         </a>
                     </div>
                 </div>

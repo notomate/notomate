@@ -54,10 +54,17 @@ export default {
       settingsNoAccess: "只有工作区所有者和管理员可以查看工作流设置。"
     },
     signin: {
-      "noAccount": "没有账户？"
+      "noAccount": "没有账户？",
+      "continueAsGuest": "以访客身份继续"
     },
     signup: {
       "alreadyHaveAccount": "已有账户？"
+    },
+    explore: {
+      searchPlaceholder: "搜索公开笔记…",
+      noPublicNotes: "目前还没有公开笔记。",
+      noSearchResults: "没有符合搜索条件的笔记。",
+      backToWorkspace: "返回工作区"
     },
     settings: {
       runners: "Runners",

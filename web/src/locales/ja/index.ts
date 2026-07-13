@@ -54,10 +54,17 @@ export default {
       settingsNoAccess: "ワークフロー設定はワークスペースのオーナーと管理者のみ閲覧できます。"
     },
     signin: {
-      "noAccount": "アカウントをお持ちでないですか？"
+      "noAccount": "アカウントをお持ちでないですか？",
+      "continueAsGuest": "ゲストとして続ける"
     },
     signup: {
       "alreadyHaveAccount": "既にアカウントをお持ちですか？"
+    },
+    explore: {
+      searchPlaceholder: "公開ノートを検索…",
+      noPublicNotes: "公開ノートはまだありません。",
+      noSearchResults: "検索条件に一致するノートがありません。",
+      backToWorkspace: "ワークスペースに戻る"
     },
     settings: {
       runners: "Runners",
