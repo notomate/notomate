@@ -20,7 +20,7 @@ services:
       # and register with the token from GET /api/v1/admin/runners/registration-token).
       - NM_RUNNER_REGISTRATION_TOKEN=${RUNNER_REGISTRATION_TOKEN}
       - NM_RUNNER_NAME=default-runner
-      - NM_RUNNER_LABELS=ubuntu-latest:docker://node:20-bullseye
+      - NM_RUNNER_LABELS=ubuntu-latest:docker://catthehacker/ubuntu:act-latest
     extra_hosts:
       # host.docker.internal is native on Docker Desktop; this makes it
       # resolve on Linux Docker Engine too.

@@ -27,7 +27,7 @@ type Config struct {
 	DaemonSocket string
 }
 
-const defaultLabels = "ubuntu-latest:docker://node:20-bullseye"
+const defaultLabels = "ubuntu-latest:docker://catthehacker/ubuntu:act-latest"
 
 func Load() (Config, error) {
 	cfg := Config{
@@ -56,7 +56,7 @@ func Load() (Config, error) {
 }
 
 // ParseLabels parses a comma-separated list of labels in act_runner style:
-// "name[:docker://image]". A bare name defaults to node:20-bullseye.
+// "name[:docker://image]". A bare name defaults to catthehacker/ubuntu:act-latest.
 func ParseLabels(raw string) ([]Label, error) {
 	var labels []Label
 	for _, part := range strings.Split(raw, ",") {
@@ -68,7 +68,7 @@ func ParseLabels(raw string) ([]Label, error) {
 		if name == "" {
 			return nil, fmt.Errorf("invalid label %q", part)
 		}
-		image := "node:20-bullseye"
+		image := "catthehacker/ubuntu:act-latest"
 		if found {
 			img, ok := strings.CutPrefix(scheme, "docker://")
 			if !ok || img == "" {
