@@ -145,6 +145,9 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 		LogOutput:             true,
 		AutoRemove:            true,
 		GitHubInstance:        "github.com",
+		// act clones "uses: owner/repo@ref" steps against DefaultActionInstance,
+		// not GitHubInstance - without this it clones from an empty host.
+		DefaultActionInstance: "github.com",
 		ContainerNamePrefix:   fmt.Sprintf("notomate-run-%d-%s", task.RunNumber, task.JobName),
 		// Jobs run against a scratch workdir with no git checkout (see the
 		// MkdirTemp above), so act's usual "inspect the workdir with git"
