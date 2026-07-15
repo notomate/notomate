@@ -54,9 +54,7 @@ const WorkflowSettingsPage = () => {
                                             <WorkflowFilesSection />
                                         </>
                                     )}
-                                    {isInstanceOwnerOrAdmin && (
-                                        <ConnectedRunnersSection />
-                                    )}
+                                    <ConnectedRunnersSection />
                                 </div>
                             ) : (
                                 <div className="text-sm text-gray-400 dark:text-gray-500">
