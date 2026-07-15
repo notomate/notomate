@@ -15,7 +15,7 @@ import (
 )
 
 type SignInRequest struct {
-	Username string `json:"username" validate:"required"`
+	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -68,7 +68,7 @@ func (h *Handler) SignIn(c echo.Context) error {
 		})
 	}
 
-	users, err := h.db.FindUsers(model.UserFilter{NameOrEmail: req.Username})
+	users, err := h.db.FindUsers(model.UserFilter{Email: req.Email})
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{

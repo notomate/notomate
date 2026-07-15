@@ -228,7 +228,7 @@ export default {
     moveBackward: "向后移动",
   },
   messages: {
-    signInFailed: "登录失败，请检查你的用户名和密码",
+    signInFailed: "登录失败，请检查你的电子邮件和密码",
     signUpFailed: "注册失败，{{error}}",
     accountDisabled: "账户已被禁用。请联系管理员。",
     passwordDoNotMatch: "密码不匹配",

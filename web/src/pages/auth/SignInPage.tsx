@@ -16,7 +16,7 @@ import { Loader2, Eye, EyeOff } from 'lucide-react';
 
 const SignIn: React.FC = () => {
     const { t } = useTranslation();
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
@@ -46,7 +46,7 @@ const SignIn: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        signInMutation.mutate({ username, password });
+        signInMutation.mutate({ email, password });
     };
 
     return (
@@ -90,14 +90,14 @@ const SignIn: React.FC = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
-                            <Label htmlFor="username">{t("form.username")}</Label>
+                            <Label htmlFor="email">{t("form.email")}</Label>
                             <Input
-                                id="username"
-                                type="text"
-                                autoComplete="username"
-                                value={username}
-                                placeholder={t("form.username")}
-                                onChange={(e) => setUsername(e.target.value)}
+                                id="email"
+                                type="email"
+                                autoComplete="email"
+                                value={email}
+                                placeholder={t("form.email")}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>

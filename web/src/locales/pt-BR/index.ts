@@ -224,7 +224,7 @@ export default {
     moveBackward: "Mover para Trás",
   },
   messages: {
-    signInFailed: "Falha no login, verifique seu nome de usuário e senha",
+    signInFailed: "Falha no login, verifique seu e-mail e senha",
     signUpFailed: "Falha no cadastro, {{error}}",
     accountDisabled: "A conta foi desativada. Entre em contato com o administrador.",
     passwordDoNotMatch: "As senhas não correspondem",

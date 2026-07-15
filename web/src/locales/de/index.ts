@@ -224,7 +224,7 @@ export default {
     moveBackward: "Rückwärts bewegen",
   },
   messages: {
-    signInFailed: "Anmeldung fehlgeschlagen, bitte überprüfen Sie Ihren Benutzernamen und Passwort",
+    signInFailed: "Anmeldung fehlgeschlagen, bitte überprüfen Sie Ihre E-Mail und Ihr Passwort",
     signUpFailed: "Registrierung fehlgeschlagen, {{error}}",
     accountDisabled: "Das Konto wurde deaktiviert. Bitte kontaktieren Sie den Administrator.",
     passwordDoNotMatch: "Passwörter stimmen nicht überein",

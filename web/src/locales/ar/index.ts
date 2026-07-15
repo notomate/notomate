@@ -224,7 +224,7 @@ export default {
     moveBackward: "نقل للخلف",
   },
   messages: {
-    signInFailed: "فشل تسجيل الدخول، يرجى التحقق من اسم المستخدم وكلمة المرور",
+    signInFailed: "فشل تسجيل الدخول، يرجى التحقق من البريد الإلكتروني وكلمة المرور",
     signUpFailed: "فشل إنشاء الحساب، {{error}}",
     accountDisabled: "تم تعطيل الحساب. يرجى الاتصال بالمسؤول.",
     passwordDoNotMatch: "كلمات المرور غير متطابقة",

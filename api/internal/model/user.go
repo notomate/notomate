@@ -2,6 +2,7 @@ package model
 
 type UserFilter struct {
 	UserID      string
+	Email       string
 	NameOrEmail string
 	Disabled    bool
 }

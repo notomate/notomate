@@ -228,7 +228,7 @@ export default {
     moveBackward: "向後移動",
   },
   messages: {
-    signInFailed: "登入失敗，請檢查你的帳號和密碼",
+    signInFailed: "登入失敗，請檢查你的電子郵件和密碼",
     signUpFailed: "註冊失敗，{{error}}",
     accountDisabled: "帳號已被停用，請聯絡管理員。",
     passwordDoNotMatch: "再次輸入密碼不符合",

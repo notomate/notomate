@@ -228,7 +228,7 @@ export default {
     moveBackward: "Move Backward",
   },
   messages: {
-    signInFailed: "Sign in failed, please check your username and password",
+    signInFailed: "Sign in failed, please check your email and password",
     signUpFailed: "Sign up failed, {{error}}",
     accountDisabled: "Account has been disabled. Please contact the administrator.",
     passwordDoNotMatch: "Passwords do not match",

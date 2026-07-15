@@ -224,7 +224,7 @@ export default {
     moveBackward: "後ろに移動",
   },
   messages: {
-    signInFailed: "サインインに失敗しました。ユーザー名とパスワードを確認してください",
+    signInFailed: "サインインに失敗しました。メールアドレスとパスワードを確認してください",
     signUpFailed: "サインアップに失敗しました。{{error}}",
     accountDisabled: "アカウントが無効化されています。管理者に連絡してください。",
     passwordDoNotMatch: "パスワードが一致しません",

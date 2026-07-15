@@ -19,6 +19,11 @@ func (s SqliteDB) FindUsers(f model.UserFilter) ([]model.User, error) {
 	var conds []string
 	var args []interface{}
 
+	if f.Email != "" {
+		conds = append(conds, "email = ?")
+		args = append(args, f.Email)
+	}
+
 	if f.NameOrEmail != "" {
 		conds = append(conds, "(name = ? OR email = ?)")
 		args = append(args, f.NameOrEmail, f.NameOrEmail)

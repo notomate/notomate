@@ -224,7 +224,7 @@ export default {
     moveBackward: "뒤로 이동",
   },
   messages: {
-    signInFailed: "로그인 실패, 사용자명과 비밀번호를 확인해주세요",
+    signInFailed: "로그인 실패, 이메일과 비밀번호를 확인해주세요",
     signUpFailed: "회원가입 실패, {{error}}",
     accountDisabled: "계정이 비활성화되었습니다. 관리자에게 문의해주세요.",
     passwordDoNotMatch: "비밀번호가 일치하지 않습니다",
