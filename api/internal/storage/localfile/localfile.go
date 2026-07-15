@@ -36,7 +36,7 @@ func (l LocalFile) Save(segments []string, r io.Reader) error {
 	return err
 }
 
-func (l *LocalFile) Load(segments []string) (io.ReadCloser, error) {
+func (l *LocalFile) Load(segments []string) (io.ReadSeekCloser, error) {
 	uploadPath := l.root + strings.Join(segments, "/")
 	f, err := os.Open(uploadPath)
 	if err != nil {
