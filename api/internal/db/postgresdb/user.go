@@ -59,6 +59,16 @@ func (s PostgresDB) UpdateUserWithDisabled(u model.User) error {
 	return err
 }
 
+func (s PostgresDB) UpdateUserAvatar(u model.User) error {
+	// Use Select to force update avatar_url even when cleared to an empty string.
+	_, err := gorm.G[model.User](s.getDB()).
+		Where("id = ?", u.ID).
+		Select("avatar_url", "updated_by", "updated_at").
+		Updates(context.Background(), u)
+
+	return err
+}
+
 func (s PostgresDB) DeleteUser(id string) error {
 	_, err := gorm.G[model.User](s.getDB()).Where("id = ?", id).Delete(context.Background())
 

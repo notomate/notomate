@@ -7,7 +7,7 @@ import { useWorkspaceStore } from "@/stores/workspace"
 import { signOut } from "@/api/auth"
 import { toast } from "@/stores/toast"
 import { useState, useEffect, useRef } from "react"
-import { updatePreferences, uploadAvatar } from "@/api/user"
+import { updatePreferences, uploadAvatar, removeAvatar, updateEmail } from "@/api/user"
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, CreateAPIKeyRequest } from "@/api/apikey"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
@@ -16,7 +16,7 @@ import Select from "@/components/select/Select"
 import Avatar from "@/components/avatar/Avatar"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera } from "lucide-react"
+import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera, X } from "lucide-react"
 
 interface UserSettingsModalProps {
     open: boolean
@@ -31,6 +31,10 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()!
     const avatarInputRef = useRef<HTMLInputElement>(null)
     const [avatarUploading, setAvatarUploading] = useState(false)
+    const [avatarRemoving, setAvatarRemoving] = useState(false)
+    const [editingEmail, setEditingEmail] = useState(false)
+    const [emailValue, setEmailValue] = useState("")
+    const [emailSaving, setEmailSaving] = useState(false)
 
     // Tab state
     const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'apiKeys' | 'users' | 'system'>('account')
@@ -340,6 +344,57 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
         }
     }
 
+    const handleRemoveAvatar = async () => {
+        if (!user) return
+
+        setAvatarRemoving(true)
+        try {
+            await removeAvatar(user.id)
+            await fetchUser()
+            toast.success(t("messages.avatarRemoved"))
+        } catch (err) {
+            toast.error(t("messages.avatarRemoveFailed"))
+        } finally {
+            setAvatarRemoving(false)
+        }
+    }
+
+    const startEditingEmail = () => {
+        setEmailValue(user?.email || "")
+        setEditingEmail(true)
+    }
+
+    const cancelEditingEmail = () => {
+        setEditingEmail(false)
+        setEmailValue("")
+    }
+
+    const handleSaveEmail = async () => {
+        if (!user) return
+
+        const trimmed = emailValue.trim()
+        if (!trimmed) {
+            toast.error(t("messages.userEmailRequired"))
+            return
+        }
+        if (trimmed === user.email) {
+            cancelEditingEmail()
+            return
+        }
+
+        setEmailSaving(true)
+        try {
+            await updateEmail(user.id, trimmed)
+            await fetchUser()
+            setEditingEmail(false)
+            toast.success(t("messages.emailUpdated"))
+        } catch (err) {
+            toast.error(t("messages.emailUpdateFailed"))
+        } finally {
+            setEmailSaving(false)
+        }
+    }
+
     const signoutMutation = useMutation({
         mutationFn: () => signOut(),
         onSuccess: () => {
@@ -444,12 +499,22 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                 <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={48} />
                                                 <button
                                                     onClick={() => avatarInputRef.current?.click()}
-                                                    disabled={avatarUploading}
+                                                    disabled={avatarUploading || avatarRemoving}
                                                     className="absolute -bottom-1 -right-1 p-1 rounded-full bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50"
                                                     title={t("pages.preferences.changeAvatar")}
                                                 >
                                                     <Camera size={12} />
                                                 </button>
+                                                {user?.avatar_url && (
+                                                    <button
+                                                        onClick={handleRemoveAvatar}
+                                                        disabled={avatarUploading || avatarRemoving}
+                                                        className="absolute -top-1 -right-1 p-1 rounded-full bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                                        title={t("pages.preferences.removeAvatar")}
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                )}
                                                 <input
                                                     ref={avatarInputRef}
                                                     type="file"
@@ -458,9 +523,46 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                     onChange={handleAvatarChange}
                                                 />
                                             </div>
-                                            <div className="min-w-0">
+                                            <div className="min-w-0 flex-1">
                                                 <p className="font-semibold text-sm truncate">{user?.name}</p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                                                {editingEmail ? (
+                                                    <div className="flex items-center gap-1 mt-1">
+                                                        <input
+                                                            type="email"
+                                                            value={emailValue}
+                                                            onChange={(e) => setEmailValue(e.target.value)}
+                                                            autoFocus
+                                                            className="min-w-0 flex-1 px-2 py-1 text-xs border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                                        />
+                                                        <button
+                                                            onClick={handleSaveEmail}
+                                                            disabled={emailSaving}
+                                                            className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors disabled:opacity-50"
+                                                            title={t("actions.save")}
+                                                        >
+                                                            <Check size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={cancelEditingEmail}
+                                                            disabled={emailSaving}
+                                                            className="p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
+                                                            title={t("actions.cancel")}
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center gap-1 min-w-0">
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                                                        <button
+                                                            onClick={startEditingEmail}
+                                                            className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors shrink-0"
+                                                            title={t("pages.preferences.changeEmail")}
+                                                        >
+                                                            <Edit size={12} />
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                         <Button

@@ -15,7 +15,9 @@ func RegisterUser(api *echo.Group, h handler.Handler, authMiddleware middlewares
 	g.Use(authMiddleware.CheckJWT())
 	g.Use(authMiddleware.ParseJWT())
 	g.PATCH("/:id/preferences", h.UpdatePreferences)
+	g.PATCH("/:id/email", h.ChangeEmail)
 	g.POST("/:id/avatar", h.UploadAvatar)
+	g.DELETE("/:id/avatar", h.RemoveAvatar)
 
 	// API Key management routes
 	apiKeys := g.Group("/:id/api-keys")
