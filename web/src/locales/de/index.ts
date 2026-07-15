@@ -582,6 +582,7 @@ export default {
     "TagsNode":"Schlagwörter",
     "RatingNode":"Bewertung",
     "Video":"Video",
+    "Audio":"Audio",
     "MapView":"Karte",
     "CalendarView":"Kalender",
     "KanbanView":"Kanban",

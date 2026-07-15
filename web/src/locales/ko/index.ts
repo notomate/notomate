@@ -582,6 +582,7 @@ export default {
     "TagsNode":"태그",
     "RatingNode":"평점",
     "Video":"동영상",
+    "Audio":"오디오",
     "MapView":"지도",
     "CalendarView":"캘린더",
     "KanbanView":"칸반",

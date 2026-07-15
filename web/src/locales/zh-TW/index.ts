@@ -684,6 +684,7 @@ export default {
     "TagsNode":"標籤",
     "RatingNode":"評分",
     "Video":"影片",
+    "Audio":"音訊",
     "SubPage":"頁面",
     "MapView":"地圖",
     "CalendarView":"行事曆",

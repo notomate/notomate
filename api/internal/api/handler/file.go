@@ -87,7 +87,8 @@ func (h Handler) Download(c echo.Context) error {
 	}
 	defer f.Close()
 
-	return c.Stream(http.StatusOK, "application/octet-stream", f)
+	http.ServeContent(c.Response(), c.Request(), filename, time.Time{}, f)
+	return nil
 }
 
 func (h Handler) Delete(c echo.Context) error {

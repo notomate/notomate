@@ -54,7 +54,7 @@ func (s *S3Storage) Save(segments []string, reader io.Reader) error {
 	return err
 }
 
-func (s *S3Storage) Load(segments []string) (io.ReadCloser, error) {
+func (s *S3Storage) Load(segments []string) (io.ReadSeekCloser, error) {
 	key := strings.Join(segments, "/")
 
 	object, err := s.client.GetObject(
