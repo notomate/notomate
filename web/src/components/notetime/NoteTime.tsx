@@ -8,9 +8,9 @@ interface Props {
 const NoteTime:FC<Props> = (props:Props)=>{
     const time = useRelativeTime(props.time)
 
-    return <>
+    return <span className="text-sm">
         {time}
-    </>
+    </span>
 }
 
 export default NoteTime
