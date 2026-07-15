@@ -7,7 +7,7 @@ import { BubbleMenu } from "@tiptap/react/menus"
 import { TableKit } from "@tiptap/extension-table"
 import { FC, useMemo, useRef, useEffect, useState, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { GripVertical, ChevronUp, ChevronDown, Trash2, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, Image, Images, List, ListTodo, FileText, Paperclip, Quote, Table, Type, Video, Youtube, CalendarDays, MapPin, Tag, Star, Map, Kanban, PenTool, Sheet } from 'lucide-react'
+import { GripVertical, ChevronUp, ChevronDown, Trash2, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, Image, Images, List, ListTodo, FileText, Paperclip, Quote, Table, Type, Video, Music, Youtube, CalendarDays, MapPin, Tag, Star, Map, Kanban, PenTool, Sheet } from 'lucide-react'
 import { CommandItem, SlashCommand } from './extensions/slashcommand/SlashCommand'
 import { Attachment } from './extensions/attachment/Attachment'
 import { ImageNode } from './extensions/imagenode/ImageNode'
@@ -17,6 +17,7 @@ import { ThreadsEmbed } from './extensions/threadsembed/ThreadsEmbed'
 import { InstagramEmbed } from './extensions/instagramembed/InstagramEmbed'
 import { TiktokEmbed } from './extensions/tiktokembed/TiktokEmbed'
 import { VideoNode } from './extensions/videonode/VideoNode'
+import { AudioNode } from './extensions/audionode/AudioNode'
 import { SubPageNode } from './extensions/subpagenode/SubPageNode'
 import { ViewNode } from './extensions/viewnode/ViewNode'
 import { createView, deleteView } from '@/api/view'
@@ -146,6 +147,17 @@ const Editor: FC<Props> = ({
       TagsNode,
       RatingNode,
       VideoNode.configure({
+        upload: async (f: File, onProgress?: (percent: number) => void) => {
+          const res = await uploadFile(currentWorkspaceId, f, onProgress)
+          return {
+            src: `/api/v1/workspaces/${currentWorkspaceId}/files/${res.filename}`,
+            name: res.original_name
+          }
+        },
+        workspaceId: currentWorkspaceId,
+        listFiles: listFiles
+      }),
+      AudioNode.configure({
         upload: async (f: File, onProgress?: (percent: number) => void) => {
           const res = await uploadFile(currentWorkspaceId, f, onProgress)
           return {
@@ -299,6 +311,14 @@ const Editor: FC<Props> = ({
                 keywords: ["video", "upload", "media", "mp4"],
                 command: ({ editor }: any) =>
                   editor?.chain().focus().setVideo({ src: null, name: null }).run()
+              },
+              {
+                icon: <Music size={16} />,
+                label: t("editor.Audio"),
+                category: 'media',
+                keywords: ["audio", "music", "sound", "mp3", "upload"],
+                command: ({ editor }: any) =>
+                  editor?.chain().focus().setAudio({ src: null, name: null }).run()
               },
               {
                 icon: <Paperclip size={16} />,

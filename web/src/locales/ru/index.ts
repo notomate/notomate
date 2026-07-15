@@ -582,6 +582,7 @@ export default {
     "TagsNode":"Теги",
     "RatingNode":"Рейтинг",
     "Video":"Видео",
+    "Audio":"Аудио",
     "MapView":"Карта",
     "CalendarView":"Календарь",
     "KanbanView":"Канбан",

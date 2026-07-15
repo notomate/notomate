@@ -684,6 +684,7 @@ export default {
     "TagsNode":"Tags",
     "RatingNode":"Rating",
     "Video":"Video",
+    "Audio":"Audio",
     "SubPage":"Page",
     "MapView":"Map",
     "CalendarView":"Calendar",

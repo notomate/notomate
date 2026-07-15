@@ -582,6 +582,7 @@ export default {
     "TagsNode":"وسوم",
     "RatingNode":"تقييم",
     "Video":"فيديو",
+    "Audio":"صوت",
     "MapView":"خريطة",
     "CalendarView":"تقويم",
     "KanbanView":"كانبان",

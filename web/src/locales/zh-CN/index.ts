@@ -669,6 +669,7 @@ export default {
     "TagsNode":"标签",
     "RatingNode":"评分",
     "Video":"视频",
+    "Audio":"音频",
     "SubPage":"页面",
     "MapView":"地图",
     "CalendarView":"日历",
