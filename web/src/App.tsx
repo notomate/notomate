@@ -20,7 +20,7 @@ import { Toast } from './components/toast/Toast'
 import { useToastStore } from './stores/toast';
 import WorkspaceLayout from './components/workspacelayout/WorkspaceLayout';
 import WorkspaceLoader from './components/workspaceloader/WorkspaceLoader';
-import ViewsLayout from './pages/workspace/views/ViewsLayout';
+import WorkspacePageLayout from './components/workspacepagelayout/WorkspacePageLayout';
 import CalendarPage from './pages/workspace/calendar/CalendarPage';
 import CalendarSlotDetailPage from './pages/workspace/calendar/CalendarSlotDetailPage';
 import MapPage from './pages/workspace/map/MapPage';
@@ -72,10 +72,12 @@ function App() {
           <Route path='workspaces' element={<WorkspaceLoader />} />
           <Route path='workspaces/:workspaceId' element={<WorkspaceLayout />}>
             <Route index element={<Navigate to="notes" replace />} />
-            <Route path='notes' element={<NotesLayout />}>
-              <Route index element={<NotesPage />} />
-              <Route path='search' element={<SearchPage />} />
-              <Route path=':noteId' element={<NoteDetailPage />} ></Route>
+            <Route path='notes/:noteId' element={<NotesLayout />}>
+              <Route index element={<NoteDetailPage />} />
+            </Route>
+            <Route element={<WorkspacePageLayout />}>
+              <Route path='notes' element={<NotesPage />} />
+              <Route path='notes/search' element={<SearchPage />} />
               <Route path='files' element={<FilesPage />} />
               <Route path='settings' element={<Settings />} />
               <Route path='workflows' element={<WorkflowsPage />} />
@@ -84,8 +86,6 @@ function App() {
               <Route path='workflows/:workflowId' element={<WorkflowEditPage />} />
               <Route path='workflows/:workflowId/runs' element={<RunsPage />} />
               <Route path='workflows/:workflowId/runs/:runId' element={<RunDetailPage />} />
-            </Route>
-            <Route element={<ViewsLayout />}>
               <Route path='calendar/:calendarId' element={<CalendarPage />}>
                 <Route path='slot/:slotId' element={<CalendarSlotDetailPage />} />
               </Route>

@@ -33,7 +33,8 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
     const location = useLocation()
     const { handleCreateNote, isPending: isCreatingNote } = useCreateNote()
 
-    const notesBase = `/workspaces/${currentWorkspaceId}/notes`
+    const workspaceBase = `/workspaces/${currentWorkspaceId}`
+    const notesBase = `${workspaceBase}/notes`
 
     const { data: pinnedNotes = [] } = useQuery<NoteData[]>({
         queryKey: ['notes', currentWorkspaceId, 'pinned'],
@@ -90,7 +91,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     <span className="leading-snug">{t("placeholder.search")}</span>
                 </Link>
                 <Link
-                    to={`${notesBase}/files`}
+                    to={`${workspaceBase}/files`}
                     onClick={onClose}
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
@@ -103,7 +104,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     <span className="leading-snug">{t("menu.files")}</span>
                 </Link>
                 <Link
-                    to={`${notesBase}/workflows`}
+                    to={`${workspaceBase}/workflows`}
                     onClick={onClose}
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
@@ -116,7 +117,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     <span className="leading-snug">{t("menu.workflows")}</span>
                 </Link>
                 <Link
-                    to={`${notesBase}/settings`}
+                    to={`${workspaceBase}/settings`}
                     onClick={onClose}
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",

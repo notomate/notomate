@@ -6,7 +6,7 @@ import { useWorkspaceStore } from "@/stores/workspace"
 import WorkspaceSidebar from "@/components/workspacesidebar/WorkspaceSidebar"
 import MobileTopBar from "@/components/mobiletopbar/MobileTopBar"
 
-const ViewsLayout = () => {
+const WorkspacePageLayout = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const { t } = useTranslation()
@@ -32,4 +32,4 @@ const ViewsLayout = () => {
     )
 }
 
-export default ViewsLayout
+export default WorkspacePageLayout
