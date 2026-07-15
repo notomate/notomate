@@ -6,16 +6,17 @@ import { useCurrentUserStore } from "@/stores/current-user"
 import { useWorkspaceStore } from "@/stores/workspace"
 import { signOut } from "@/api/auth"
 import { toast } from "@/stores/toast"
-import { useState, useEffect } from "react"
-import { updatePreferences } from "@/api/user"
+import { useState, useEffect, useRef } from "react"
+import { updatePreferences, uploadAvatar } from "@/api/user"
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, CreateAPIKeyRequest } from "@/api/apikey"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
 import Card from "@/components/card/Card"
 import Select from "@/components/select/Select"
+import Avatar from "@/components/avatar/Avatar"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut } from "lucide-react"
+import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera } from "lucide-react"
 
 interface UserSettingsModalProps {
     open: boolean
@@ -23,11 +24,13 @@ interface UserSettingsModalProps {
 }
 
 const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
-    const { user, resetCurrentUser } = useCurrentUserStore()
+    const { user, fetchUser, resetCurrentUser } = useCurrentUserStore()
     const { resetWorkspaces } = useWorkspaceStore()
     const { t, i18n } = useTranslation()
     const navigate = useNavigate()
     const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()!
+    const avatarInputRef = useRef<HTMLInputElement>(null)
+    const [avatarUploading, setAvatarUploading] = useState(false)
 
     // Tab state
     const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'apiKeys' | 'users' | 'system'>('account')
@@ -311,6 +314,32 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
         setShowPasswordDialog(true)
     }
 
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        e.target.value = ""
+        if (!file || !user) return
+
+        if (!file.type.startsWith("image/")) {
+            toast.error(t("messages.avatarInvalidType"))
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error(t("messages.avatarTooLarge"))
+            return
+        }
+
+        setAvatarUploading(true)
+        try {
+            await uploadAvatar(user.id, file)
+            await fetchUser()
+            toast.success(t("messages.avatarUploaded"))
+        } catch (err) {
+            toast.error(t("messages.avatarUploadFailed"))
+        } finally {
+            setAvatarUploading(false)
+        }
+    }
+
     const signoutMutation = useMutation({
         mutationFn: () => signOut(),
         onSuccess: () => {
@@ -410,9 +439,29 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             {activeTab === 'account' && (
                                 <Card className="w-full p-4">
                                     <div className="flex items-center justify-between gap-4">
-                                        <div className="min-w-0">
-                                            <p className="font-semibold text-sm truncate">{user?.name}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="relative shrink-0">
+                                                <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={48} />
+                                                <button
+                                                    onClick={() => avatarInputRef.current?.click()}
+                                                    disabled={avatarUploading}
+                                                    className="absolute -bottom-1 -right-1 p-1 rounded-full bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50"
+                                                    title={t("pages.preferences.changeAvatar")}
+                                                >
+                                                    <Camera size={12} />
+                                                </button>
+                                                <input
+                                                    ref={avatarInputRef}
+                                                    type="file"
+                                                    accept="image/png,image/jpeg,image/gif,image/webp"
+                                                    className="hidden"
+                                                    onChange={handleAvatarChange}
+                                                />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-sm truncate">{user?.name}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                                            </div>
                                         </div>
                                         <Button
                                             variant="outline"

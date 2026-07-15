@@ -3,6 +3,7 @@ import { Link } from "react-router-dom"
 import { NoteData } from "@/api/note"
 import NoteTime from "../notetime/NoteTime"
 import Renderer from "@/components/renderer/Renderer"
+import Avatar from "@/components/avatar/Avatar"
 import { ExternalLink, CornerDownRight } from "lucide-react"
 
 interface NoteCardProps {
@@ -31,7 +32,16 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
                     </div>
                 )}
                 <div className="flex justify-between items-center text-gray-500">
-                    <div>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        {note.created_by && (
+                            <>
+                                <Avatar name={note.created_by} avatarUrl={note.created_by_avatar_url} size={20} />
+                                <span className=" font-medium text-gray-600 dark:text-gray-300 truncate max-w-[140px]">
+                                    {note.created_by}
+                                </span>
+                                <span className="text-gray-300 dark:text-gray-600">·</span>
+                            </>
+                        )}
                         <NoteTime time={note.created_at ?? ""} />
                     </div>
                     {showLink && (

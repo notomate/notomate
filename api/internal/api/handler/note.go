@@ -26,19 +26,20 @@ type UpdateNoteRequest struct {
 }
 
 type GetNoteResponse struct {
-	ID          string   `json:"id"`
-	WorkspaceID string   `json:"workspace_id"`
-	ParentID    string   `json:"parent_id"`
-	Visibility  string   `json:"visibility"`
-	Pinned      bool     `json:"pinned"`
-	Title       string   `json:"title"`
-	Content     string   `json:"content"`
-	Tags        []string `json:"tags"`
-	Files       []string `json:"files"`
-	CreatedAt   string   `json:"created_at"`
-	CreatedBy   string   `json:"created_by"`
-	UpdatedAt   string   `json:"updated_at"`
-	UpdatedBy   string   `json:"updated_by"`
+	ID                 string   `json:"id"`
+	WorkspaceID        string   `json:"workspace_id"`
+	ParentID           string   `json:"parent_id"`
+	Visibility         string   `json:"visibility"`
+	Pinned             bool     `json:"pinned"`
+	Title              string   `json:"title"`
+	Content            string   `json:"content"`
+	Tags               []string `json:"tags"`
+	Files              []string `json:"files"`
+	CreatedAt          string   `json:"created_at"`
+	CreatedBy          string   `json:"created_by"`
+	CreatedByAvatarUrl string   `json:"created_by_avatar_url"`
+	UpdatedAt          string   `json:"updated_at"`
+	UpdatedBy          string   `json:"updated_by"`
 }
 
 // Helper function to get username by user ID
@@ -51,6 +52,18 @@ func (h Handler) getUserNameByID(userID string) string {
 		return userID // Return ID if user not found
 	}
 	return user.Name
+}
+
+// Helper function to get a user's display name and avatar URL by user ID
+func (h Handler) getUserInfoByID(userID string) (name string, avatarUrl string) {
+	if userID == "" {
+		return "", ""
+	}
+	user, err := h.db.FindUserByID(userID)
+	if err != nil {
+		return userID, "" // Return ID if user not found
+	}
+	return user.Name, user.AvatarUrl
 }
 
 // Helper function to check if a user is a member of a workspace
@@ -103,18 +116,20 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 
 	res := make([]GetNoteResponse, 0)
 	for _, b := range notes {
+		createdByName, createdByAvatarUrl := h.getUserInfoByID(b.CreatedBy)
 		res = append(res, GetNoteResponse{
-			ID:          b.ID,
-			WorkspaceID: b.WorkspaceID,
-			ParentID:    b.ParentID,
-			Visibility:  b.Visibility,
-			Pinned:      b.Pinned,
-			Title:       b.Title,
-			Content:     b.Content,
-			CreatedAt:   b.CreatedAt,
-			CreatedBy:   h.getUserNameByID(b.CreatedBy),
-			UpdatedAt:   b.UpdatedAt,
-			UpdatedBy:   h.getUserNameByID(b.UpdatedBy),
+			ID:                 b.ID,
+			WorkspaceID:        b.WorkspaceID,
+			ParentID:           b.ParentID,
+			Visibility:         b.Visibility,
+			Pinned:             b.Pinned,
+			Title:              b.Title,
+			Content:            b.Content,
+			CreatedAt:          b.CreatedAt,
+			CreatedBy:          createdByName,
+			CreatedByAvatarUrl: createdByAvatarUrl,
+			UpdatedAt:          b.UpdatedAt,
+			UpdatedBy:          h.getUserNameByID(b.UpdatedBy),
 		})
 	}
 
@@ -165,18 +180,20 @@ func (h Handler) GetNotes(c echo.Context) error {
 	res := make([]GetNoteResponse, 0)
 
 	for _, b := range notes {
+		createdByName, createdByAvatarUrl := h.getUserInfoByID(b.CreatedBy)
 		res = append(res, GetNoteResponse{
-			ID:          b.ID,
-			WorkspaceID: b.WorkspaceID,
-			ParentID:    b.ParentID,
-			Visibility:  b.Visibility,
-			Pinned:      b.Pinned,
-			Title:       b.Title,
-			Content:     b.Content,
-			CreatedAt:   b.CreatedAt,
-			CreatedBy:   h.getUserNameByID(b.CreatedBy),
-			UpdatedAt:   b.UpdatedAt,
-			UpdatedBy:   h.getUserNameByID(b.UpdatedBy),
+			ID:                 b.ID,
+			WorkspaceID:        b.WorkspaceID,
+			ParentID:           b.ParentID,
+			Visibility:         b.Visibility,
+			Pinned:             b.Pinned,
+			Title:              b.Title,
+			Content:            b.Content,
+			CreatedAt:          b.CreatedAt,
+			CreatedBy:          createdByName,
+			CreatedByAvatarUrl: createdByAvatarUrl,
+			UpdatedAt:          b.UpdatedAt,
+			UpdatedBy:          h.getUserNameByID(b.UpdatedBy),
 		})
 	}
 
@@ -214,18 +231,20 @@ func (h Handler) GetNote(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusForbidden, "you do not have permission to see this Note")
 	}
 
+	createdByName, createdByAvatarUrl := h.getUserInfoByID(b.CreatedBy)
 	res := GetNoteResponse{
-		ID:          b.ID,
-		WorkspaceID: b.WorkspaceID,
-		ParentID:    b.ParentID,
-		Visibility:  b.Visibility,
-		Pinned:      b.Pinned,
-		Title:       b.Title,
-		Content:     b.Content,
-		CreatedAt:   b.CreatedAt,
-		CreatedBy:   h.getUserNameByID(b.CreatedBy),
-		UpdatedAt:   b.UpdatedAt,
-		UpdatedBy:   h.getUserNameByID(b.UpdatedBy),
+		ID:                 b.ID,
+		WorkspaceID:        b.WorkspaceID,
+		ParentID:           b.ParentID,
+		Visibility:         b.Visibility,
+		Pinned:             b.Pinned,
+		Title:              b.Title,
+		Content:            b.Content,
+		CreatedAt:          b.CreatedAt,
+		CreatedBy:          createdByName,
+		CreatedByAvatarUrl: createdByAvatarUrl,
+		UpdatedAt:          b.UpdatedAt,
+		UpdatedBy:          h.getUserNameByID(b.UpdatedBy),
 	}
 
 	return c.JSON(http.StatusOK, res)

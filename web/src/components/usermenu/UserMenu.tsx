@@ -1,11 +1,12 @@
 import { useRef, useState, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { Settings, Info, Compass, User as UserIcon } from "lucide-react"
+import { Settings, Info, Compass } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { useCurrentUserStore } from "@/stores/current-user"
 import UserSettingsModal from "@/components/user/UserSettingsModal"
 import AboutModal from "@/components/user/AboutModal"
+import Avatar from "@/components/avatar/Avatar"
 
 const UserMenu = () => {
     const { t } = useTranslation()
@@ -73,9 +74,7 @@ const UserMenu = () => {
                     onClick={() => setIsMenuOpen(prev => !prev)}
                     className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors text-left"
                 >
-                    <div className="w-6 h-6 rounded-full bg-blue-500 text-white font-semibold flex items-center justify-center text-xs shrink-0">
-                        {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon size={14} />}
-                    </div>
+                    <Avatar name={user.name} avatarUrl={user.avatar_url} size={24} />
                     <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{user.name}</span>
                 </button>
                 {isLg && isMenuOpen && (

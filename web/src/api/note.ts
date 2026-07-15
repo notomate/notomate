@@ -7,6 +7,7 @@ export interface NoteData {
   parent_id?: string;
   created_at?: string;
   created_by?: string;
+  created_by_avatar_url?: string;
   updated_at?: string;
   updated_by?: string;
   title?: string;

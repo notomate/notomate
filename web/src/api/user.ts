@@ -11,6 +11,7 @@ export interface User {
     name: string;
     email: string;
     role: string;
+    avatar_url?: string;
     preferences: UserPreferences;
 }
 
@@ -20,4 +21,16 @@ export const updatePreferences = async (user: User) => {
             preferences: user.preferences
         });
     return response.data as User;
+};
+
+export const uploadAvatar = async (userId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await axios.post(`/api/v1/users/${userId}/avatar`, formData, {
+        withCredentials: true,
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data as { avatar_url: string };
 };
