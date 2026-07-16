@@ -38,25 +38,24 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
 
     if (!note) {
         return (
-            <div className="w-full">
-                <div className="flex flex-col min-h-full animate-pulse">
-                    <div className="flex justify-center">
-                        <div className="max-w-3xl w-full m-auto">
-                            <div className="lg:p-10">
-                                <div className="px-4 pt-16 lg:pt-14">
-                                    <div className="flex flex-col gap-4">
-                                        <div className="hidden lg:block">
-                                            <div className="h-10 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
-                                        </div>
-                                        <div className="flex flex-col gap-3">
-                                            <div className="h-6 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
-                                            <div className="h-6 bg-gray-200 dark:bg-neutral-700 rounded w-5/6"></div>
-                                            <div className="h-6 bg-gray-200 dark:bg-neutral-700 rounded w-4/5"></div>
-                                            <div className="h-6 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
-                                            <div className="h-6 bg-gray-200 dark:bg-neutral-700 rounded w-3/4"></div>
-                                            <div className="h-6 bg-gray-200 dark:bg-neutral-700 rounded w-5/6"></div>
-                                        </div>
-                                    </div>
+            <div className="flex flex-col flex-1 min-h-0 animate-pulse">
+                <div className="shrink-0 p-2 lg:p-4">
+                    <div className="flex items-center gap-2 px-3">
+                        <div className="h-6 bg-gray-200 dark:bg-neutral-700 rounded w-1/3"></div>
+                    </div>
+                </div>
+                <div className="flex-1 overflow-auto">
+                    <div className="lg:max-w-3xl w-full m-auto">
+                        <div className="lg:p-10">
+                            <div className="px-4">
+                                {/* Bar/gap heights mirror the prose-sm/base/lg/2xl line-heights (24/28/32/40px) used by the tiptap editor */}
+                                <div className="flex flex-col gap-[7px] sm:gap-2 lg:gap-2.5 xl:gap-3">
+                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
+                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-5/6"></div>
+                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-4/5"></div>
+                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
+                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-3/4"></div>
+                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-5/6"></div>
                                 </div>
                             </div>
                         </div>
