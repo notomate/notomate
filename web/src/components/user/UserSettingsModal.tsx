@@ -432,10 +432,10 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                 className="max-w-[800px] h-[85vh] flex flex-col"
             >
                         {/* Tabs */}
-                        <div className="flex gap-2 border-b border-gray-200 dark:border-neutral-700 mb-4">
+                        <div className="flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-neutral-700 mb-4">
                             <button
                                 onClick={() => setActiveTab('account')}
-                                className={`px-4 py-2 font-medium transition-colors ${
+                                className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                     activeTab === 'account'
                                         ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
@@ -445,7 +445,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             </button>
                             <button
                                 onClick={() => setActiveTab('preferences')}
-                                className={`px-4 py-2 font-medium transition-colors ${
+                                className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                     activeTab === 'preferences'
                                         ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
@@ -455,7 +455,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             </button>
                             <button
                                 onClick={() => setActiveTab('apiKeys')}
-                                className={`px-4 py-2 font-medium transition-colors ${
+                                className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                     activeTab === 'apiKeys'
                                         ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
                                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
@@ -466,7 +466,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             {isOwner && (
                                 <button
                                     onClick={() => setActiveTab('users')}
-                                    className={`px-4 py-2 font-medium transition-colors ${
+                                    className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                         activeTab === 'users'
                                             ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
                                             : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
@@ -478,7 +478,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             {isOwner && (
                                 <button
                                     onClick={() => setActiveTab('system')}
-                                    className={`px-4 py-2 font-medium transition-colors ${
+                                    className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                         activeTab === 'system'
                                             ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
                                             : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
