@@ -241,6 +241,8 @@ export default {
     avatarRemoveFailed: "アバターの削除に失敗しました",
     emailUpdated: "メールアドレスを更新しました",
     emailUpdateFailed: "メールアドレスの更新に失敗しました",
+    passwordUpdated: "パスワードを更新しました",
+    passwordUpdateFailed: "パスワードの更新に失敗しました",
     avatarUploadFailed: "アバターの更新に失敗しました",
     avatarInvalidType: "画像ファイルを選択してください",
     avatarTooLarge: "画像が大きすぎます（最大5MB）",

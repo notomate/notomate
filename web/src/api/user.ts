@@ -44,3 +44,8 @@ export const updateEmail = async (userId: string, email: string) => {
     const response = await axios.patch(`/api/v1/users/${userId}/email`, { email });
     return response.data as { email: string };
 };
+
+export const changePassword = async (userId: string, password: string) => {
+    const response = await axios.patch(`/api/v1/users/${userId}/password`, { password });
+    return response.data;
+};

@@ -248,6 +248,8 @@ export default {
     avatarRemoveFailed: "Failed to remove avatar",
     emailUpdated: "Email updated successfully",
     emailUpdateFailed: "Failed to update email",
+    passwordUpdated: "Password updated successfully",
+    passwordUpdateFailed: "Failed to update password",
     networkError: "Network error. Please try again",
     fileUploaded: "File uploaded successfully",
     fileUploadFailed: "File upload failed",

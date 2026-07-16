@@ -241,6 +241,8 @@ export default {
     avatarRemoveFailed: "Не удалось удалить аватар",
     emailUpdated: "Email успешно обновлён",
     emailUpdateFailed: "Не удалось обновить email",
+    passwordUpdated: "Пароль успешно обновлён",
+    passwordUpdateFailed: "Не удалось обновить пароль",
     avatarUploadFailed: "Не удалось обновить аватар",
     avatarInvalidType: "Пожалуйста, выберите файл изображения",
     avatarTooLarge: "Изображение слишком большое (макс. 5МБ)",

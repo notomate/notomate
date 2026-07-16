@@ -245,6 +245,8 @@ export default {
     avatarRemoveFailed: "移除頭像失敗",
     emailUpdated: "電子郵件更新成功",
     emailUpdateFailed: "電子郵件更新失敗",
+    passwordUpdated: "密碼更新成功",
+    passwordUpdateFailed: "密碼更新失敗",
     avatarUploadFailed: "頭像更新失敗",
     avatarInvalidType: "請選擇圖片檔案",
     avatarTooLarge: "圖片太大（最大 5MB）",

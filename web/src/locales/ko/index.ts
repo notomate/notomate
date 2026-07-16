@@ -241,6 +241,8 @@ export default {
     avatarRemoveFailed: "아바타 삭제 실패",
     emailUpdated: "이메일이 업데이트되었습니다",
     emailUpdateFailed: "이메일 업데이트 실패",
+    passwordUpdated: "비밀번호가 업데이트되었습니다",
+    passwordUpdateFailed: "비밀번호 업데이트 실패",
     avatarUploadFailed: "아바타 업데이트에 실패했습니다",
     avatarInvalidType: "이미지 파일을 선택해주세요",
     avatarTooLarge: "이미지가 너무 큽니다 (최대 5MB)",

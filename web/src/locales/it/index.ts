@@ -241,6 +241,8 @@ export default {
     avatarRemoveFailed: "Impossibile rimuovere l'avatar",
     emailUpdated: "Email aggiornata con successo",
     emailUpdateFailed: "Impossibile aggiornare l'email",
+    passwordUpdated: "Password aggiornata con successo",
+    passwordUpdateFailed: "Impossibile aggiornare la password",
     avatarUploadFailed: "Impossibile aggiornare l'avatar",
     avatarInvalidType: "Seleziona un file immagine",
     avatarTooLarge: "L'immagine è troppo grande (max 5MB)",

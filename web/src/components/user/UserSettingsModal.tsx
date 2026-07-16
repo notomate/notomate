@@ -7,7 +7,7 @@ import { useWorkspaceStore } from "@/stores/workspace"
 import { signOut } from "@/api/auth"
 import { toast } from "@/stores/toast"
 import { useState, useEffect, useRef } from "react"
-import { updatePreferences, uploadAvatar, removeAvatar, updateEmail } from "@/api/user"
+import { updatePreferences, uploadAvatar, removeAvatar, updateEmail, changePassword } from "@/api/user"
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, CreateAPIKeyRequest } from "@/api/apikey"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
@@ -35,6 +35,9 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const [editingEmail, setEditingEmail] = useState(false)
     const [emailValue, setEmailValue] = useState("")
     const [emailSaving, setEmailSaving] = useState(false)
+    const [showOwnPasswordDialog, setShowOwnPasswordDialog] = useState(false)
+    const [ownPasswordFormData, setOwnPasswordFormData] = useState({ newPassword: "", confirmPassword: "" })
+    const [ownPasswordSaving, setOwnPasswordSaving] = useState(false)
 
     // Tab state
     const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'apiKeys' | 'users' | 'system'>('account')
@@ -395,6 +398,31 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
         }
     }
 
+    const handleChangeOwnPassword = async () => {
+        if (!user) return
+
+        if (!ownPasswordFormData.newPassword) {
+            toast.error(t("messages.userPasswordRequired"))
+            return
+        }
+        if (ownPasswordFormData.newPassword !== ownPasswordFormData.confirmPassword) {
+            toast.error(t("messages.passwordMismatch"))
+            return
+        }
+
+        setOwnPasswordSaving(true)
+        try {
+            await changePassword(user.id, ownPasswordFormData.newPassword)
+            setOwnPasswordFormData({ newPassword: "", confirmPassword: "" })
+            setShowOwnPasswordDialog(false)
+            toast.success(t("messages.passwordUpdated"))
+        } catch (err) {
+            toast.error(t("messages.passwordUpdateFailed"))
+        } finally {
+            setOwnPasswordSaving(false)
+        }
+    }
+
     const signoutMutation = useMutation({
         mutationFn: () => signOut(),
         onSuccess: () => {
@@ -493,10 +521,14 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             {/* Account Tab */}
                             {activeTab === 'account' && (
                                 <Card className="w-full p-4">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="relative shrink-0">
-                                                <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={48} />
+                                    <div className="flex flex-col gap-6">
+                                        {/* Avatar field */}
+                                        <div className="flex flex-col">
+                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                                {t("pages.preferences.changeAvatar")}
+                                            </div>
+                                            <div className="relative w-fit">
+                                                <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={56} />
                                                 <button
                                                     onClick={() => avatarInputRef.current?.click()}
                                                     disabled={avatarUploading || avatarRemoving}
@@ -523,57 +555,88 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                     onChange={handleAvatarChange}
                                                 />
                                             </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="font-semibold text-sm truncate">{user?.name}</p>
-                                                {editingEmail ? (
-                                                    <div className="flex items-center gap-1 mt-1">
-                                                        <input
-                                                            type="email"
-                                                            value={emailValue}
-                                                            onChange={(e) => setEmailValue(e.target.value)}
-                                                            autoFocus
-                                                            className="min-w-0 flex-1 px-2 py-1 text-xs border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
-                                                        />
-                                                        <button
-                                                            onClick={handleSaveEmail}
-                                                            disabled={emailSaving}
-                                                            className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors disabled:opacity-50"
-                                                            title={t("actions.save")}
-                                                        >
-                                                            <Check size={14} />
-                                                        </button>
-                                                        <button
-                                                            onClick={cancelEditingEmail}
-                                                            disabled={emailSaving}
-                                                            className="p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
-                                                            title={t("actions.cancel")}
-                                                        >
-                                                            <X size={14} />
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-1 min-w-0">
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
-                                                        <button
-                                                            onClick={startEditingEmail}
-                                                            className="p-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors shrink-0"
-                                                            title={t("pages.preferences.changeEmail")}
-                                                        >
-                                                            <Edit size={12} />
-                                                        </button>
-                                                    </div>
-                                                )}
+                                        </div>
+
+                                        {/* Name field */}
+                                        <div className="flex flex-col">
+                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                                {t("form.username")}
+                                            </div>
+                                            <p className="text-sm font-medium">{user?.name}</p>
+                                        </div>
+
+                                        {/* Email field */}
+                                        <div className="flex flex-col">
+                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                                {t("form.email")}
+                                            </div>
+                                            {editingEmail ? (
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="email"
+                                                        value={emailValue}
+                                                        onChange={(e) => setEmailValue(e.target.value)}
+                                                        autoFocus
+                                                        className="min-w-0 flex-1 max-w-xs px-2 py-1.5 text-sm border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                                    />
+                                                    <button
+                                                        onClick={handleSaveEmail}
+                                                        disabled={emailSaving}
+                                                        className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors disabled:opacity-50"
+                                                        title={t("actions.save")}
+                                                    >
+                                                        <Check size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={cancelEditingEmail}
+                                                        disabled={emailSaving}
+                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
+                                                        title={t("actions.cancel")}
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <p className="text-sm">{user?.email}</p>
+                                                    <button
+                                                        onClick={startEditingEmail}
+                                                        className="text-xs font-medium text-primary hover:underline shrink-0"
+                                                    >
+                                                        {t("pages.preferences.changeEmail")}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Password field */}
+                                        <div className="flex flex-col">
+                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                                {t("form.password")}
+                                            </div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <p className="text-sm tracking-widest">••••••••</p>
+                                                <button
+                                                    onClick={() => setShowOwnPasswordDialog(true)}
+                                                    className="text-xs font-medium text-primary hover:underline shrink-0"
+                                                >
+                                                    {t("pages.preferences.changePassword")}
+                                                </button>
                                             </div>
                                         </div>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="shrink-0 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                            onClick={() => signoutMutation.mutate()}
-                                        >
-                                            <LogOut size={16} />
-                                            {t("actions.signout")}
-                                        </Button>
+
+                                        {/* Sign out */}
+                                        <div className="flex flex-col pt-2 border-t border-gray-200 dark:border-neutral-700">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-fit mt-4 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                onClick={() => signoutMutation.mutate()}
+                                            >
+                                                <LogOut size={16} />
+                                                {t("actions.signout")}
+                                            </Button>
+                                        </div>
                                     </div>
                                 </Card>
                             )}
@@ -818,6 +881,55 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             {activeTab === 'system' && isOwner && (
                                 <RunnersSection />
                             )}
+                        </div>
+            </Modal>
+
+            {/* Change Own Password Dialog */}
+            <Modal
+                open={showOwnPasswordDialog}
+                onOpenChange={setShowOwnPasswordDialog}
+                title={t("pages.preferences.changePassword")}
+                nested
+            >
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("pages.preferences.newPassword")}</label>
+                                <input
+                                    type="password"
+                                    value={ownPasswordFormData.newPassword}
+                                    onChange={(e) => setOwnPasswordFormData({ ...ownPasswordFormData, newPassword: e.target.value })}
+                                    placeholder={t("pages.preferences.newPassword")}
+                                    autoFocus
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">{t("pages.preferences.confirmNewPassword")}</label>
+                                <input
+                                    type="password"
+                                    value={ownPasswordFormData.confirmPassword}
+                                    onChange={(e) => setOwnPasswordFormData({ ...ownPasswordFormData, confirmPassword: e.target.value })}
+                                    placeholder={t("pages.preferences.confirmNewPassword")}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                />
+                            </div>
+
+                            <div className="flex gap-2">
+                                <Button className="flex-1" onClick={handleChangeOwnPassword} disabled={ownPasswordSaving}>
+                                    {t("actions.save")}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowOwnPasswordDialog(false)
+                                        setOwnPasswordFormData({ newPassword: "", confirmPassword: "" })
+                                    }}
+                                    disabled={ownPasswordSaving}
+                                >
+                                    {t("actions.cancel")}
+                                </Button>
+                            </div>
                         </div>
             </Modal>
 

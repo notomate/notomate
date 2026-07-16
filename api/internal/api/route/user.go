@@ -16,6 +16,7 @@ func RegisterUser(api *echo.Group, h handler.Handler, authMiddleware middlewares
 	g.Use(authMiddleware.ParseJWT())
 	g.PATCH("/:id/preferences", h.UpdatePreferences)
 	g.PATCH("/:id/email", h.ChangeEmail)
+	g.PATCH("/:id/password", h.ChangePassword)
 	g.POST("/:id/avatar", h.UploadAvatar)
 	g.DELETE("/:id/avatar", h.RemoveAvatar)
 

@@ -241,6 +241,8 @@ export default {
     avatarRemoveFailed: "فشل إزالة الصورة الرمزية",
     emailUpdated: "تم تحديث البريد الإلكتروني بنجاح",
     emailUpdateFailed: "فشل تحديث البريد الإلكتروني",
+    passwordUpdated: "تم تحديث كلمة المرور بنجاح",
+    passwordUpdateFailed: "فشل تحديث كلمة المرور",
     avatarUploadFailed: "فشل تحديث الصورة الرمزية",
     avatarInvalidType: "الرجاء اختيار ملف صورة",
     avatarTooLarge: "الصورة كبيرة جدًا (الحد الأقصى 5 ميجابايت)",
