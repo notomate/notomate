@@ -83,7 +83,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isSearchActive
-                            ? "bg-neutral-200 dark:bg-neutral-700 text-gray-900 dark:text-gray-100 font-medium"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
                             : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
@@ -96,7 +96,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isFilesActive
-                            ? "bg-neutral-200 dark:bg-neutral-700 text-gray-900 dark:text-gray-100 font-medium"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
                             : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
@@ -109,7 +109,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isWorkflowsActive
-                            ? "bg-neutral-200 dark:bg-neutral-700 text-gray-900 dark:text-gray-100 font-medium"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
                             : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
@@ -122,7 +122,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isSettingsActive
-                            ? "bg-neutral-200 dark:bg-neutral-700 text-gray-900 dark:text-gray-100 font-medium"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
                             : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
