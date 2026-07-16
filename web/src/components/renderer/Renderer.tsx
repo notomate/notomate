@@ -599,6 +599,12 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 </div>
             case 'attachment':
                 return <a key={key} href={node.attrs?.src} className="text-blue-600">{node.attrs?.name}</a>
+            case 'mention':
+                return (
+                    <span key={key} className="text-primary bg-primary-lighter dark:bg-primary-light rounded px-1 font-medium">
+                        {node.attrs?.mentionSuggestionChar ?? '@'}{node.attrs?.label ?? node.attrs?.id}
+                    </span>
+                )
             case 'youtubeEmbed': {
                 const url = node.attrs?.url
                 let videoId: string | null = null

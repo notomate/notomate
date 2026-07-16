@@ -729,6 +729,9 @@ export default {
         "advanced": "Advanced",
         "views": "Views"
     },
+    "mention": {
+        "noResults": "No members found"
+    },
     "carousel": {
         "addMediaToCarousel": "Add Media to Carousel",
         "addMedia": "Add media",

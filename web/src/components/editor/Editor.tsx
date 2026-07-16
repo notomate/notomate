@@ -5,10 +5,13 @@ import StarterKit from "@tiptap/starter-kit"
 import { Placeholder } from "@tiptap/extensions"
 import { BubbleMenu } from "@tiptap/react/menus"
 import { TableKit } from "@tiptap/extension-table"
+import { Mention } from "@tiptap/extension-mention"
 import { FC, useMemo, useRef, useEffect, useState, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { useQuery } from "@tanstack/react-query"
 import { GripVertical, ChevronUp, ChevronDown, Trash2, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, Image, Images, List, ListTodo, FileText, Paperclip, Quote, Table, Type, Video, Music, Youtube, CalendarDays, MapPin, Tag, Star, Map, Kanban, PenTool, Sheet } from 'lucide-react'
 import { CommandItem, SlashCommand } from './extensions/slashcommand/SlashCommand'
+import { createMentionSuggestion } from './extensions/mention/suggestion'
 import { Attachment } from './extensions/attachment/Attachment'
 import { ImageNode } from './extensions/imagenode/ImageNode'
 import { PasteHandler } from './extensions/pastehandler/PasteHandler'
@@ -29,6 +32,7 @@ import { CarouselNode } from './extensions/carouselnode/CarouselNode'
 import { uploadFile, listFiles } from '@/api/file'
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id'
 import { createNote, NoteData } from '@/api/note'
+import { getWorkspaceMembers, WorkspaceMember } from '@/api/workspace'
 import * as Y from 'yjs'
 import { DragMenuContext, type MenuAction } from './DragMenuContext'
 
@@ -86,6 +90,15 @@ const Editor: FC<Props> = ({
 }) => {
   const currentWorkspaceId = useCurrentWorkspaceId()
   const { t } = useTranslation()
+  const { data: workspaceMembers = [] } = useQuery({
+    queryKey: ['workspaceMembers', currentWorkspaceId],
+    queryFn: () => getWorkspaceMembers(currentWorkspaceId),
+    enabled: !!currentWorkspaceId,
+  })
+  const workspaceMembersRef = useRef<WorkspaceMember[]>([])
+  useEffect(() => {
+    workspaceMembersRef.current = workspaceMembers
+  }, [workspaceMembers])
   const { parsed: initialContent, error: contentError } = useMemo(() => safeParse(note.content), [note.content])
   const lastContentRef = useRef<string>(note.content)
   const isApplyingYjsUpdate = useRef(false)
@@ -457,7 +470,13 @@ const Editor: FC<Props> = ({
             )
           },
         }
-      })
+      }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'text-primary bg-primary-lighter dark:bg-primary-light rounded px-1 font-medium',
+        },
+        suggestion: createMentionSuggestion(() => workspaceMembersRef.current),
+      }),
     ],
     editorProps: {
       attributes: {
