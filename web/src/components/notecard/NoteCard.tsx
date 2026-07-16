@@ -32,17 +32,16 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
                     </div>
                 )}
                 <div className="flex justify-between items-center text-gray-500">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                        {note.created_by && (
-                            <>
-                                <Avatar name={note.created_by} avatarUrl={note.created_by_avatar_url} size={20} />
-                                <span className=" font-medium text-gray-600 dark:text-gray-300 truncate max-w-[140px]">
+                    <div className="flex items-center gap-2 min-w-0">
+                        {note.created_by && <Avatar name={note.created_by} avatarUrl={note.created_by_avatar_url} size={32} />}
+                        <div className="flex flex-col min-w-0">
+                            {note.created_by && (
+                                <span className="font-medium text-gray-600 dark:text-gray-300 truncate max-w-[140px]">
                                     {note.created_by}
                                 </span>
-                                <span className="text-gray-300 dark:text-gray-600">·</span>
-                            </>
-                        )}
-                        <NoteTime time={note.created_at ?? ""} />
+                            )}
+                            <NoteTime time={note.created_at ?? ""} />
+                        </div>
                     </div>
                     {showLink && (
                         <div>
