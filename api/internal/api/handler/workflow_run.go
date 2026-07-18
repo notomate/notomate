@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/workflow"
 )
 
 type WorkflowRunDetailResponse struct {
@@ -99,32 +100,8 @@ func (h Handler) CancelWorkflowRun(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusConflict, "run is already finished")
 	}
 
-	jobs, err := h.db.FindWorkflowJobs(model.WorkflowJobFilter{RunID: run.ID})
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
 	now := time.Now().UTC().Format(time.RFC3339)
-	stillRunning := false
-	for _, job := range jobs {
-		switch job.Status {
-		case model.WorkflowRunStatusQueued:
-			// Cancelled queued jobs are never claimed by a runner.
-			if err := h.db.UpdateWorkflowJobStatus(job.ID, model.WorkflowRunStatusCancelled, "", now); err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-			}
-		case model.WorkflowRunStatusRunning:
-			// The runner sees Cancelled on its next heartbeat/log flush,
-			// aborts and confirms with a terminal UpdateTask.
-			stillRunning = true
-		}
-	}
-
-	finishedAt := now
-	if stillRunning {
-		finishedAt = ""
-	}
-	if err := h.db.UpdateWorkflowRunStatus(run.ID, model.WorkflowRunStatusCancelled, "", finishedAt); err != nil {
+	if err := workflow.CancelRun(h.db, run, now); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 

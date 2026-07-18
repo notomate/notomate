@@ -51,6 +51,18 @@ func CreateRun(database db.DB, wf model.Workflow, spec Spec, event string, paylo
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
+
+	// Concurrency: only workflows that declare a `concurrency:` block with
+	// `cancel-in-progress: true` get the GitHub Actions cancel-in-progress
+	// behaviour. The group itself isn't persisted anywhere - without
+	// expression support it's a constant per workflow, so "same group" and
+	// "same workflow" are equivalent and workflow_id already gives us that.
+	if spec.Concurrency != nil && spec.Concurrency.CancelInProgress {
+		if err := cancelActiveRuns(tx, wf.ID, now); err != nil {
+			return model.WorkflowRun{}, err
+		}
+	}
+
 	run := model.WorkflowRun{
 		ID:           util.NewId(),
 		WorkflowID:   wf.ID,
@@ -90,4 +102,55 @@ func CreateRun(database db.DB, wf model.Workflow, spec Spec, event string, paylo
 	}
 
 	return run, nil
+}
+
+// cancelActiveRuns cancels every queued or running run of a workflow, ahead
+// of a new run's creation.
+func cancelActiveRuns(database db.DB, workflowID string, now string) error {
+	for _, status := range []string{model.WorkflowRunStatusQueued, model.WorkflowRunStatusRunning} {
+		runs, err := database.FindWorkflowRuns(model.WorkflowRunFilter{WorkflowID: workflowID, Status: status})
+		if err != nil {
+			return err
+		}
+		for _, run := range runs {
+			if err := CancelRun(database, run, now); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// CancelRun cancels a single non-terminal run. Queued jobs are marked
+// cancelled immediately, since they are never claimed by a runner. Running
+// jobs are left as-is: the runner observes the run's cancelled status on its
+// next heartbeat/log flush, aborts and reports back a terminal status, so the
+// run's finishedAt is only set here once nothing is still running.
+func CancelRun(database db.DB, run model.WorkflowRun, now string) error {
+	if model.IsTerminalWorkflowRunStatus(run.Status) {
+		return nil
+	}
+
+	jobs, err := database.FindWorkflowJobs(model.WorkflowJobFilter{RunID: run.ID})
+	if err != nil {
+		return err
+	}
+
+	stillRunning := false
+	for _, job := range jobs {
+		switch job.Status {
+		case model.WorkflowRunStatusQueued:
+			if err := database.UpdateWorkflowJobStatus(job.ID, model.WorkflowRunStatusCancelled, "", now); err != nil {
+				return err
+			}
+		case model.WorkflowRunStatusRunning:
+			stillRunning = true
+		}
+	}
+
+	finishedAt := now
+	if stillRunning {
+		finishedAt = ""
+	}
+	return database.UpdateWorkflowRunStatus(run.ID, model.WorkflowRunStatusCancelled, "", finishedAt)
 }

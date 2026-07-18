@@ -14,9 +14,19 @@ import (
 // surface ("on:") and a shallow shape of "jobs:" are parsed here; the full
 // document is parsed by the act library on the runner.
 type Spec struct {
-	Name string
-	On   Triggers
-	Jobs map[string]JobSpec
+	Name        string
+	On          Triggers
+	Jobs        map[string]JobSpec
+	Concurrency *ConcurrencySpec
+}
+
+// ConcurrencySpec mirrors GitHub Actions' workflow-level `concurrency:` key.
+// Runs sharing the same Group are serialized against each other; when
+// CancelInProgress is set, a new run cancels whatever queued/running run
+// currently holds the group instead of waiting behind it.
+type ConcurrencySpec struct {
+	Group            string
+	CancelInProgress bool
 }
 
 type Triggers struct {
@@ -103,7 +113,7 @@ func ParseAndValidate(definition string) (Spec, []ValidationError) {
 	}
 
 	doc := root.Content[0]
-	var onNode, jobsNode *yaml.Node
+	var onNode, jobsNode, concurrencyNode *yaml.Node
 
 	for i := 0; i+1 < len(doc.Content); i += 2 {
 		key := doc.Content[i]
@@ -117,6 +127,16 @@ func ParseAndValidate(definition string) (Spec, []ValidationError) {
 			onNode = value
 		case "jobs":
 			jobsNode = value
+		case "concurrency":
+			concurrencyNode = value
+		}
+	}
+
+	if concurrencyNode != nil {
+		concurrency, concurrencyErrs := parseConcurrency(concurrencyNode)
+		errs = append(errs, concurrencyErrs...)
+		if len(concurrencyErrs) == 0 {
+			spec.Concurrency = concurrency
 		}
 	}
 
@@ -258,6 +278,33 @@ func parseWorkflowDispatchTrigger(_ *yaml.Node, value *yaml.Node, out *Triggers)
 
 	out.WorkflowDispatch = trigger
 	return nil
+}
+
+// parseConcurrency accepts either the GitHub Actions shorthand
+// (`concurrency: group-name`, cancel-in-progress defaults to false) or the
+// full mapping form (`concurrency: { group: ..., cancel-in-progress: ... }`).
+func parseConcurrency(node *yaml.Node) (*ConcurrencySpec, []ValidationError) {
+	switch node.Kind {
+	case yaml.ScalarNode:
+		if node.Value == "" {
+			return nil, []ValidationError{{Line: node.Line, Message: "'concurrency' group must not be empty"}}
+		}
+		return &ConcurrencySpec{Group: node.Value}, nil
+	case yaml.MappingNode:
+		var raw struct {
+			Group            string `yaml:"group"`
+			CancelInProgress bool   `yaml:"cancel-in-progress"`
+		}
+		if err := node.Decode(&raw); err != nil {
+			return nil, []ValidationError{{Line: node.Line, Message: fmt.Sprintf("invalid 'concurrency': %v", err)}}
+		}
+		if raw.Group == "" {
+			return nil, []ValidationError{{Line: node.Line, Message: "'concurrency.group' is required"}}
+		}
+		return &ConcurrencySpec{Group: raw.Group, CancelInProgress: raw.CancelInProgress}, nil
+	default:
+		return nil, []ValidationError{{Line: node.Line, Message: "'concurrency' must be a string or a mapping with 'group'"}}
+	}
 }
 
 func parseJob(name string, jobNode *yaml.Node) (JobSpec, []ValidationError) {
