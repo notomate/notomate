@@ -50,9 +50,6 @@ const ExplorePage: React.FC = () => {
     const [authChecked, setAuthChecked] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const [isLg, setIsLg] = useState(() => window.innerWidth >= 1024);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
     const mobileButtonRef = useRef<HTMLButtonElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,29 +60,6 @@ const ExplorePage: React.FC = () => {
     useEffect(() => {
         if (isSearchOpen) searchInputRef.current?.focus();
     }, [isSearchOpen]);
-
-    useEffect(() => {
-        const mq = window.matchMedia("(min-width: 1024px)");
-        const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-        mq.addEventListener("change", handler);
-        return () => mq.removeEventListener("change", handler);
-    }, []);
-
-    useEffect(() => {
-        if (!isLg || !isMenuOpen) return;
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as Node;
-            if (
-                !menuRef.current?.contains(target) &&
-                !buttonRef.current?.contains(target) &&
-                !mobileButtonRef.current?.contains(target)
-            ) {
-                setIsMenuOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isMenuOpen, isLg]);
 
     const menuContent = authChecked && (
         <div className="flex flex-col p-1">
@@ -116,23 +90,31 @@ const ExplorePage: React.FC = () => {
     return (
         <div className="min-h-dvh lg:flex">
             {/* Sidebar — desktop only */}
-            <aside className="hidden lg:flex flex-col w-56 shrink-0 fixed top-0 left-0 h-screen px-5 py-6">
-                <div className="relative">
-                    <button
-                        ref={buttonRef}
-                        onClick={() => setIsMenuOpen(prev => !prev)}
-                        className="flex items-center gap-3 select-none rounded-md p-1 -m-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                        title="Menu"
-                    >
-                        <img src={logo} className="w-9" alt="logo" />
-                    </button>
-                    {isLg && isMenuOpen && (
-                        <div
-                            ref={menuRef}
-                            className="absolute top-full left-0 mt-2 w-52 bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100 rounded-md shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)] overflow-hidden z-[9999]"
-                        >
-                            {menuContent}
-                        </div>
+            <aside className="hidden lg:flex flex-col w-56 shrink-0 fixed top-0 left-0 h-screen px-3 pt-6 pb-3">
+                <div className="flex items-center gap-3 select-none px-2">
+                    <img src={logo} className="w-9" alt="logo" />
+                </div>
+                <div className="mt-auto flex flex-col">
+                    {authChecked && (
+                        user ? (
+                            <Link
+                                to="/"
+                                className="flex gap-3 px-2 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                title={t("pages.explore.backToWorkspace")}
+                            >
+                                <ArrowLeft size={16} strokeWidth={2.5} />
+                                {t("pages.explore.backToWorkspace")}
+                            </Link>
+                        ) : (
+                            <Link
+                                to="/signin"
+                                className="flex gap-3 px-2 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                title={t("actions.signin")}
+                            >
+                                <LogIn size={16} strokeWidth={2.5} />
+                                {t("actions.signin")}
+                            </Link>
+                        )
                     )}
                 </div>
             </aside>
@@ -209,7 +191,7 @@ const ExplorePage: React.FC = () => {
                 </div>
             </div>
 
-            {!isLg && isMenuOpen && createPortal(
+            {isMenuOpen && createPortal(
                 <>
                     <div
                         className="fixed inset-0 bg-black/40 z-40"
