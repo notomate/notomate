@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import { useEffect } from "react"
 import { useWorkspaceStore } from "@/stores/workspace"
 import { useCurrentUserStore } from "@/stores/current-user"
+import { getLastWorkspaceId } from "@/lib/recent-visits"
 
 const WorkspaceLoader = () => {
     const { isFetched, workspaces, fetchWorkspaces } = useWorkspaceStore()
@@ -23,7 +24,9 @@ const WorkspaceLoader = () => {
             navigate("/workspace-setup", { replace: true })
         }
         else if (!workspaceId && workspaces?.length > 0) {
-            navigate(`/workspaces/${workspaces[0].id}`, { replace: true })
+            const lastWorkspaceId = getLastWorkspaceId()
+            const targetWorkspace = workspaces.find(w => w.id === lastWorkspaceId) ?? workspaces[0]
+            navigate(`/workspaces/${targetWorkspace.id}`, { replace: true })
         }
     }, [workspaces])
 

@@ -6,6 +6,7 @@ import { getNote, NoteData, updateNote } from "@/api/note"
 import NoteDetailView from "@/components/notedetail/NoteDetailView"
 import { useNoteCollab } from "@/hooks/use-note-collab"
 import NoteDetailMenu from "@/components/notedetailmenu/NoteDetailMenu"
+import { setLastNoteId } from "@/lib/recent-visits"
 
 const NoteDetailPage = () => {
     const [note, setNote] = useState<NoteData | null>(null)
@@ -44,6 +45,10 @@ const NoteDetailPage = () => {
     useEffect(() => {
         setNote(null)
     }, [noteId])
+
+    useEffect(() => {
+        if (noteId && currentWorkspaceId) setLastNoteId(currentWorkspaceId, noteId)
+    }, [noteId, currentWorkspaceId])
 
     useEffect(() => {
         if (fetchedNote) {

@@ -1,9 +1,11 @@
 import { useEffect } from "react"
+import { useParams, Outlet } from "react-router-dom"
 import { useWorkspaceStore } from "@/stores/workspace"
-import { Outlet } from "react-router-dom"
+import { setLastWorkspaceId } from "@/lib/recent-visits"
 
 const WorkspaceLayout = () => {
     const { isFetched, fetchWorkspaces } = useWorkspaceStore()
+    const { workspaceId } = useParams<{ workspaceId?: string }>()
 
     useEffect(() => {
         (async () => {
@@ -11,6 +13,10 @@ const WorkspaceLayout = () => {
             await fetchWorkspaces();
         })()
     }, [])
+
+    useEffect(() => {
+        if (workspaceId) setLastWorkspaceId(workspaceId)
+    }, [workspaceId])
 
     return <Outlet />
 }
