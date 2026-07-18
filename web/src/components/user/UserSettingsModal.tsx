@@ -11,7 +11,6 @@ import { updatePreferences, uploadAvatar, removeAvatar, updateEmail, changePassw
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, CreateAPIKeyRequest } from "@/api/apikey"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
-import Card from "@/components/card/Card"
 import Select from "@/components/select/Select"
 import Avatar from "@/components/avatar/Avatar"
 import { Modal } from "@/components/ui/modal"
@@ -520,7 +519,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                         <div className="space-y-4 overflow-y-auto flex-1">
                             {/* Account Tab */}
                             {activeTab === 'account' && (
-                                <Card className="w-full p-4">
+                                <div className="w-full px-4">
                                     <div className="flex flex-col gap-6">
                                         {/* Avatar field */}
                                         <div className="flex flex-col">
@@ -626,7 +625,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                         </div>
 
                                         {/* Sign out */}
-                                        <div className="flex flex-col pt-2 border-t border-gray-200 dark:border-neutral-700">
+                                        <div className="flex flex-col pt-2">
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -638,12 +637,12 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                             </Button>
                                         </div>
                                     </div>
-                                </Card>
+                                </div>
                             )}
 
                             {/* Preferences Tab */}
                             {activeTab === 'preferences' && (
-                                <Card className="w-full p-0">
+                                <div className="w-full">
                                     <div className="flex flex-col gap-6">
                                         <div className="flex flex-col">
                                             <div className="text-xs font-semibold text-gray-500 mb-2">
@@ -715,7 +714,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                             </div>
                                         </div>
                                     </div>
-                                </Card>
+                                </div>
                             )}
 
                             {/* API Keys Tab */}
@@ -734,13 +733,13 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     {loading ? (
                                         <div className="text-center py-8">{t("common.loading")}</div>
                                     ) : apiKeys.length === 0 ? (
-                                        <Card className="p-8 text-center text-gray-500">
+                                        <div className="p-8 text-center text-gray-500">
                                             {t("pages.preferences.noApiKeys")}
-                                        </Card>
+                                        </div>
                                     ) : (
                                         <div className="space-y-2">
                                             {apiKeys.map((key) => (
-                                                <Card key={key.id} className="p-4">
+                                                <div key={key.id} className="p-4 border border-gray-200 dark:border-neutral-700 rounded-lg">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-2">
@@ -776,7 +775,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                             <Trash2 size={18} />
                                                         </button>
                                                     </div>
-                                                </Card>
+                                                </div>
                                             ))}
                                         </div>
                                     )}
@@ -799,13 +798,13 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     {usersLoading ? (
                                         <div className="text-center py-8">{t("common.loading")}</div>
                                     ) : users.length === 0 ? (
-                                        <Card className="p-8 text-center text-gray-500">
+                                        <div className="p-8 text-center text-gray-500">
                                             {t("pages.preferences.noUsers")}
-                                        </Card>
+                                        </div>
                                     ) : (
                                         <div className="space-y-2">
                                             {users.map((u) => (
-                                                <Card key={u.id} className="p-4">
+                                                <div key={u.id} className="p-4 border border-gray-200 dark:border-neutral-700 rounded-lg">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-2">
@@ -870,7 +869,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                             </div>
                                                         )}
                                                     </div>
-                                                </Card>
+                                                </div>
                                             ))}
                                         </div>
                                     )}
