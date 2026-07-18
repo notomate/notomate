@@ -6,7 +6,7 @@ import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
 import NoteListSkeleton from '@/components/notecard/NoteListSkeleton';
 import logo from '@/assets/app.svg';
-import { LogIn, ArrowLeft, Search, X } from 'lucide-react';
+import { LogIn, ArrowLeft, Search, X, Trash2 } from 'lucide-react';
 import { useCurrentUserStore } from '@/stores/current-user';
 import { useTranslation } from 'react-i18next';
 
@@ -180,10 +180,10 @@ const ExplorePage: React.FC = () => {
                             {search && (
                                 <button
                                     onClick={() => setSearch('')}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
                                     title="Clear search"
                                 >
-                                    <X size={14} />
+                                    <Trash2 size={14} />
                                 </button>
                             )}
                         </div>
