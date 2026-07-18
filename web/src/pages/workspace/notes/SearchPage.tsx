@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
-import { Search, X } from "lucide-react"
+import { Search, Trash2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { getNotes } from "@/api/note"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
@@ -67,9 +67,9 @@ const SearchPage = () => {
                             <button
                                 onClick={() => setQuery("")}
                                 title={t("common.clear")}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
                             >
-                                <X size={14} />
+                                <Trash2 size={14} />
                             </button>
                         )}
                     </div>
