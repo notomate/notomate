@@ -1,5 +1,5 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { Loader2, FolderOpen, Upload, Trash2, Edit3, ChevronUp, ChevronDown } from "lucide-react"
+import { FolderOpen, Trash2, Edit3, ChevronUp, ChevronDown } from "lucide-react"
 import { useRef, useState, useEffect, useCallback } from "react"
 import { twMerge } from "tailwind-merge"
 import VideoPickerDialog from "./VideoPickerDialog"
@@ -7,15 +7,13 @@ import { FileInfo } from "@/api/file"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 
 const VideoNodeComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes, selected, editor, deleteNode, getPos }) => {
-    const [isUploading, setIsUploading] = useState(false)
-    const [uploadProgress, setUploadProgress] = useState(0)
     const [isPickerOpen, setIsPickerOpen] = useState(false)
-    const inputRef = useRef<HTMLInputElement>(null)
     const wasEditableRef = useRef<boolean>(true)
     const { src, name } = node.attrs
     const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
 
     useEffect(() => {
+        if (!isTouchDevice) return
         if (selected) {
             wasEditableRef.current = editor.isEditable
             editor.setEditable(false)
@@ -29,28 +27,7 @@ const VideoNodeComponent: React.FC<NodeViewProps> = ({ node, extension, updateAt
                 editor.setEditable(true)
             }
         }
-    }, [selected, editor])
-
-    const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-        setIsUploading(true)
-        setUploadProgress(0)
-        try {
-            const result = await extension.options?.upload(file, (progress: any) => {
-                setUploadProgress(progress)
-            })
-            if (result?.src) {
-                updateAttributes({ src: result.src, name: result.name })
-            }
-        } catch (error) {
-            console.error('Failed to upload video:', error)
-        } finally {
-            setIsUploading(false)
-            setUploadProgress(0)
-            if (inputRef.current) inputRef.current.value = ''
-        }
-    }
+    }, [selected, editor, isTouchDevice])
 
     const handleSelectExistingFile = (file: FileInfo) => {
         const workspaceId = extension.options?.workspaceId
@@ -100,40 +77,20 @@ const VideoNodeComponent: React.FC<NodeViewProps> = ({ node, extension, updateAt
                 <div className="flex gap-2 w-full h-32">
                     <button
                         className="flex-1 rounded flex flex-col gap-2 items-center justify-center hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors text-gray-700 dark:text-gray-300"
-                        onClick={() => inputRef.current?.click()}
-                        disabled={isUploading}
-                    >
-                        {isUploading ? (
-                            <>
-                                <Loader2 className="animate-spin" size={20} />
-                                <span className="text-sm">Uploading {uploadProgress}%</span>
-                                <div className="w-full bg-gray-300 dark:bg-neutral-700 rounded-full h-2 mt-1">
-                                    <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <Upload size={20} />
-                                <span className="text-sm">Upload New</span>
-                            </>
-                        )}
-                    </button>
-                    <button
-                        className="flex-1 rounded flex flex-col gap-2 items-center justify-center hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors text-gray-700 dark:text-gray-300"
                         onClick={() => setIsPickerOpen(true)}
-                        disabled={isUploading || !extension.options?.workspaceId}
+                        disabled={!extension.options?.workspaceId}
                     >
                         <FolderOpen size={20} />
-                        <span className="text-sm">Choose Existing</span>
+                        <span className="text-sm">Choose Video</span>
                     </button>
                 </div>
-                <input type="file" ref={inputRef} className="hidden" aria-label="upload video" accept="video/*" onChange={handleUploadFile} />
                 {extension.options?.workspaceId && (
                     <VideoPickerDialog
                         open={isPickerOpen}
                         onOpenChange={setIsPickerOpen}
                         workspaceId={extension.options.workspaceId}
                         listFiles={extension.options.listFiles}
+                        upload={extension.options.upload}
                         onSelect={handleSelectExistingFile}
                     />
                 )}
@@ -154,6 +111,7 @@ const VideoNodeComponent: React.FC<NodeViewProps> = ({ node, extension, updateAt
                         onOpenChange={setIsPickerOpen}
                         workspaceId={extension.options.workspaceId}
                         listFiles={extension.options.listFiles}
+                        upload={extension.options.upload}
                         onSelect={handleSelectExistingFile}
                     />
                 )}

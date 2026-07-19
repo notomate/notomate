@@ -1,33 +1,15 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { DownloadIcon, Loader2, FolderOpen, Upload, Trash2, Edit3, FileIcon, ChevronUp, ChevronDown } from "lucide-react"
-import { useRef, useState, useCallback } from "react"
+import { DownloadIcon, FolderOpen, Trash2, Edit3, FileIcon, ChevronUp, ChevronDown } from "lucide-react"
+import { useState, useCallback } from "react"
 import AllFilePickerDialog from "./AllFilePickerDialog"
 import { FileInfo } from "@/api/file"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 
 const AttachmentComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, extension, editor, deleteNode, selected, getPos }) => {
-  const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [isPickerOpen, setIsPickerOpen] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
   const { src, name } = node.attrs
   const isEditable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
-
-  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setIsUploading(true)
-    setUploadProgress(0)
-    const result = await extension.options?.upload(file, (progress: any) => {
-      setUploadProgress(progress)
-    })
-    setIsUploading(false)
-    setUploadProgress(0)
-    if (result?.src) {
-      updateAttributes({ src: result.src, name: result.name })
-    }
-  }
 
   const handleSelectExistingFile = (file: FileInfo) => {
     const workspaceId = extension.options?.workspaceId
@@ -77,40 +59,20 @@ const AttachmentComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
         <div className="flex gap-2 w-full h-32">
           <button
             className="flex-1 rounded flex flex-col gap-2 items-center justify-center hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors text-gray-700 dark:text-gray-300"
-            onClick={() => inputRef.current?.click()}
-            disabled={isUploading}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="animate-spin" size={20} />
-                <span className="text-sm">Uploading {uploadProgress}%</span>
-                <div className="w-full bg-gray-300 dark:bg-neutral-700 rounded-full h-2 mt-1">
-                  <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-                </div>
-              </>
-            ) : (
-              <>
-                <Upload size={20} />
-                <span className="text-sm">Upload New</span>
-              </>
-            )}
-          </button>
-          <button
-            className="flex-1 rounded flex flex-col gap-2 items-center justify-center hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors text-gray-700 dark:text-gray-300"
             onClick={() => setIsPickerOpen(true)}
-            disabled={isUploading || !extension.options?.workspaceId}
+            disabled={!extension.options?.workspaceId}
           >
             <FolderOpen size={20} />
-            <span className="text-sm">Choose Existing</span>
+            <span className="text-sm">Choose File</span>
           </button>
         </div>
-        <input type="file" ref={inputRef} className="hidden" aria-label="upload" onChange={handleUploadFile} />
         {extension.options?.workspaceId && (
           <AllFilePickerDialog
             open={isPickerOpen}
             onOpenChange={setIsPickerOpen}
             workspaceId={extension.options.workspaceId}
             listFiles={extension.options.listFiles}
+            upload={extension.options.upload}
             onSelect={handleSelectExistingFile}
           />
         )}
@@ -148,6 +110,7 @@ const AttachmentComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
             onOpenChange={setIsPickerOpen}
             workspaceId={extension.options.workspaceId}
             listFiles={extension.options.listFiles}
+            upload={extension.options.upload}
             onSelect={handleSelectExistingFile}
           />
         )}
