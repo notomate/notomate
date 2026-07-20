@@ -592,6 +592,20 @@ export default {
     connected: "已連線",
     disconnected: "已斷線"
   },
+  comments: {
+    title: "留言",
+    addComment: "新增留言",
+    noComments: "尚無留言，選取筆記中的文字，或直接在上方輸入一般留言。",
+    composerPlaceholder: "新增留言...",
+    replyPlaceholder: "回覆...",
+    submit: "留言",
+    edited: "（已編輯）",
+    orphaned: "留言標註的文字已不在此筆記中",
+    confirmDelete: "確定要刪除這則留言嗎？",
+    createFailed: "新增留言失敗",
+    updateFailed: "更新留言失敗",
+    deleteFailed: "刪除留言失敗"
+  },
   whiteboard: {
     loading: "載入中...",
     select: "選取",
@@ -707,6 +721,7 @@ export default {
     "Carousel": "輪播",
     "moveUp": "向上移動",
     "moveDown": "向下移動",
+    "addComment": "新增留言",
     "subPage":{
         "newPage": "新頁面"
     },
@@ -730,6 +745,9 @@ export default {
         "embed": "嵌入",
         "advanced": "進階",
         "views": "視圖"
+    },
+    "mention": {
+        "noResults": "找不到成員"
     },
     "carousel": {
         "addMediaToCarousel": "新增媒體至輪播",

@@ -14,11 +14,12 @@ type Handler struct {
 
 // WorkflowEngine is the part of the workflow trigger engine handlers need:
 // reloading cron schedules after definitions change, waking runners
-// long-polling for queued jobs, and reporting note events.
+// long-polling for queued jobs, and reporting note/comment events.
 type WorkflowEngine interface {
 	ReloadSchedules()
 	WakeQueue()
 	NotifyNoteEvent(event string, note model.Note, actorID string)
+	NotifyCommentEvent(event string, comment model.Comment, actorID string)
 }
 
 func NewHandler(r db.DB, s storage.Storage) *Handler {

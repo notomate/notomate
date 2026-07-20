@@ -14,25 +14,33 @@ import (
 // whose jobs modify notes can retrigger itself indefinitely.
 const maxRunsPerWorkflowPerMinute = 30
 
-// Dispatcher turns note events into queued workflow runs.
+// Dispatcher turns note and comment events into queued workflow runs.
 //
-// note.updated events are debounced per note: the collab service write-back
-// fires in bursts while a note is being edited, and one run per burst is what
+// note.updated and comment.updated events are debounced per entity: the
+// collab service write-back fires in bursts while a note is being edited
+// (and comment edits can similarly be rapid), and one run per burst is what
 // users expect. created/deleted events dispatch immediately.
 type Dispatcher struct {
 	db       db.DB
 	queue    *Queue
 	debounce time.Duration
 
-	mu      sync.Mutex
-	pending map[string]*pendingUpdate
-	rates   map[string][]time.Time
-	stopped bool
+	mu             sync.Mutex
+	pending        map[string]*pendingUpdate
+	pendingComment map[string]*pendingCommentUpdate
+	rates          map[string][]time.Time
+	stopped        bool
 }
 
 type pendingUpdate struct {
 	timer   *time.Timer
 	note    model.Note
+	actorID string
+}
+
+type pendingCommentUpdate struct {
+	timer   *time.Timer
+	comment model.Comment
 	actorID string
 }
 
@@ -42,11 +50,12 @@ func NewDispatcher(database db.DB, queue *Queue) *Dispatcher {
 		debounceSeconds = 10
 	}
 	return &Dispatcher{
-		db:       database,
-		queue:    queue,
-		debounce: time.Duration(debounceSeconds) * time.Second,
-		pending:  map[string]*pendingUpdate{},
-		rates:    map[string][]time.Time{},
+		db:             database,
+		queue:          queue,
+		debounce:       time.Duration(debounceSeconds) * time.Second,
+		pending:        map[string]*pendingUpdate{},
+		pendingComment: map[string]*pendingCommentUpdate{},
+		rates:          map[string][]time.Time{},
 	}
 }
 
@@ -87,6 +96,43 @@ func (d *Dispatcher) NotifyNoteEvent(event string, note model.Note, actorID stri
 	d.mu.Unlock()
 }
 
+func (d *Dispatcher) NotifyCommentEvent(event string, comment model.Comment, actorID string) {
+	d.mu.Lock()
+	if d.stopped {
+		d.mu.Unlock()
+		return
+	}
+
+	if event != model.WorkflowEventCommentUpdated {
+		d.mu.Unlock()
+		go d.dispatchComment(event, comment, actorID)
+		return
+	}
+
+	if p, ok := d.pendingComment[comment.ID]; ok {
+		p.comment = comment
+		p.actorID = actorID
+		p.timer.Reset(d.debounce)
+		d.mu.Unlock()
+		return
+	}
+
+	p := &pendingCommentUpdate{comment: comment, actorID: actorID}
+	p.timer = time.AfterFunc(d.debounce, func() {
+		d.mu.Lock()
+		delete(d.pendingComment, comment.ID)
+		stopped := d.stopped
+		latest := *p
+		d.mu.Unlock()
+		if stopped {
+			return
+		}
+		d.dispatchComment(model.WorkflowEventCommentUpdated, latest.comment, latest.actorID)
+	})
+	d.pendingComment[comment.ID] = p
+	d.mu.Unlock()
+}
+
 func (d *Dispatcher) Stop() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -94,6 +140,10 @@ func (d *Dispatcher) Stop() {
 	for id, p := range d.pending {
 		p.timer.Stop()
 		delete(d.pending, id)
+	}
+	for id, p := range d.pendingComment {
+		p.timer.Stop()
+		delete(d.pendingComment, id)
 	}
 }
 
@@ -143,6 +193,76 @@ func (d *Dispatcher) dispatch(event string, note model.Note, actorID string) {
 			Workspace: PayloadWorkspace{ID: workspace.ID, Name: workspace.Name},
 			Sender:    sender,
 			Note:      &noteCopy,
+		}
+		if _, err := CreateRun(d.db, wf, spec, event, payload, actorID); err != nil {
+			log.Printf("[workflow] create run for workflow %s: %v", wf.ID, err)
+			continue
+		}
+		created = true
+	}
+
+	if created {
+		d.queue.Wake()
+	}
+}
+
+func (d *Dispatcher) dispatchComment(event string, comment model.Comment, actorID string) {
+	enabled := true
+	workflows, err := d.db.FindWorkflows(model.WorkflowFilter{
+		WorkspaceID: comment.WorkspaceID,
+		Enabled:     &enabled,
+	})
+	if err != nil {
+		log.Printf("[workflow] load workflows for comment event: %v", err)
+		return
+	}
+	if len(workflows) == 0 {
+		return
+	}
+
+	workspace, err := d.db.FindWorkspaceByID(comment.WorkspaceID)
+	if err != nil {
+		log.Printf("[workflow] load workspace %s: %v", comment.WorkspaceID, err)
+		return
+	}
+
+	// Comment events carry their parent note alongside the comment itself so
+	// workflow authors can reference note fields (title, etc.) without a
+	// separate lookup step.
+	var note *model.Note
+	if n, err := d.db.FindNote(model.Note{ID: comment.NoteID}); err == nil {
+		note = &n
+	} else {
+		log.Printf("[workflow] load parent note %s for comment event: %v", comment.NoteID, err)
+	}
+
+	var sender *PayloadSender
+	if actorID != "" {
+		name := actorID
+		if user, err := d.db.FindUserByID(actorID); err == nil {
+			name = user.Name
+		}
+		sender = &PayloadSender{ID: actorID, Name: name}
+	}
+
+	created := false
+	for _, wf := range workflows {
+		spec, errs := ParseAndValidate(wf.Definition)
+		if len(errs) > 0 || !spec.MatchesCommentEvent(event) {
+			continue
+		}
+		if !d.allowRun(wf.ID) {
+			log.Printf("[workflow] rate limit hit for workflow %s (%s); dropping %s event", wf.ID, wf.Name, event)
+			continue
+		}
+
+		commentCopy := comment
+		payload := EventPayload{
+			Event:     event,
+			Workspace: PayloadWorkspace{ID: workspace.ID, Name: workspace.Name},
+			Sender:    sender,
+			Note:      note,
+			Comment:   &commentCopy,
 		}
 		if _, err := CreateRun(d.db, wf, spec, event, payload, actorID); err != nil {
 			log.Printf("[workflow] create run for workflow %s: %v", wf.ID, err)

@@ -87,6 +87,7 @@ const SearchPage = () => {
                                 notes={notes}
                                 getLinkTo={(note) => `/workspaces/${currentWorkspaceId}/notes/${note.id}`}
                                 maxNodes={8}
+                                workspaceId={currentWorkspaceId}
                             />
                             <div ref={loadMoreRef} className="h-2" />
                             {isFetchingNextPage && <NoteListSkeleton count={3} />}

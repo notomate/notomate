@@ -10,6 +10,7 @@ type DB interface {
 	Uow
 	UserRepository
 	NoteRepository
+	CommentRepository
 	FileRepository
 	WorkspaceRepository
 	WorkspaceUserRepository
@@ -45,6 +46,13 @@ type NoteRepository interface {
 	FindNote(n model.Note) (model.Note, error)
 	FindNotes(f model.NoteFilter) ([]model.Note, error)
 	GetNoteCountsByDate(workspaceID string, startDate string, timezoneOffsetMinutes int) (map[string]int, error)
+}
+type CommentRepository interface {
+	CreateComment(c model.Comment) error
+	UpdateComment(c model.Comment) error
+	DeleteComment(c model.Comment) error
+	FindComment(c model.Comment) (model.Comment, error)
+	FindComments(f model.CommentFilter) ([]model.Comment, error)
 }
 type FileRepository interface {
 	CreateFile(u model.File) error

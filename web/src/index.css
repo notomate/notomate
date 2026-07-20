@@ -122,7 +122,63 @@ p.is-editor-empty:first-child::before {
 
 
 .ProseMirror-selectednode {
-  @apply rounded  
+  @apply rounded
+}
+
+.note-comment-mark {
+  @apply bg-primary-lighter dark:bg-primary-light rounded-sm cursor-pointer;
+}
+
+.note-comment-body {
+  @apply leading-relaxed;
+}
+
+.note-comment-body p {
+  @apply my-1 first:mt-0 last:mb-0;
+}
+
+.note-comment-body ul, .note-comment-body ol {
+  @apply my-1 pl-4;
+}
+
+.note-comment-body ul {
+  @apply list-disc;
+}
+
+.note-comment-body ol {
+  @apply list-decimal;
+}
+
+.note-comment-body blockquote {
+  @apply my-1 pl-2 border-l-2 border-gray-300 dark:border-neutral-600 text-gray-500 dark:text-gray-400;
+}
+
+.note-comment-body code {
+  @apply px-1 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 text-[0.85em] font-mono;
+}
+
+.note-comment-body pre {
+  @apply my-1 p-2 rounded bg-gray-100 dark:bg-neutral-800 overflow-x-auto;
+}
+
+.note-comment-body pre code {
+  @apply bg-transparent p-0;
+}
+
+.note-comment-body a {
+  @apply text-primary underline break-all;
+}
+
+.note-comment-body li.note-comment-task-item {
+  @apply list-none -ml-4 flex items-start gap-1.5;
+}
+
+.note-comment-body .note-comment-task-checkbox {
+  @apply mt-1 accent-primary shrink-0;
+}
+
+.note-comment-mention {
+  @apply text-primary bg-primary-lighter dark:bg-primary-light rounded px-1 font-medium;
 }
 p[data-placeholder] :not(.ProseMirror-trailingBreak) {
   display: none;

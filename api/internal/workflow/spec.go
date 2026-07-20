@@ -31,11 +31,16 @@ type ConcurrencySpec struct {
 
 type Triggers struct {
 	Note             *NoteTrigger
+	Comment          *CommentTrigger
 	Schedule         []ScheduleTrigger
 	WorkflowDispatch *WorkflowDispatchTrigger
 }
 
 type NoteTrigger struct {
+	Types []string
+}
+
+type CommentTrigger struct {
 	Types []string
 }
 
@@ -75,6 +80,12 @@ var validNoteEventTypes = map[string]string{
 	"deleted": model.WorkflowEventNoteDeleted,
 }
 
+var validCommentEventTypes = map[string]string{
+	"created": model.WorkflowEventCommentCreated,
+	"updated": model.WorkflowEventCommentUpdated,
+	"deleted": model.WorkflowEventCommentDeleted,
+}
+
 // MatchesNoteEvent reports whether the spec's note trigger covers the given
 // full event name (e.g. "note.updated").
 func (s Spec) MatchesNoteEvent(event string) bool {
@@ -83,6 +94,20 @@ func (s Spec) MatchesNoteEvent(event string) bool {
 	}
 	for _, t := range s.On.Note.Types {
 		if validNoteEventTypes[t] == event {
+			return true
+		}
+	}
+	return false
+}
+
+// MatchesCommentEvent reports whether the spec's comment trigger covers the
+// given full event name (e.g. "comment.created").
+func (s Spec) MatchesCommentEvent(event string) bool {
+	if s.On.Comment == nil {
+		return false
+	}
+	for _, t := range s.On.Comment.Types {
+		if validCommentEventTypes[t] == event {
 			return true
 		}
 	}
@@ -144,8 +169,8 @@ func ParseAndValidate(definition string) (Spec, []ValidationError) {
 		errs = append(errs, ValidationError{Line: doc.Line, Message: "workflow must declare at least one trigger under 'on:'"})
 	} else {
 		errs = append(errs, parseTriggers(onNode, &spec.On)...)
-		if spec.On.Note == nil && len(spec.On.Schedule) == 0 && spec.On.WorkflowDispatch == nil && len(errs) == 0 {
-			errs = append(errs, ValidationError{Line: onNode.Line, Message: "no supported trigger found; supported triggers are 'note', 'schedule' and 'workflow_dispatch'"})
+		if spec.On.Note == nil && spec.On.Comment == nil && len(spec.On.Schedule) == 0 && spec.On.WorkflowDispatch == nil && len(errs) == 0 {
+			errs = append(errs, ValidationError{Line: onNode.Line, Message: "no supported trigger found; supported triggers are 'note', 'comment', 'schedule' and 'workflow_dispatch'"})
 		}
 	}
 
@@ -192,12 +217,14 @@ func parseTriggerName(key *yaml.Node, value *yaml.Node, out *Triggers) []Validat
 	switch key.Value {
 	case "note":
 		return parseNoteTrigger(key, value, out)
+	case "comment":
+		return parseCommentTrigger(key, value, out)
 	case "schedule":
 		return parseScheduleTrigger(key, value, out)
 	case "workflow_dispatch":
 		return parseWorkflowDispatchTrigger(key, value, out)
 	default:
-		return []ValidationError{{Line: key.Line, Message: fmt.Sprintf("unsupported trigger %q; supported triggers are 'note', 'schedule' and 'workflow_dispatch'", key.Value)}}
+		return []ValidationError{{Line: key.Line, Message: fmt.Sprintf("unsupported trigger %q; supported triggers are 'note', 'comment', 'schedule' and 'workflow_dispatch'", key.Value)}}
 	}
 }
 
@@ -230,6 +257,38 @@ func parseNoteTrigger(key *yaml.Node, value *yaml.Node, out *Triggers) []Validat
 	}
 
 	out.Note = trigger
+	return nil
+}
+
+func parseCommentTrigger(key *yaml.Node, value *yaml.Node, out *Triggers) []ValidationError {
+	trigger := &CommentTrigger{}
+
+	if value != nil && value.Kind == yaml.MappingNode {
+		var raw struct {
+			Types []string `yaml:"types"`
+		}
+		if err := value.Decode(&raw); err != nil {
+			return []ValidationError{{Line: value.Line, Message: fmt.Sprintf("invalid 'comment' trigger: %v", err)}}
+		}
+		trigger.Types = raw.Types
+	}
+
+	// Without an explicit types filter the trigger matches every comment event.
+	if len(trigger.Types) == 0 {
+		trigger.Types = []string{"created", "updated", "deleted"}
+	}
+
+	var errs []ValidationError
+	for _, t := range trigger.Types {
+		if _, ok := validCommentEventTypes[t]; !ok {
+			errs = append(errs, ValidationError{Line: key.Line, Message: fmt.Sprintf("invalid comment event type %q; valid types are 'created', 'updated' and 'deleted'", t)})
+		}
+	}
+	if len(errs) > 0 {
+		return errs
+	}
+
+	out.Comment = trigger
 	return nil
 }
 

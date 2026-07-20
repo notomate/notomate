@@ -4,6 +4,7 @@ import { NoteData } from "@/api/note"
 import NoteTime from "../notetime/NoteTime"
 import Renderer from "@/components/renderer/Renderer"
 import Avatar from "@/components/avatar/Avatar"
+import NoteCardComments from "@/components/commentsidebar/NoteCardComments"
 import { ExternalLink, CornerDownRight } from "lucide-react"
 
 interface NoteCardProps {
@@ -13,9 +14,12 @@ interface NoteCardProps {
     maxNodes?: number
     parentNoteTitle?: string
     parentNoteLinkTo?: string
+    workspaceId?: string
+    commentsReadOnly?: boolean
 }
 
-const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, parentNoteTitle, parentNoteLinkTo }) => {
+const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, parentNoteTitle, parentNoteLinkTo, workspaceId, commentsReadOnly }) => {
+    const commentsWorkspaceId = workspaceId || note.workspace_id
     return (
         <div className="relative bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-none rounded-lg overflow-auto flex flex-col gap-2 p-4">
             <>
@@ -59,6 +63,9 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
                         <Renderer content={note.content} maxNodes={maxNodes} workspaceId={note.workspace_id} />
                     )}
                 </div>
+                {commentsWorkspaceId && note.id && (
+                    <NoteCardComments workspaceId={commentsWorkspaceId} noteId={note.id} readOnly={commentsReadOnly} />
+                )}
             </>
         </div>
     )

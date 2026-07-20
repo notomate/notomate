@@ -69,7 +69,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
     const displayTitle = wsReady ? wsTitle : (note.title ?? '')
 
     return (
-        <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex flex-col flex-1 min-h-0 min-w-0">
             {note && (
                 <>
                     <div className="shrink-0 p-2 lg:p-4">
@@ -98,7 +98,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                             <div className="inline-flex flex-shrink-0">{menu}</div>
                         </div>
                     </div>
-                    <div className="flex-1 overflow-auto">
+                    <div className="flex-1 overflow-x-auto overflow-y-auto">
                         <div className="lg:max-w-3xl w-full m-auto">
                             <div className="lg:p-10">
                                 <div className="flex flex-col gap-2">

@@ -592,6 +592,20 @@ export default {
     connected: "Connected",
     disconnected: "Disconnected"
   },
+  comments: {
+    title: "Comments",
+    addComment: "Add comment",
+    noComments: "No comments yet. Select text, or write a general comment above.",
+    composerPlaceholder: "Add a comment...",
+    replyPlaceholder: "Reply...",
+    submit: "Comment",
+    edited: "(edited)",
+    orphaned: "The commented text is no longer in this note",
+    confirmDelete: "Are you sure you want to delete this comment?",
+    createFailed: "Failed to add comment",
+    updateFailed: "Failed to update comment",
+    deleteFailed: "Failed to delete comment"
+  },
   whiteboard: {
     loading: "Loading...",
     select: "Select",
@@ -707,6 +721,7 @@ export default {
     "Carousel": "Carousel",
     "moveUp": "Move up",
     "moveDown": "Move down",
+    "addComment": "Add comment",
     "subPage":{
         "newPage": "New page"
     },

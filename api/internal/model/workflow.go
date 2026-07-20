@@ -25,6 +25,9 @@ const (
 	WorkflowEventNoteCreated      = "note.created"
 	WorkflowEventNoteUpdated      = "note.updated"
 	WorkflowEventNoteDeleted      = "note.deleted"
+	WorkflowEventCommentCreated   = "comment.created"
+	WorkflowEventCommentUpdated   = "comment.updated"
+	WorkflowEventCommentDeleted   = "comment.deleted"
 	WorkflowEventSchedule         = "schedule"
 	WorkflowEventWorkflowDispatch = "workflow_dispatch"
 )

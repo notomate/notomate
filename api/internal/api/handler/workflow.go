@@ -280,3 +280,11 @@ func (h Handler) notifyNoteEvent(event string, note model.Note, actorID string) 
 		h.workflowEngine.NotifyNoteEvent(event, note, actorID)
 	}
 }
+
+// notifyCommentEvent reports a comment change to the trigger engine (no-op
+// when no engine is attached).
+func (h Handler) notifyCommentEvent(event string, comment model.Comment, actorID string) {
+	if h.workflowEngine != nil {
+		h.workflowEngine.NotifyCommentEvent(event, comment, actorID)
+	}
+}

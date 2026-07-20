@@ -39,6 +39,12 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 	// Note-scoped views: returns all views belonging to a specific note
 	g.GET("/:workspaceId/notes/:noteId/views", h.GetNoteViews)
 
+	// Note-scoped comments
+	g.GET("/:workspaceId/notes/:noteId/comments", h.GetNoteComments)
+	g.POST("/:workspaceId/notes/:noteId/comments", h.CreateComment)
+	g.PUT("/:workspaceId/notes/:noteId/comments/:id", h.UpdateComment)
+	g.DELETE("/:workspaceId/notes/:noteId/comments/:id", h.DeleteComment)
+
 	g.GET("/:workspaceId/files/:id", h.Download)
 	g.GET("/:workspaceId/files", h.List)
 	g.POST("/:workspaceId/files", h.Upload)

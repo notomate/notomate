@@ -2,14 +2,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useParams } from "react-router-dom"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import { useEffect, useRef, useState } from "react"
+import { MessageCircle } from "lucide-react"
 import { getNote, NoteData, updateNote } from "@/api/note"
 import NoteDetailView from "@/components/notedetail/NoteDetailView"
 import { useNoteCollab } from "@/hooks/use-note-collab"
 import NoteDetailMenu from "@/components/notedetailmenu/NoteDetailMenu"
+import CommentSidebar from "@/components/commentsidebar/CommentSidebar"
 import { setLastNoteId } from "@/lib/recent-visits"
 
 const NoteDetailPage = () => {
     const [note, setNote] = useState<NoteData | null>(null)
+    const [showComments, setShowComments] = useState(false)
     const currentWorkspaceId = useCurrentWorkspaceId()
     const { noteId } = useParams()
     const queryClient = useQueryClient()
@@ -135,16 +138,34 @@ const NoteDetailPage = () => {
     }, [wsTitle, currentWorkspaceId, queryClient])
 
     return (
-        <div className="flex flex-col bg-white dark:bg-neutral-800 xl:w-full h-full">
+        <div className="flex bg-white dark:bg-neutral-800 xl:w-full h-full min-w-0">
             <NoteDetailView
                 note={note}
-                menu={note ? <NoteDetailMenu note={note} /> : undefined}
+                menu={note ? (
+                    <div className="flex items-center gap-1">
+                        <button
+                            className={`p-2 rounded ${showComments ? 'text-primary' : 'text-gray-500 dark:text-gray-400'} hover:bg-gray-100 dark:hover:bg-neutral-700`}
+                            onClick={() => setShowComments(prev => !prev)}
+                        >
+                            <MessageCircle size={16} />
+                        </button>
+                        <NoteDetailMenu note={note} />
+                    </div>
+                ) : undefined}
                 wsTitle={wsTitle}
                 wsReady={isReady}
                 onTitleChange={sendUpdateTitle}
                 yDoc={yDoc}
                 yText={yText}
             />
+            {currentWorkspaceId && noteId && (
+                <CommentSidebar
+                    workspaceId={currentWorkspaceId}
+                    noteId={noteId}
+                    open={showComments}
+                    onOpenChange={setShowComments}
+                />
+            )}
         </div>
     )
 }

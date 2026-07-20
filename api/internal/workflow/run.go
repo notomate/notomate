@@ -17,6 +17,7 @@ type EventPayload struct {
 	Workspace PayloadWorkspace  `json:"workspace"`
 	Sender    *PayloadSender    `json:"sender,omitempty"`
 	Note      *model.Note       `json:"note,omitempty"`
+	Comment   *model.Comment    `json:"comment,omitempty"`
 	Inputs    map[string]string `json:"inputs,omitempty"`
 }
 
