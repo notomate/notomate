@@ -595,7 +595,6 @@ export default {
   comments: {
     title: "留言",
     addComment: "新增留言",
-    noComments: "尚無留言，選取筆記中的文字，或直接在上方輸入一般留言。",
     composerPlaceholder: "新增留言...",
     replyPlaceholder: "回覆...",
     submit: "留言",

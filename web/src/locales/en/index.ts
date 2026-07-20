@@ -595,7 +595,6 @@ export default {
   comments: {
     title: "Comments",
     addComment: "Add comment",
-    noComments: "No comments yet. Select text, or write a general comment above.",
     composerPlaceholder: "Add a comment...",
     replyPlaceholder: "Reply...",
     submit: "Comment",

@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { X, Send, Pencil, Trash2, MessageSquareOff, MoreVertical } from "lucide-react"
+import { X, Send, Pencil, Trash2, MoreVertical } from "lucide-react"
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import { CommentData, createComment, deleteComment, getComments, updateComment } from "@/api/comment"
 import { getWorkspaceMembers } from "@/api/workspace"
@@ -337,34 +337,33 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
             </blockquote>
           )}
           <div className="flex gap-2 items-start">
-            <MentionTextarea
-              key={composerFocusKey}
-              autoFocus={composerFocusKey > 0}
-              className="w-full text-sm border dark:border-neutral-600 rounded p-2 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
-              rows={composer.quotedText ? 2 : 1}
-              placeholder={t("comments.composerPlaceholder") as string}
-              value={composerBody}
-              onChange={setComposerBody}
-              members={members}
-            />
-            <button
-              className="p-1.5 text-primary disabled:opacity-40 shrink-0"
-              disabled={!composerBody.trim()}
-              onClick={handleSubmitComposer}
-            >
-              <Send size={16} />
-            </button>
+            <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
+              <div className="flex gap-2 items-center">
+                <MentionTextarea
+                  key={composerFocusKey}
+                  autoFocus={composerFocusKey > 0}
+                  className="w-full text-sm border dark:border-neutral-600 rounded p-2 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
+                  rows={composer.quotedText ? 2 : 1}
+                  placeholder={t("comments.composerPlaceholder") as string}
+                  value={composerBody}
+                  onChange={setComposerBody}
+                  members={members}
+                />
+                <button
+                  className="p-1.5 text-primary disabled:opacity-40 shrink-0"
+                  disabled={!composerBody.trim()}
+                  onClick={handleSubmitComposer}
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         <div ref={bodyRef} className="flex-1 overflow-y-auto">
-        {threads.length === 0 && (
-          <div className="flex flex-col items-center justify-center text-center gap-2 p-8 text-gray-400">
-            <MessageSquareOff size={24} />
-            <p className="text-sm">{t("comments.noComments")}</p>
-          </div>
-        )}
-
         {threads.map(thread => {
           const anchor = thread[0]
           const isOrphaned = orphanedThreadIds.has(anchor.thread_id)
@@ -454,21 +453,27 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
               </div>
 
               <div className="mt-3 flex gap-2 items-start">
-                <MentionTextarea
-                  className="w-full text-sm border dark:border-neutral-600 rounded p-1.5 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
-                  rows={1}
-                  placeholder={t("comments.replyPlaceholder") as string}
-                  value={replyBodies[anchor.thread_id] ?? ""}
-                  onChange={value => setReplyBodies(prev => ({ ...prev, [anchor.thread_id]: value }))}
-                  members={members}
-                />
-                <button
-                  className="p-1.5 text-primary disabled:opacity-40"
-                  disabled={!(replyBodies[anchor.thread_id] ?? "").trim()}
-                  onClick={() => handleSubmitReply(anchor.thread_id)}
-                >
-                  <Send size={16} />
-                </button>
+                <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
+                  <div className="flex gap-2 items-center">
+                    <MentionTextarea
+                      className="w-full text-sm border dark:border-neutral-600 rounded p-1.5 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
+                      rows={1}
+                      placeholder={t("comments.replyPlaceholder") as string}
+                      value={replyBodies[anchor.thread_id] ?? ""}
+                      onChange={value => setReplyBodies(prev => ({ ...prev, [anchor.thread_id]: value }))}
+                      members={members}
+                    />
+                    <button
+                      className="p-1.5 text-primary disabled:opacity-40"
+                      disabled={!(replyBodies[anchor.thread_id] ?? "").trim()}
+                      onClick={() => handleSubmitReply(anchor.thread_id)}
+                    >
+                      <Send size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )
