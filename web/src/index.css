@@ -169,6 +169,14 @@ p.is-editor-empty:first-child::before {
   @apply text-primary underline break-all;
 }
 
+.note-comment-body li.note-comment-task-item {
+  @apply list-none -ml-4 flex items-start gap-1.5;
+}
+
+.note-comment-body .note-comment-task-checkbox {
+  @apply mt-1 accent-primary shrink-0;
+}
+
 .note-comment-mention {
   @apply text-primary bg-primary-lighter dark:bg-primary-light rounded px-1 font-medium;
 }
