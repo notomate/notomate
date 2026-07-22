@@ -9,7 +9,7 @@ import { useCurrentUserStore } from "@/stores/current-user"
 import { useToastStore } from "@/stores/toast"
 import Avatar from "@/components/avatar/Avatar"
 import NoteTime from "@/components/notetime/NoteTime"
-import MentionTextarea from "./MentionTextarea"
+import CommentEditor from "./CommentEditor"
 import { renderCommentBody } from "./commentMarkdown"
 
 interface NoteCardCommentsProps {
@@ -25,7 +25,9 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
   const queryClient = useQueryClient()
 
   const [expanded, setExpanded] = useState(false)
+  const [composerExpanded, setComposerExpanded] = useState(false)
   const [composerBody, setComposerBody] = useState("")
+  const [expandedReplyThreads, setExpandedReplyThreads] = useState<Set<string>>(new Set())
   const [replyBodies, setReplyBodies] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingBody, setEditingBody] = useState("")
@@ -85,6 +87,20 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
     setReplyBodies(prev => ({ ...prev, [threadId]: "" }))
   }
 
+  const openReply = (threadId: string) => {
+    setExpandedReplyThreads(prev => new Set(prev).add(threadId))
+  }
+
+  const collapseReplyIfEmpty = (threadId: string) => {
+    if ((replyBodies[threadId] ?? "").trim()) return
+    setExpandedReplyThreads(prev => {
+      if (!prev.has(threadId)) return prev
+      const next = new Set(prev)
+      next.delete(threadId)
+      return next
+    })
+  }
+
   const handleStartEdit = (comment: CommentData) => {
     setEditingId(comment.id)
     setEditingBody(comment.body)
@@ -118,24 +134,38 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
             <div className="flex gap-2 items-start px-4 mt-1">
               <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
-                <div className="flex gap-2 items-center">
-                  <MentionTextarea
-                    className="w-full text-sm border dark:border-neutral-600 rounded p-2 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
-                    rows={1}
-                    placeholder={t("comments.composerPlaceholder") as string}
-                    value={composerBody}
-                    onChange={setComposerBody}
-                    members={members}
-                  />
+                {composerExpanded ? (
+                  <>
+                    <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
+                    <div className="flex gap-2 items-end">
+                      <CommentEditor
+                        autoFocus
+                        className="text-sm"
+                        minHeight={56}
+                        placeholder={t("comments.composerPlaceholder") as string}
+                        value={composerBody}
+                        onChange={setComposerBody}
+                        onBlur={() => { if (!composerBody.trim()) setComposerExpanded(false) }}
+                        members={members}
+                      />
+                      <button
+                        className="p-1.5 text-primary disabled:opacity-40 shrink-0"
+                        disabled={!composerBody.trim()}
+                        onClick={handleSubmitComposer}
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
                   <button
-                    className="p-1.5 text-primary disabled:opacity-40 shrink-0"
-                    disabled={!composerBody.trim()}
-                    onClick={handleSubmitComposer}
+                    type="button"
+                    className="w-full text-left text-sm text-gray-400 dark:text-gray-500 border dark:border-neutral-600 rounded px-3 py-1.5 hover:border-gray-300 dark:hover:border-neutral-500 hover:text-gray-500 dark:hover:text-gray-400"
+                    onClick={() => setComposerExpanded(true)}
                   >
-                    <Send size={16} />
+                    {t("comments.composerPlaceholder")}
                   </button>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -152,9 +182,12 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
                       </blockquote>
                     )}
                     <div className="flex flex-col gap-2">
-                      {thread.map(comment => (
-                        <div key={comment.id} className="flex gap-2">
-                          <Avatar name={comment.created_by_name} avatarUrl={comment.created_by_avatar_url} size={22} />
+                      {thread.map((comment, index) => (
+                        <div
+                          key={comment.id}
+                          className={`flex gap-2 ${index > 0 ? "ml-7 pl-3 dark:border-neutral-700" : ""}`}
+                        >
+                          <Avatar name={comment.created_by_name} avatarUrl={comment.created_by_avatar_url} size={index > 0 ? 18 : 22} />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{comment.created_by_name}</span>
@@ -195,10 +228,10 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
 
                             {editingId === comment.id ? (
                               <div className="mt-1">
-                                <MentionTextarea
+                                <CommentEditor
                                   autoFocus
-                                  className="w-full text-sm border dark:border-neutral-600 rounded p-2 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
-                                  rows={2}
+                                  className="text-sm"
+                                  minHeight={56}
                                   value={editingBody}
                                   onChange={setEditingBody}
                                   members={members}
@@ -224,29 +257,41 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
                     </div>
 
                     {!readOnly && (
-                      <div className="mt-2 flex gap-2 items-start pl-7">
-                        <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={22} />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
-                          <div className="flex gap-2 items-center">
-                            <MentionTextarea
-                              className="w-full text-xs border dark:border-neutral-600 rounded p-1.5 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
-                              rows={1}
-                              placeholder={t("comments.replyPlaceholder") as string}
-                              value={replyBodies[anchor.thread_id] ?? ""}
-                              onChange={value => setReplyBodies(prev => ({ ...prev, [anchor.thread_id]: value }))}
-                              members={members}
-                            />
-                            <button
-                              className="p-1 text-primary disabled:opacity-40"
-                              disabled={!(replyBodies[anchor.thread_id] ?? "").trim()}
-                              onClick={() => handleSubmitReply(anchor.thread_id)}
-                            >
-                              <Send size={14} />
-                            </button>
+                      expandedReplyThreads.has(anchor.thread_id) ? (
+                        <div className="mt-2 flex gap-2 items-start ml-7 pl-3 border-l-2 border-transparent">
+                          <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={22} />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
+                            <div className="flex gap-2 items-end">
+                              <CommentEditor
+                                autoFocus
+                                className="text-xs"
+                                minHeight={48}
+                                placeholder={t("comments.replyPlaceholder") as string}
+                                value={replyBodies[anchor.thread_id] ?? ""}
+                                onChange={value => setReplyBodies(prev => ({ ...prev, [anchor.thread_id]: value }))}
+                                onBlur={() => collapseReplyIfEmpty(anchor.thread_id)}
+                                members={members}
+                              />
+                              <button
+                                className="p-1 text-primary disabled:opacity-40"
+                                disabled={!(replyBodies[anchor.thread_id] ?? "").trim()}
+                                onClick={() => handleSubmitReply(anchor.thread_id)}
+                              >
+                                <Send size={14} />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="mt-2 ml-7 pl-3 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                          onClick={() => openReply(anchor.thread_id)}
+                        >
+                          {t("comments.replyPlaceholder")}
+                        </button>
+                      )
                     )}
                   </div>
                 )

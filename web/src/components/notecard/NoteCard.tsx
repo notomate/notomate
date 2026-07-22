@@ -21,7 +21,7 @@ interface NoteCardProps {
 const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, parentNoteTitle, parentNoteLinkTo, workspaceId, commentsReadOnly }) => {
     const commentsWorkspaceId = workspaceId || note.workspace_id
     return (
-        <div className="relative bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-none rounded-lg overflow-auto flex flex-col gap-2 p-4">
+        <div className="relative bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-none rounded-lg overflow-auto flex flex-col gap-3 p-4">
             <>
                 {showLink && (
                     <Link to={linkTo || ""} className="absolute top-4 right-4 text-gray-500">

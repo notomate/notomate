@@ -178,7 +178,7 @@ p.is-editor-empty:first-child::before {
 }
 
 .note-comment-mention {
-  @apply text-primary bg-primary-lighter dark:bg-primary-light rounded px-1 font-medium;
+  @apply text-primary font-medium;
 }
 p[data-placeholder] :not(.ProseMirror-trailingBreak) {
   display: none;

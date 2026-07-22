@@ -83,7 +83,7 @@ export const MentionList = forwardRef<MentionListRef, Props>(
                 }`}
               onClick={() => command(item)}
             >
-              <Avatar name={item.label} size={22} />
+              <Avatar name={item.label} avatarUrl={item.avatarUrl} size={22} />
               <div className="min-w-0 flex flex-col">
                 <span className="truncate leading-tight">{item.label}</span>
                 <span className="truncate leading-tight text-xs text-gray-400 dark:text-stone-500">{item.email}</span>
