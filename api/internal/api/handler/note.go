@@ -383,6 +383,7 @@ func (h Handler) UpdateNote(c echo.Context) error {
 	n.Title = req.Title
 	n.Content = content
 	n.Visibility = existingNote.Visibility
+	n.Pinned = existingNote.Pinned
 	n.CreatedAt = existingNote.CreatedAt
 	n.CreatedBy = existingNote.CreatedBy
 	n.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
