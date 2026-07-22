@@ -48,6 +48,7 @@ const WorkspaceMenu = () => {
             if (workspace.id) {
                 await fetchWorkspaces();
                 setIsMenuOpen(false)
+                setKeyword("")
                 navigate(`/workspaces/${workspace.id}`);
             }
         } catch (error) {
