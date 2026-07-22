@@ -731,7 +731,6 @@ export default {
     "Carousel": "Carousel",
     "moveUp": "Move up",
     "moveDown": "Move down",
-    "addComment": "Add comment",
     "subPage":{
         "newPage": "New page"
     },

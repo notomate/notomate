@@ -9,7 +9,7 @@ import { Mention } from "@tiptap/extension-mention"
 import { FC, useMemo, useRef, useEffect, useState, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
-import { GripVertical, ChevronUp, ChevronDown, Trash2, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, Image, Images, List, ListTodo, FileText, Paperclip, Quote, Table, Type, Video, Music, Youtube, CalendarDays, MapPin, Tag, Star, Map, Kanban, PenTool, Sheet, MessageSquarePlus } from 'lucide-react'
+import { GripVertical, ChevronUp, ChevronDown, Trash2, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, Image, Images, List, ListTodo, FileText, Paperclip, Quote, Table, Type, Video, Music, Youtube, CalendarDays, MapPin, Tag, Star, Map, Kanban, PenTool, Sheet } from 'lucide-react'
 import { CommandItem, SlashCommand } from './extensions/slashcommand/SlashCommand'
 import { createMentionSuggestion } from './extensions/mention/suggestion'
 import { Attachment } from './extensions/attachment/Attachment'
@@ -635,17 +635,11 @@ const Editor: FC<Props> = ({
     };
   }, [editor, yDoc, yText, onChange]);
 
-  // Apply/remove comment marks in response to the comment sidebar's actions.
-  // The sidebar has no direct reference to the editor instance, so it communicates
-  // via DOM CustomEvents (matching the composition-event pattern above).
+  // Remove comment marks left over from previously anchored comments when their
+  // thread is deleted. The sidebar has no direct reference to the editor instance,
+  // so it communicates via a DOM CustomEvent (matching the composition-event pattern above).
   useEffect(() => {
     if (!editor) return;
-
-    const handleMarkApplied = (event: Event) => {
-      const { threadId, from, to } = (event as CustomEvent).detail || {};
-      if (!threadId || typeof from !== 'number' || typeof to !== 'number') return;
-      editor.chain().setTextSelection({ from, to }).setComment(threadId).run();
-    };
 
     const handleMarkRemove = (event: Event) => {
       const { threadId } = (event as CustomEvent).detail || {};
@@ -653,11 +647,9 @@ const Editor: FC<Props> = ({
       editor.chain().unsetComment(threadId).run();
     };
 
-    document.addEventListener('note-comment-mark-applied', handleMarkApplied);
     document.addEventListener('note-comment-mark-remove', handleMarkRemove);
 
     return () => {
-      document.removeEventListener('note-comment-mark-applied', handleMarkApplied);
       document.removeEventListener('note-comment-mark-remove', handleMarkRemove);
     };
   }, [editor]);
@@ -826,27 +818,6 @@ const Editor: FC<Props> = ({
           <button className='p-2' onClick={() => editor.chain().focus().deleteRow().run()}>{t("editor.table.deleteRow")}</button>
           <button className='p-2' onClick={() => editor.chain().focus().addRowAfter().run()}>{t("editor.table.addRow")}</button>
           <button className='p-2' onClick={() => editor.chain().focus().deleteTable().run()}>{t('editor.table.deleteTable')}</button>
-        </div>
-      </BubbleMenu>
-
-      <BubbleMenu
-        editor={editor}
-        shouldShow={({ state }) => !state.selection.empty && !editor.isActive('table') && !editor.isActive('tableCell')}
-        options={{ placement: 'top', offset: 8 }}
-      >
-        <div className="flex bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded shadow">
-          <button
-            className="flex items-center gap-1.5 px-2 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded"
-            onClick={() => {
-              const { from, to } = editor.state.selection
-              const quotedText = editor.state.doc.textBetween(from, to, ' ')
-              if (!quotedText.trim()) return
-              document.dispatchEvent(new CustomEvent('note-comment-open-composer', { detail: { quotedText, from, to } }))
-            }}
-          >
-            <MessageSquarePlus size={14} />
-            {t('editor.addComment')}
-          </button>
         </div>
       </BubbleMenu>
       <EditorContent editor={editor} />

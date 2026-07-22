@@ -731,7 +731,6 @@ export default {
     "Carousel": "輪播",
     "moveUp": "向上移動",
     "moveDown": "向下移動",
-    "addComment": "新增留言",
     "subPage":{
         "newPage": "新頁面"
     },

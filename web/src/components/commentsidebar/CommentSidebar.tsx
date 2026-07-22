@@ -19,12 +19,6 @@ interface CommentSidebarProps {
   onOpenChange: (open: boolean) => void
 }
 
-interface PendingComposer {
-  quotedText: string
-  from?: number
-  to?: number
-}
-
 function formatRelativeTime(t: (key: string, opts?: any) => string, dateString?: string) {
   const date = new Date(dateString ?? "")
   const now = new Date()
@@ -44,7 +38,6 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   const { addToast } = useToastStore()
   const queryClient = useQueryClient()
 
-  const [composer, setComposer] = useState<PendingComposer>({ quotedText: "" })
   const [composerFocusKey, setComposerFocusKey] = useState(0)
   const [composerExpanded, setComposerExpanded] = useState(false)
   const [composerBody, setComposerBody] = useState("")
@@ -125,21 +118,6 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
       observer.disconnect()
     }
   }, [threads])
-
-  // "Add comment" bubble-menu button in the editor asks us to open a composer for a fresh selection.
-  useEffect(() => {
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail as PendingComposer
-      if (!detail) return
-      setComposer(detail)
-      setComposerBody("")
-      setComposerExpanded(true)
-      setComposerFocusKey(k => k + 1)
-      onOpenChange(true)
-    }
-    document.addEventListener("note-comment-open-composer", handler)
-    return () => document.removeEventListener("note-comment-open-composer", handler)
-  }, [onOpenChange])
 
   // Clicking a highlighted comment span in the editor scrolls/highlights the matching thread.
   useEffect(() => {
@@ -228,17 +206,9 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   }, [isDragging, dragOffset])
 
   const createMutation = useMutation({
-    mutationFn: (vars: { threadId?: string; quotedText?: string; body: string; from?: number; to?: number }) =>
+    mutationFn: (vars: { threadId?: string; body: string }) =>
       createComment(workspaceId, noteId, vars),
-    onSuccess: (created, vars) => {
-      queryClient.invalidateQueries({ queryKey })
-      // Only anchor a mark in the editor when the comment was created against a text selection.
-      if (!vars.threadId && vars.from !== undefined && vars.to !== undefined) {
-        document.dispatchEvent(new CustomEvent("note-comment-mark-applied", {
-          detail: { threadId: created.id, from: vars.from, to: vars.to },
-        }))
-      }
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
     onError: () => addToast({ title: t("comments.createFailed"), type: "error" }),
   })
 
@@ -262,8 +232,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
 
   const handleSubmitComposer = () => {
     if (!composerBody.trim()) return
-    createMutation.mutate({ quotedText: composer.quotedText, body: composerBody.trim(), from: composer.from, to: composer.to })
-    setComposer({ quotedText: "" })
+    createMutation.mutate({ body: composerBody.trim() })
     setComposerBody("")
   }
 
@@ -343,18 +312,6 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
         <div className="p-3 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 shrink-0">
           {composerExpanded ? (
             <>
-              {composer.quotedText && (
-                <blockquote className="text-xs italic text-gray-500 dark:text-gray-400 border-l-2 pl-2 mb-2 line-clamp-3 flex items-start gap-1">
-                  <span className="flex-1">{composer.quotedText}</span>
-                  <button
-                    className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0"
-                    title={t("actions.cancel") as string}
-                    onClick={() => setComposer({ quotedText: "" })}
-                  >
-                    <X size={12} />
-                  </button>
-                </blockquote>
-              )}
               <div className="flex gap-2 items-start">
                 <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
                 <div className="flex-1 min-w-0">
@@ -364,11 +321,11 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
                       key={composerFocusKey}
                       autoFocus={composerFocusKey > 0}
                       className="text-sm"
-                      minHeight={composer.quotedText ? 72 : 56}
+                      minHeight={56}
                       placeholder={t("comments.composerPlaceholder") as string}
                       value={composerBody}
                       onChange={setComposerBody}
-                      onBlur={() => { if (!composerBody.trim() && !composer.quotedText) setComposerExpanded(false) }}
+                      onBlur={() => { if (!composerBody.trim()) setComposerExpanded(false) }}
                       members={members}
                     />
                     <button
