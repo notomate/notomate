@@ -243,12 +243,13 @@ func (h Handler) UpdateWorkspace(c echo.Context) error {
 // Workspace Member Management
 
 type WorkspaceMemberResponse struct {
-	WorkspaceID string `json:"workspace_id"`
-	UserID      string `json:"user_id"`
-	UserName    string `json:"user_name"`
-	UserEmail   string `json:"user_email"`
-	Role        string `json:"role"`
-	CreatedAt   string `json:"created_at"`
+	WorkspaceID   string `json:"workspace_id"`
+	UserID        string `json:"user_id"`
+	UserName      string `json:"user_name"`
+	UserEmail     string `json:"user_email"`
+	UserAvatarUrl string `json:"user_avatar_url"`
+	Role          string `json:"role"`
+	CreatedAt     string `json:"created_at"`
 }
 
 type InviteMemberRequest struct {
@@ -285,12 +286,13 @@ func (h Handler) GetWorkspaceMembers(c echo.Context) error {
 		}
 
 		members = append(members, WorkspaceMemberResponse{
-			WorkspaceID: wu.WorkspaceID,
-			UserID:      wu.UserID,
-			UserName:    user.Name,
-			UserEmail:   user.Email,
-			Role:        wu.Role,
-			CreatedAt:   wu.CreatedAt,
+			WorkspaceID:   wu.WorkspaceID,
+			UserID:        wu.UserID,
+			UserName:      user.Name,
+			UserEmail:     user.Email,
+			UserAvatarUrl: user.AvatarUrl,
+			Role:          wu.Role,
+			CreatedAt:     wu.CreatedAt,
 		})
 	}
 
@@ -387,12 +389,13 @@ func (h Handler) InviteMember(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, WorkspaceMemberResponse{
-		WorkspaceID: workspaceUser.WorkspaceID,
-		UserID:      workspaceUser.UserID,
-		UserName:    invitedUser.Name,
-		UserEmail:   invitedUser.Email,
-		Role:        workspaceUser.Role,
-		CreatedAt:   workspaceUser.CreatedAt,
+		WorkspaceID:   workspaceUser.WorkspaceID,
+		UserID:        workspaceUser.UserID,
+		UserName:      invitedUser.Name,
+		UserEmail:     invitedUser.Email,
+		UserAvatarUrl: invitedUser.AvatarUrl,
+		Role:          workspaceUser.Role,
+		CreatedAt:     workspaceUser.CreatedAt,
 	})
 }
 
@@ -482,12 +485,13 @@ func (h Handler) UpdateMemberRole(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, WorkspaceMemberResponse{
-		WorkspaceID: targetMember.WorkspaceID,
-		UserID:      targetMember.UserID,
-		UserName:    user.Name,
-		UserEmail:   user.Email,
-		Role:        targetMember.Role,
-		CreatedAt:   targetMember.CreatedAt,
+		WorkspaceID:   targetMember.WorkspaceID,
+		UserID:        targetMember.UserID,
+		UserName:      user.Name,
+		UserEmail:     user.Email,
+		UserAvatarUrl: user.AvatarUrl,
+		Role:          targetMember.Role,
+		CreatedAt:     targetMember.CreatedAt,
 	})
 }
 

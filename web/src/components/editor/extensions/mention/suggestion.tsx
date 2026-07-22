@@ -8,6 +8,7 @@ export interface MentionItem {
   id: string
   label: string
   email: string
+  avatarUrl?: string
 }
 
 export const createMentionSuggestion = (
@@ -27,6 +28,7 @@ export const createMentionSuggestion = (
         id: member.user_id,
         label: member.user_name,
         email: member.user_email,
+        avatarUrl: member.user_avatar_url,
       }))
   },
 

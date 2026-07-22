@@ -9,7 +9,7 @@ import { COMMENT_CLICK_EVENT } from "@/components/editor/extensions/comment/Comm
 import { useCurrentUserStore } from "@/stores/current-user"
 import { useToastStore } from "@/stores/toast"
 import Avatar from "@/components/avatar/Avatar"
-import MentionTextarea from "./MentionTextarea"
+import CommentEditor from "./CommentEditor"
 import { renderCommentBody } from "./commentMarkdown"
 
 interface CommentSidebarProps {
@@ -46,7 +46,9 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
 
   const [composer, setComposer] = useState<PendingComposer>({ quotedText: "" })
   const [composerFocusKey, setComposerFocusKey] = useState(0)
+  const [composerExpanded, setComposerExpanded] = useState(false)
   const [composerBody, setComposerBody] = useState("")
+  const [expandedReplyThreads, setExpandedReplyThreads] = useState<Set<string>>(new Set())
   const [replyBodies, setReplyBodies] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingBody, setEditingBody] = useState("")
@@ -131,6 +133,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
       if (!detail) return
       setComposer(detail)
       setComposerBody("")
+      setComposerExpanded(true)
       setComposerFocusKey(k => k + 1)
       onOpenChange(true)
     }
@@ -271,6 +274,20 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
     setReplyBodies(prev => ({ ...prev, [threadId]: "" }))
   }
 
+  const openReply = (threadId: string) => {
+    setExpandedReplyThreads(prev => new Set(prev).add(threadId))
+  }
+
+  const collapseReplyIfEmpty = (threadId: string) => {
+    if ((replyBodies[threadId] ?? "").trim()) return
+    setExpandedReplyThreads(prev => {
+      if (!prev.has(threadId)) return prev
+      const next = new Set(prev)
+      next.delete(threadId)
+      return next
+    })
+  }
+
   const handleStartEdit = (comment: CommentData) => {
     setEditingId(comment.id)
     setEditingBody(comment.body)
@@ -324,43 +341,59 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
         </div>
 
         <div className="p-3 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 shrink-0">
-          {composer.quotedText && (
-            <blockquote className="text-xs italic text-gray-500 dark:text-gray-400 border-l-2 pl-2 mb-2 line-clamp-3 flex items-start gap-1">
-              <span className="flex-1">{composer.quotedText}</span>
-              <button
-                className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0"
-                title={t("actions.cancel") as string}
-                onClick={() => setComposer({ quotedText: "" })}
-              >
-                <X size={12} />
-              </button>
-            </blockquote>
-          )}
-          <div className="flex gap-2 items-start">
-            <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
-              <div className="flex gap-2 items-center">
-                <MentionTextarea
-                  key={composerFocusKey}
-                  autoFocus={composerFocusKey > 0}
-                  className="w-full text-sm border dark:border-neutral-600 rounded p-2 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
-                  rows={composer.quotedText ? 2 : 1}
-                  placeholder={t("comments.composerPlaceholder") as string}
-                  value={composerBody}
-                  onChange={setComposerBody}
-                  members={members}
-                />
-                <button
-                  className="p-1.5 text-primary disabled:opacity-40 shrink-0"
-                  disabled={!composerBody.trim()}
-                  onClick={handleSubmitComposer}
-                >
-                  <Send size={16} />
-                </button>
+          {composerExpanded ? (
+            <>
+              {composer.quotedText && (
+                <blockquote className="text-xs italic text-gray-500 dark:text-gray-400 border-l-2 pl-2 mb-2 line-clamp-3 flex items-start gap-1">
+                  <span className="flex-1">{composer.quotedText}</span>
+                  <button
+                    className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0"
+                    title={t("actions.cancel") as string}
+                    onClick={() => setComposer({ quotedText: "" })}
+                  >
+                    <X size={12} />
+                  </button>
+                </blockquote>
+              )}
+              <div className="flex gap-2 items-start">
+                <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
+                  <div className="flex gap-2 items-end">
+                    <CommentEditor
+                      key={composerFocusKey}
+                      autoFocus={composerFocusKey > 0}
+                      className="text-sm"
+                      minHeight={composer.quotedText ? 72 : 56}
+                      placeholder={t("comments.composerPlaceholder") as string}
+                      value={composerBody}
+                      onChange={setComposerBody}
+                      onBlur={() => { if (!composerBody.trim() && !composer.quotedText) setComposerExpanded(false) }}
+                      members={members}
+                    />
+                    <button
+                      className="p-1.5 text-primary disabled:opacity-40 shrink-0"
+                      disabled={!composerBody.trim()}
+                      onClick={handleSubmitComposer}
+                    >
+                      <Send size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="w-full flex items-center gap-2 text-left"
+              onClick={() => { setComposerExpanded(true); setComposerFocusKey(k => k + 1) }}
+            >
+              <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
+              <span className="flex-1 text-sm text-gray-400 dark:text-gray-500 border dark:border-neutral-600 rounded px-3 py-1.5 hover:border-gray-300 dark:hover:border-neutral-500 hover:text-gray-500 dark:hover:text-gray-400">
+                {t("comments.composerPlaceholder")}
+              </span>
+            </button>
+          )}
         </div>
 
         <div ref={bodyRef} className="flex-1 overflow-y-auto">
@@ -381,9 +414,12 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
               )}
 
               <div className="flex flex-col gap-3">
-                {thread.map(comment => (
-                  <div key={comment.id} className="flex gap-2">
-                    <Avatar name={comment.created_by_name} avatarUrl={comment.created_by_avatar_url} size={24} />
+                {thread.map((comment, index) => (
+                  <div
+                    key={comment.id}
+                    className={`flex gap-2 ${index > 0 ? "ml-8 pl-3 dark:border-neutral-700" : ""}`}
+                  >
+                    <Avatar name={comment.created_by_name} avatarUrl={comment.created_by_avatar_url} size={index > 0 ? 20 : 24} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{comment.created_by_name}</span>
@@ -424,10 +460,10 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
 
                       {editingId === comment.id ? (
                         <div className="mt-1">
-                          <MentionTextarea
+                          <CommentEditor
                             autoFocus
-                            className="w-full text-sm border dark:border-neutral-600 rounded p-2 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
-                            rows={2}
+                            className="text-sm"
+                            minHeight={64}
                             value={editingBody}
                             onChange={setEditingBody}
                             members={members}
@@ -452,29 +488,41 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
                 ))}
               </div>
 
-              <div className="mt-3 flex gap-2 items-start">
-                <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
-                  <div className="flex gap-2 items-center">
-                    <MentionTextarea
-                      className="w-full text-sm border dark:border-neutral-600 rounded p-1.5 bg-white dark:bg-neutral-900 dark:text-gray-100 resize-none"
-                      rows={1}
-                      placeholder={t("comments.replyPlaceholder") as string}
-                      value={replyBodies[anchor.thread_id] ?? ""}
-                      onChange={value => setReplyBodies(prev => ({ ...prev, [anchor.thread_id]: value }))}
-                      members={members}
-                    />
-                    <button
-                      className="p-1.5 text-primary disabled:opacity-40"
-                      disabled={!(replyBodies[anchor.thread_id] ?? "").trim()}
-                      onClick={() => handleSubmitReply(anchor.thread_id)}
-                    >
-                      <Send size={16} />
-                    </button>
+              {expandedReplyThreads.has(anchor.thread_id) ? (
+                <div className="mt-3 flex gap-2 items-start ml-8 pl-3 border-l-2 border-transparent">
+                  <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={20} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
+                    <div className="flex gap-2 items-end">
+                      <CommentEditor
+                        autoFocus
+                        className="text-sm"
+                        minHeight={48}
+                        placeholder={t("comments.replyPlaceholder") as string}
+                        value={replyBodies[anchor.thread_id] ?? ""}
+                        onChange={value => setReplyBodies(prev => ({ ...prev, [anchor.thread_id]: value }))}
+                        onBlur={() => collapseReplyIfEmpty(anchor.thread_id)}
+                        members={members}
+                      />
+                      <button
+                        className="p-1.5 text-primary disabled:opacity-40"
+                        disabled={!(replyBodies[anchor.thread_id] ?? "").trim()}
+                        onClick={() => handleSubmitReply(anchor.thread_id)}
+                      >
+                        <Send size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <button
+                  type="button"
+                  className="mt-3 ml-8 pl-3 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                  onClick={() => openReply(anchor.thread_id)}
+                >
+                  {t("comments.replyPlaceholder")}
+                </button>
+              )}
             </div>
           )
         })}

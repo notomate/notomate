@@ -603,7 +603,18 @@ export default {
     confirmDelete: "Are you sure you want to delete this comment?",
     createFailed: "Failed to add comment",
     updateFailed: "Failed to update comment",
-    deleteFailed: "Failed to delete comment"
+    deleteFailed: "Failed to delete comment",
+    editor: {
+      bold: "Bold",
+      italic: "Italic",
+      strike: "Strikethrough",
+      code: "Code",
+      bulletList: "Bullet list",
+      orderedList: "Numbered list",
+      taskList: "Task list",
+      blockquote: "Quote",
+      codeBlock: "Code block"
+    }
   },
   whiteboard: {
     loading: "Loading...",

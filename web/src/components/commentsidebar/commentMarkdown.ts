@@ -62,7 +62,7 @@ function taskListPlugin(md: MarkdownIt) {
   })
 }
 
-const md = new MarkdownIt({
+export const md = new MarkdownIt({
   html: false,
   linkify: true,
   breaks: true,

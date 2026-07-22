@@ -603,7 +603,18 @@ export default {
     confirmDelete: "確定要刪除這則留言嗎？",
     createFailed: "新增留言失敗",
     updateFailed: "更新留言失敗",
-    deleteFailed: "刪除留言失敗"
+    deleteFailed: "刪除留言失敗",
+    editor: {
+      bold: "粗體",
+      italic: "斜體",
+      strike: "刪除線",
+      code: "程式碼",
+      bulletList: "項目符號清單",
+      orderedList: "編號清單",
+      taskList: "待辦清單",
+      blockquote: "引用",
+      codeBlock: "程式碼區塊"
+    }
   },
   whiteboard: {
     loading: "載入中...",

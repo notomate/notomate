@@ -44,6 +44,7 @@ export interface WorkspaceMember {
   user_id: string;
   user_name: string;
   user_email: string;
+  user_avatar_url?: string;
   role: 'owner' | 'admin' | 'user';
   created_at: string;
 }
