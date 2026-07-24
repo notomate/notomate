@@ -13,25 +13,37 @@ export class AuthExtension {
   async onConnect(data) {
     const isPublic = data.requestHeaders.get('x-public-access') === 'true'
 
-    // Parse JWT from cookie
-    const cookieHeader = data.requestHeaders.get('cookie') || ''
-    const tokenMatch = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/)
-    const token = tokenMatch ? tokenMatch[1] : null
-
     let userId = null
     let userName = 'Anonymous'
 
-    if (token) {
-      try {
-        const secret = process.env.APP_SECRET || 'default_secret'
-        const decoded = jwt.verify(token, secret)
-        const user = await this.db.findUser(decoded.id)
-        if (user && !user.disabled) {
-          userId = user.id
-          userName = user.name
+    // STEP 1: Check for Authorization header with Bearer token (API Key)
+    const authHeader = data.requestHeaders.get('authorization') || ''
+    const apiKey = authHeader.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : null
+
+    if (apiKey) {
+      const user = await this.db.validateApiKey(apiKey)
+      if (user && !user.disabled) {
+        userId = user.id
+        userName = user.name
+      }
+    } else {
+      // STEP 2: Fall back to JWT cookie authentication
+      const cookieHeader = data.requestHeaders.get('cookie') || ''
+      const tokenMatch = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/)
+      const token = tokenMatch ? tokenMatch[1] : null
+
+      if (token) {
+        try {
+          const secret = process.env.APP_SECRET || 'default_secret'
+          const decoded = jwt.verify(token, secret)
+          const user = await this.db.findUser(decoded.id)
+          if (user && !user.disabled) {
+            userId = user.id
+            userName = user.name
+          }
+        } catch (_) {
+          // Invalid token → treat as anonymous
         }
-      } catch (_) {
-        // Invalid token → treat as anonymous
       }
     }
 
@@ -59,15 +71,7 @@ export class AuthExtension {
   }
 
   async checkAccess(resource, userId) {
-    switch (resource.visibility) {
-      case 'public':
-        return true
-      case 'workspace':
-        return userId != null && (await this.db.isWorkspaceMember(userId, resource.workspace_id))
-      case 'private':
-        return resource.created_by === userId
-      default:
-        return false
-    }
+    if (resource.visibility === 'public') return true
+    return userId != null && (await this.db.isWorkspaceMember(userId, resource.workspace_id))
   }
 }

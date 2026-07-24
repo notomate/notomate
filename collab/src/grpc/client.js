@@ -17,6 +17,7 @@ function makeMethod(path) {
 
 const METHODS = {
   GetUser:             '/collab.CollabService/GetUser',
+  ValidateAPIKey:      '/collab.CollabService/ValidateAPIKey',
   IsWorkspaceMember:   '/collab.CollabService/IsWorkspaceMember',
   GetNote:             '/collab.CollabService/GetNote',
   GetView:             '/collab.CollabService/GetView',
@@ -57,6 +58,11 @@ function createGrpcClient(address) {
     async findUser(id) {
       const res = await call(METHODS.GetUser, { id })
       return res.found ? { id: res.id, name: res.name, disabled: res.disabled } : null
+    },
+
+    async validateApiKey(key) {
+      const res = await call(METHODS.ValidateAPIKey, { key })
+      return res.valid ? { id: res.user_id, name: res.user_name, disabled: res.disabled } : null
     },
 
     async isWorkspaceMember(userId, workspaceId) {

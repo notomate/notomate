@@ -10,6 +10,7 @@ package collab;
 service CollabService {
   // Auth
   rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc ValidateAPIKey(ValidateAPIKeyRequest) returns (ValidateAPIKeyResponse);
   rpc IsWorkspaceMember(IsWorkspaceMemberRequest) returns (IsWorkspaceMemberResponse);
   rpc GetNote(GetNoteRequest) returns (GetNoteResponse);
   rpc GetView(GetViewRequest) returns (GetViewResponse);
@@ -25,6 +26,9 @@ service CollabService {
 
 message GetUserRequest        { string id = 1; }
 message GetUserResponse       { bool found = 1; string id = 2; string name = 3; bool disabled = 4; }
+
+message ValidateAPIKeyRequest  { string key = 1; }
+message ValidateAPIKeyResponse { bool valid = 1; string user_id = 2; string user_name = 3; bool disabled = 4; }
 
 message IsWorkspaceMemberRequest  { string user_id = 1; string workspace_id = 2; }
 message IsWorkspaceMemberResponse { bool is_member = 1; }

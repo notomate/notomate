@@ -352,17 +352,13 @@ func (h Handler) UpdateNote(c echo.Context) error {
 		})
 	}
 
-	existingNote, err := h.db.FindNote(model.Note{ID: id})
+	existingNote, err := h.db.FindNote(model.Note{WorkspaceID: workspaceId, ID: id})
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	user := c.Get("user").(model.User)
-
-	if existingNote.CreatedBy != user.ID {
-		return echo.NewHTTPError(http.StatusUnauthorized)
-	}
 
 	// Check if content is markdown and convert to TipTap JSON
 	content := req.Content

@@ -6,7 +6,9 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,6 +17,7 @@ import (
 	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/model"
 	"github.com/notomate/notomate/internal/storage"
+	"github.com/notomate/notomate/internal/util"
 	"github.com/notomate/notomate/internal/workflow"
 )
 
@@ -27,6 +30,16 @@ type GetUserResponse struct {
 	Found    bool   `json:"found"`
 	ID       string `json:"id"`
 	Name     string `json:"name"`
+	Disabled bool   `json:"disabled"`
+}
+
+type ValidateAPIKeyRequest struct {
+	Key string `json:"key"`
+}
+type ValidateAPIKeyResponse struct {
+	Valid    bool   `json:"valid"`
+	UserID   string `json:"user_id"`
+	UserName string `json:"user_name"`
 	Disabled bool   `json:"disabled"`
 }
 
@@ -83,6 +96,7 @@ type UpdateViewDataResponse struct{}
 
 type CollabServiceServer interface {
 	GetUser(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error)
+	ValidateAPIKey(ctx context.Context, req *ValidateAPIKeyRequest) (*ValidateAPIKeyResponse, error)
 	IsWorkspaceMember(ctx context.Context, req *IsWorkspaceMemberRequest) (*IsWorkspaceMemberResponse, error)
 	GetNote(ctx context.Context, req *GetNoteRequest) (*GetNoteResponse, error)
 	GetView(ctx context.Context, req *GetViewRequest) (*GetViewResponse, error)
@@ -122,6 +136,9 @@ func registerCollabServiceServer(s *grpc.Server, srv CollabServiceServer) {
 		Methods: []grpc.MethodDesc{
 			makeHandler("/collab.CollabService/GetUser", func(ctx context.Context, req *GetUserRequest) (interface{}, error) {
 				return srv.GetUser(ctx, req)
+			}),
+			makeHandler("/collab.CollabService/ValidateAPIKey", func(ctx context.Context, req *ValidateAPIKeyRequest) (interface{}, error) {
+				return srv.ValidateAPIKey(ctx, req)
 			}),
 			makeHandler("/collab.CollabService/IsWorkspaceMember", func(ctx context.Context, req *IsWorkspaceMemberRequest) (interface{}, error) {
 				return srv.IsWorkspaceMember(ctx, req)
@@ -164,6 +181,46 @@ func (s *collabServer) GetUser(ctx context.Context, req *GetUserRequest) (*GetUs
 		Found:    true,
 		ID:       user.ID,
 		Name:     user.Name,
+		Disabled: user.Disabled,
+	}, nil
+}
+
+func (s *collabServer) ValidateAPIKey(ctx context.Context, req *ValidateAPIKeyRequest) (*ValidateAPIKeyResponse, error) {
+	if !util.ValidateAPIKeyFormat(req.Key) {
+		return &ValidateAPIKeyResponse{Valid: false}, nil
+	}
+
+	prefix := util.ExtractPrefix(req.Key)
+	apiKeyRecord, err := s.db.FindAPIKeyByPrefix(prefix)
+	if err != nil {
+		return &ValidateAPIKeyResponse{Valid: false}, nil
+	}
+
+	if apiKeyRecord.ExpiresAt != "" {
+		expiresAt, err := time.Parse(time.RFC3339, apiKeyRecord.ExpiresAt)
+		if err == nil && time.Now().UTC().After(expiresAt) {
+			return &ValidateAPIKeyResponse{Valid: false}, nil
+		}
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(apiKeyRecord.KeyHash), []byte(req.Key)); err != nil {
+		return &ValidateAPIKeyResponse{Valid: false}, nil
+	}
+
+	user, err := s.db.FindUserByID(apiKeyRecord.UserID)
+	if err != nil {
+		return &ValidateAPIKeyResponse{Valid: false}, nil
+	}
+
+	go func() {
+		apiKeyRecord.LastUsedAt = time.Now().UTC().Format(time.RFC3339)
+		s.db.UpdateAPIKey(apiKeyRecord)
+	}()
+
+	return &ValidateAPIKeyResponse{
+		Valid:    true,
+		UserID:   user.ID,
+		UserName: user.Name,
 		Disabled: user.Disabled,
 	}, nil
 }
