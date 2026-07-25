@@ -1,6 +1,6 @@
-// Package run executes a claimed workflow job by embedding the act library
-// (gitea.com/gitea/act fork), mirroring how Gitea's act_runner drives it. All
-// act API usage is isolated in this package so version bumps touch one place.
+// Package run executes a claimed workflow job by embedding the upstream
+// nektos/act library, mirroring how Gitea's act_runner drives it. All act
+// API usage is isolated in this package so version bumps touch one place.
 package run
 
 import (
@@ -16,7 +16,6 @@ import (
 
 	"github.com/nektos/act/pkg/model"
 	"github.com/nektos/act/pkg/runner"
-	"github.com/sirupsen/logrus"
 
 	"github.com/notomate/notomate-runner/internal/client"
 	"github.com/notomate/notomate-runner/internal/config"
@@ -108,15 +107,16 @@ func (r *Runner) Run(ctx context.Context, task *client.TaskPayload) error {
 }
 
 func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer *logStreamer) error {
-	wf, err := model.ReadWorkflow(strings.NewReader(task.WorkflowYAML))
+	planner, err := model.NewSingleWorkflowPlanner(task.WorkflowName, strings.NewReader(task.WorkflowYAML))
 	if err != nil {
 		return fmt.Errorf("parse workflow: %w", err)
 	}
 
-	plan, err := model.CombineWorkflowPlanner(wf).PlanJob(task.JobName)
+	plan, err := planner.PlanJob(task.JobName)
 	if err != nil {
 		return fmt.Errorf("plan job %q: %w", task.JobName, err)
 	}
+	uniquifyJobNames(plan, task)
 
 	// Jobs get an empty scratch workdir; there is no repository to check out.
 	workdir, err := os.MkdirTemp("", "notomate-job")
@@ -132,11 +132,21 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 		return fmt.Errorf("write workflow files: %w", err)
 	}
 
-	jobLoggerLevel := logrus.InfoLevel
+	// act only accepts the event payload as a file (Config.EventPath); there
+	// is no field for passing the JSON inline.
+	eventPath, err := writeEventFile(task.EventPayloadJSON)
+	if err != nil {
+		return fmt.Errorf("write event payload: %w", err)
+	}
+	if eventPath != "" {
+		defer os.Remove(eventPath)
+	}
+
 	actConfig := &runner.Config{
+		Actor:                 "notomate",
 		Workdir:               workdir,
 		EventName:             task.EventName,
-		EventJSON:             task.EventPayloadJSON,
+		EventPath:             eventPath,
 		Env:                   r.jobEnv(task),
 		Vars:                  task.Vars,
 		Secrets:               task.Secrets,
@@ -145,22 +155,6 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 		LogOutput:             true,
 		AutoRemove:            true,
 		GitHubInstance:        "github.com",
-		// act clones "uses: owner/repo@ref" steps against DefaultActionInstance,
-		// not GitHubInstance - without this it clones from an empty host.
-		DefaultActionInstance: "github.com",
-		ContainerNamePrefix:   fmt.Sprintf("notomate-run-%d-%s", task.RunNumber, task.JobName),
-		// Jobs run against a scratch workdir with no git checkout (see the
-		// MkdirTemp above), so act's usual "inspect the workdir with git"
-		// fallback for repo/ref/sha always fails and floods the job log with
-		// warnings. Presetting the context sidesteps that codepath entirely -
-		// this is the same mechanism Gitea's act_runner uses.
-		PresetGitHubContext: r.githubContext(task),
-		// The job container idles as "sleep <lifetime>"; without this act
-		// starts it as "sleep 0" and it exits before steps run. Also acts as
-		// a hard cap on job duration.
-		ContainerMaxLifetime: 6 * time.Hour,
-		// Without an explicit level the job logger emits act's debug noise.
-		JobLoggerLevel: &jobLoggerLevel,
 	}
 
 	actRunner, err := runner.New(actConfig)
@@ -175,47 +169,68 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 	return nil
 }
 
-// githubContext builds a synthetic GithubContext for a job. There is no git
-// checkout backing the job workdir (jobs run against a scratch temp dir), so
-// every field act would normally derive by shelling out to git in the
-// workdir is filled in here instead.
-func (r *Runner) githubContext(task *client.TaskPayload) *model.GithubContext {
-	var event map[string]any
-	if task.EventPayloadJSON != "" {
-		if err := json.Unmarshal([]byte(task.EventPayloadJSON), &event); err != nil {
-			log.Printf("parse event payload for github context: %v", err)
+// uniquifyJobNames folds the task's job ID into every job's display name in
+// the plan. act derives job container names from that display name
+// (createContainerName("act", jobName)); without a per-task suffix, two
+// runner instances executing a job with the same YAML key at the same time
+// would collide on one Docker container name.
+func uniquifyJobNames(plan *model.Plan, task *client.TaskPayload) {
+	for _, stage := range plan.Stages {
+		for _, run := range stage.Runs {
+			job := run.Job()
+			name := job.Name
+			if name == "" {
+				name = run.JobID
+			}
+			job.Name = fmt.Sprintf("notomate-run-%d-%s-%s", task.RunNumber, name, task.JobID)
 		}
-	}
-	if event == nil {
-		event = map[string]any{}
-	}
-
-	sha := sha1.Sum([]byte(task.RunID + "/" + task.JobID))
-
-	return &model.GithubContext{
-		Event:           event,
-		EventName:       task.EventName,
-		RunID:           task.RunID,
-		RunNumber:       fmt.Sprintf("%d", task.RunNumber),
-		RunAttempt:      "1",
-		Actor:           "notomate",
-		Repository:      "notomate/" + task.WorkspaceID,
-		RepositoryOwner: "notomate",
-		Ref:             "refs/heads/main",
-		RefName:         "main",
-		RefType:         "branch",
-		Sha:             hex.EncodeToString(sha[:]),
-		RetentionDays:   "0",
 	}
 }
 
-// jobEnv is the Notomate context exposed to job steps.
+// writeEventFile writes the job's event payload to a temp file for act's
+// Config.EventPath, since act only loads the event JSON from disk. Returns
+// an empty path (and no file) when there is no payload.
+func writeEventFile(payloadJSON string) (string, error) {
+	if payloadJSON == "" {
+		return "", nil
+	}
+	f, err := os.CreateTemp("", "notomate-event-*.json")
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	if _, err := f.WriteString(payloadJSON); err != nil {
+		os.Remove(f.Name())
+		return "", err
+	}
+	return f.Name(), nil
+}
+
+// jobEnv is the Notomate context exposed to job steps, plus the GitHub
+// context fields act reads out of Config.Env (GithubContext.SetRef/SetSha/
+// SetRepositoryAndOwner only shell out to git in the job workdir when their
+// corresponding field is still empty). Presetting them all here means act
+// never takes that fallback path - there is no git checkout backing the job
+// workdir (jobs run against a scratch temp dir, see the MkdirTemp above), so
+// it would just fail and flood the job log with warnings.
 func (r *Runner) jobEnv(task *client.TaskPayload) map[string]string {
+	sha := sha1.Sum([]byte(task.RunID + "/" + task.JobID))
+
 	env := map[string]string{
 		"NM_EVENT_NAME":   task.EventName,
 		"NM_WORKSPACE_ID": task.WorkspaceID,
 		"NM_RUN_ID":       task.RunID,
 		"NM_RUN_NUMBER":   fmt.Sprintf("%d", task.RunNumber),
+
+		"GITHUB_REPOSITORY":       "notomate/" + task.WorkspaceID,
+		"GITHUB_REPOSITORY_OWNER": "notomate",
+		"GITHUB_REF":              "refs/heads/main",
+		"GITHUB_REF_NAME":         "main",
+		"GITHUB_REF_TYPE":         "branch",
+		"SHA_REF":                 hex.EncodeToString(sha[:]),
+		"GITHUB_RUN_ID":           task.RunID,
+		"GITHUB_RUN_NUMBER":       fmt.Sprintf("%d", task.RunNumber),
+		"GITHUB_RUN_ATTEMPT":      "1",
 	}
 	if serverURL := os.Getenv("NM_SERVER_URL"); serverURL != "" {
 		env["NM_SERVER_URL"] = serverURL
