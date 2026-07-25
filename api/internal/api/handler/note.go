@@ -360,6 +360,17 @@ func (h Handler) UpdateNote(c echo.Context) error {
 
 	user := c.Get("user").(model.User)
 
+	switch existingNote.Visibility {
+	case "private":
+		if existingNote.CreatedBy != user.ID {
+			return echo.NewHTTPError(http.StatusForbidden, "you do not have permission to edit this Note")
+		}
+	case "public", "workspace":
+		if !h.isUserWorkspaceMember(user.ID, workspaceId) {
+			return echo.NewHTTPError(http.StatusForbidden, "you do not have permission to edit this Note")
+		}
+	}
+
 	// Check if content is markdown and convert to TipTap JSON
 	content := req.Content
 	contentFormat := c.Request().Header.Get("X-Content-Format")
