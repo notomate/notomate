@@ -217,7 +217,7 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
       {expanded && (
         <div className="">
           {!readOnly && (
-            <div className="flex gap-2 items-start px-4 mt-1">
+            <div className="flex gap-2 items-start px-4 my-1">
               <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
               <div className="flex-1 min-w-0">
                 {composerExpanded ? (
