@@ -1,11 +1,13 @@
 import { FC } from "react"
 import { Link } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import { NoteData } from "@/api/note"
 import NoteTime from "../notetime/NoteTime"
 import Renderer from "@/components/renderer/Renderer"
 import Avatar from "@/components/avatar/Avatar"
 import NoteCardComments from "@/components/commentsidebar/NoteCardComments"
-import { ExternalLink, CornerDownRight } from "lucide-react"
+import NoteCardMenu from "./NoteCardMenu"
+import { SquarePen, CornerDownRight } from "lucide-react"
 
 interface NoteCardProps {
     note: NoteData
@@ -16,17 +18,26 @@ interface NoteCardProps {
     parentNoteLinkTo?: string
     workspaceId?: string
     commentsReadOnly?: boolean
+    showActions?: boolean
 }
 
-const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, parentNoteTitle, parentNoteLinkTo, workspaceId, commentsReadOnly }) => {
+const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, parentNoteTitle, parentNoteLinkTo, workspaceId, commentsReadOnly, showActions = false }) => {
+    const { t } = useTranslation()
     const commentsWorkspaceId = workspaceId || note.workspace_id
     return (
         <div className="relative bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-none rounded-lg overflow-auto flex flex-col gap-3 p-4">
             <>
-                {showLink && (
-                    <Link to={linkTo || ""} className="absolute top-4 right-4 text-gray-500">
-                        <ExternalLink size={16} />
-                    </Link>
+                {(showLink || (showActions && workspaceId && note.id)) && (
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5 p-1">
+                        {showLink && (
+                            <Link to={linkTo || ""} title={t("actions.edit")} className="p-1 text-gray-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md">
+                                <SquarePen size={16} />
+                            </Link>
+                        )}
+                        {showActions && workspaceId && note.id && (
+                            <NoteCardMenu note={note} workspaceId={workspaceId} />
+                        )}
+                    </div>
                 )}
                 {note.parent_id && (
                     <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
