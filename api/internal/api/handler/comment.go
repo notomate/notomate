@@ -61,6 +61,25 @@ func (h Handler) GetNoteComments(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "note id is required")
 	}
 
+	note, err := h.db.FindNote(model.Note{WorkspaceID: workspaceId, ID: noteId})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	user, isAuthenticated := c.Get("user").(model.User)
+
+	isVisible := false
+	switch note.Visibility {
+	case "public", "workspace":
+		isVisible = true
+	case "private":
+		isVisible = isAuthenticated && note.CreatedBy == user.ID
+	}
+
+	if !isVisible {
+		return echo.NewHTTPError(http.StatusForbidden, "you do not have permission to see this note's comments")
+	}
+
 	comments, err := h.db.FindComments(model.CommentFilter{WorkspaceID: workspaceId, NoteID: noteId})
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

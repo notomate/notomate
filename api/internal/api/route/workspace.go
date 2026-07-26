@@ -1,6 +1,7 @@
 package route
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/notomate/notomate/internal/api/handler"
@@ -18,7 +19,17 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 		if strings.HasPrefix(c.Request().Header.Get("Authorization"), "Bearer ") {
 			return true
 		}
-		return strings.HasSuffix(c.Path(), "/:workspaceId/files/:id")
+		if strings.HasSuffix(c.Path(), "/:workspaceId/files/:id") {
+			return true
+		}
+		// Reading comments must stay anonymous-accessible so public notes
+		// (e.g. on the Explore page) can show their comments to visitors
+		// who aren't logged in. GetNoteComments enforces note visibility
+		// itself. Writing comments still requires auth (method check).
+		if c.Request().Method == http.MethodGet && strings.HasSuffix(c.Path(), "/notes/:noteId/comments") {
+			return true
+		}
+		return false
 	}))
 	g.Use(authMiddleware.ParseJWT())
 	g.Use(workspaceMiddleware.CheckWorkspaceExists())
