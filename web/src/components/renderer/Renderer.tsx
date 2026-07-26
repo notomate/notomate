@@ -719,12 +719,12 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
         }
     }
 
-    const allNodes = json.content || []
     const trimTrailingEmptyParagraphs = (nodes: Node[]) => {
         let end = nodes.length
         while (end > 0 && nodes[end - 1].type === 'paragraph' && !nodes[end - 1].content) end--
         return nodes.slice(0, end)
     }
+    const allNodes = trimTrailingEmptyParagraphs(json.content || [])
     const hasLimit = maxNodes && maxNodes > 0
     const shouldLimit = hasLimit && !isExpanded
     const nodesToRender = trimTrailingEmptyParagraphs(shouldLimit ? allNodes.slice(0, maxNodes) : allNodes)

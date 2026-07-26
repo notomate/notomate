@@ -179,7 +179,7 @@ const ExplorePage: React.FC = () => {
                         </div>
                     ) : (
                         <>
-                            <NoteList notes={notes} showLink={false} commentsReadOnly />
+                            <NoteList notes={notes} showLink={false} commentsReadOnly maxNodes={8} />
                             <div ref={loadMoreRef} className="h-px" />
                             {isFetchingNextPage && (
                                 <div className="text-center text-gray-500 dark:text-gray-400 py-4 text-sm">
