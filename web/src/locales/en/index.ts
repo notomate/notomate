@@ -597,6 +597,8 @@ export default {
     addComment: "Add comment",
     composerPlaceholder: "Add a comment...",
     replyPlaceholder: "Reply...",
+    showReplies: "Show {{count}} replies",
+    hideReplies: "Hide replies",
     submit: "Comment",
     edited: "(edited)",
     orphaned: "The commented text is no longer in this note",

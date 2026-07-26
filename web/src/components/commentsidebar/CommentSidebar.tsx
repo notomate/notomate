@@ -1,7 +1,7 @@
 import { FC, useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { X, Send, Pencil, Trash2, MoreVertical } from "lucide-react"
+import { X, Send, Pencil, Trash2, MoreVertical, ChevronDown } from "lucide-react"
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import { CommentData, createComment, deleteComment, getComments, updateComment } from "@/api/comment"
 import { getWorkspaceMembers } from "@/api/workspace"
@@ -42,6 +42,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   const [composerExpanded, setComposerExpanded] = useState(false)
   const [composerBody, setComposerBody] = useState("")
   const [expandedReplyThreads, setExpandedReplyThreads] = useState<Set<string>>(new Set())
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set())
   const [replyBodies, setReplyBodies] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingBody, setEditingBody] = useState("")
@@ -241,6 +242,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
     if (!body) return
     createMutation.mutate({ threadId, body })
     setReplyBodies(prev => ({ ...prev, [threadId]: "" }))
+    setExpandedReplies(prev => new Set(prev).add(threadId))
   }
 
   const openReply = (threadId: string) => {
@@ -273,6 +275,88 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
     if (!confirm(t("comments.confirmDelete"))) return
     deleteMutation.mutate(comment)
   }
+
+  const toggleReplies = (threadId: string) => {
+    setExpandedReplies(prev => {
+      const next = new Set(prev)
+      if (next.has(threadId)) next.delete(threadId)
+      else next.add(threadId)
+      return next
+    })
+  }
+
+  const renderCommentItem = (comment: CommentData, index: number) => (
+    <div
+      key={comment.id}
+      className={`flex gap-2 ${index > 0 ? "ml-8 dark:border-neutral-700" : ""}`}
+    >
+      <Avatar name={comment.created_by_name} avatarUrl={comment.created_by_avatar_url} size={index > 0 ? 20 : 24} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{comment.created_by_name}</span>
+          <span className="text-xs text-gray-400">{formatRelativeTime(t, comment.created_at)}</span>
+          {comment.edited && <span className="text-xs text-gray-400">{t("comments.edited")}</span>}
+          {user?.id === comment.created_by && editingId !== comment.id && (
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="ml-auto p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0">
+                  <MoreVertical size={14} />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={4}
+                  className="min-w-[140px] bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg p-1 z-50"
+                >
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    onSelect={() => handleStartEdit(comment)}
+                  >
+                    <Pencil size={12} />
+                    {t("actions.edit")}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    onSelect={() => handleDelete(comment)}
+                  >
+                    <Trash2 size={12} />
+                    {t("actions.delete")}
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          )}
+        </div>
+
+        {editingId === comment.id ? (
+          <div className="mt-1">
+            <CommentEditor
+              autoFocus
+              className="text-sm"
+              minHeight={64}
+              value={editingBody}
+              onChange={setEditingBody}
+              members={members}
+            />
+            <div className="flex justify-end gap-2 mt-1">
+              <button className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onClick={() => setEditingId(null)}>
+                {t("actions.cancel")}
+              </button>
+              <button className="text-xs px-3 py-1 bg-primary text-white rounded disabled:opacity-50" disabled={!editingBody.trim()} onClick={handleSubmitEdit}>
+                {t("actions.save")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="note-comment-body text-sm text-gray-700 dark:text-gray-300 break-words"
+            dangerouslySetInnerHTML={{ __html: renderCommentBody(comment.body) }}
+          />
+        )}
+      </div>
+    </div>
+  )
 
   if (!open && shouldHideOnMobile) {
     return null
@@ -356,7 +440,9 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
         <div ref={bodyRef} className="flex-1 overflow-y-auto">
         {threads.map(thread => {
           const anchor = thread[0]
+          const replies = thread.slice(1)
           const isOrphaned = orphanedThreadIds.has(anchor.thread_id)
+          const repliesExpanded = expandedReplies.has(anchor.thread_id)
           return (
             <div
               key={anchor.thread_id}
@@ -371,82 +457,28 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
               )}
 
               <div className="flex flex-col gap-3">
-                {thread.map((comment, index) => (
-                  <div
-                    key={comment.id}
-                    className={`flex gap-2 ${index > 0 ? "ml-8 pl-3 dark:border-neutral-700" : ""}`}
-                  >
-                    <Avatar name={comment.created_by_name} avatarUrl={comment.created_by_avatar_url} size={index > 0 ? 20 : 24} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{comment.created_by_name}</span>
-                        <span className="text-xs text-gray-400">{formatRelativeTime(t, comment.created_at)}</span>
-                        {comment.edited && <span className="text-xs text-gray-400">{t("comments.edited")}</span>}
-                        {user?.id === comment.created_by && editingId !== comment.id && (
-                          <DropdownMenu.Root>
-                            <DropdownMenu.Trigger asChild>
-                              <button className="ml-auto p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0">
-                                <MoreVertical size={14} />
-                              </button>
-                            </DropdownMenu.Trigger>
-                            <DropdownMenu.Portal>
-                              <DropdownMenu.Content
-                                align="end"
-                                sideOffset={4}
-                                className="min-w-[140px] bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg p-1 z-50"
-                              >
-                                <DropdownMenu.Item
-                                  className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                                  onSelect={() => handleStartEdit(comment)}
-                                >
-                                  <Pencil size={12} />
-                                  {t("actions.edit")}
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Item
-                                  className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  onSelect={() => handleDelete(comment)}
-                                >
-                                  <Trash2 size={12} />
-                                  {t("actions.delete")}
-                                </DropdownMenu.Item>
-                              </DropdownMenu.Content>
-                            </DropdownMenu.Portal>
-                          </DropdownMenu.Root>
-                        )}
-                      </div>
-
-                      {editingId === comment.id ? (
-                        <div className="mt-1">
-                          <CommentEditor
-                            autoFocus
-                            className="text-sm"
-                            minHeight={64}
-                            value={editingBody}
-                            onChange={setEditingBody}
-                            members={members}
-                          />
-                          <div className="flex justify-end gap-2 mt-1">
-                            <button className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onClick={() => setEditingId(null)}>
-                              {t("actions.cancel")}
-                            </button>
-                            <button className="text-xs px-3 py-1 bg-primary text-white rounded disabled:opacity-50" disabled={!editingBody.trim()} onClick={handleSubmitEdit}>
-                              {t("actions.save")}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className="note-comment-body text-sm text-gray-700 dark:text-gray-300 break-words"
-                          dangerouslySetInnerHTML={{ __html: renderCommentBody(comment.body) }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                ))}
+                {renderCommentItem(anchor, 0)}
               </div>
 
+              {replies.length > 0 && (
+                <button
+                  type="button"
+                  className="mt-2 ml-8 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                  onClick={() => toggleReplies(anchor.thread_id)}
+                >
+                  <ChevronDown size={12} className={`transition-transform duration-200 ${repliesExpanded ? "rotate-180" : ""}`} />
+                  {repliesExpanded ? t("comments.hideReplies") : t("comments.showReplies", { count: replies.length })}
+                </button>
+              )}
+
+              {repliesExpanded && (
+                <div className="flex flex-col gap-3 mt-3">
+                  {replies.map((comment, index) => renderCommentItem(comment, index + 1))}
+                </div>
+              )}
+
               {expandedReplyThreads.has(anchor.thread_id) ? (
-                <div className="mt-3 flex gap-2 items-start ml-8 pl-3 border-l-2 border-transparent">
+                <div className="mt-3 flex gap-2 items-start ml-8 border-l-2 border-transparent">
                   <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={20} />
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
@@ -474,7 +506,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
               ) : (
                 <button
                   type="button"
-                  className="mt-3 ml-8 pl-3 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="mt-3 ml-8 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   onClick={() => openReply(anchor.thread_id)}
                 >
                   {t("comments.replyPlaceholder")}
