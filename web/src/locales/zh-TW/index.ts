@@ -597,6 +597,8 @@ export default {
     addComment: "新增留言",
     composerPlaceholder: "新增留言...",
     replyPlaceholder: "回覆...",
+    showReplies: "顯示 {{count}} 則回覆",
+    hideReplies: "隱藏回覆",
     submit: "留言",
     edited: "（已編輯）",
     orphaned: "留言標註的文字已不在此筆記中",
