@@ -19,10 +19,12 @@ interface CommentEditorProps {
   autoFocus?: boolean
   minHeight?: number
   onBlur?: () => void
+  /** Show a primary-colored ring around the editor while focused. Defaults to true. */
+  focusRing?: boolean
 }
 
 const CommentEditor: FC<CommentEditorProps> = ({
-  value, onChange, members, placeholder, className = "", autoFocus, minHeight = 72, onBlur,
+  value, onChange, members, placeholder, className = "", autoFocus, minHeight = 72, onBlur, focusRing = true,
 }) => {
   const { t } = useTranslation()
   const membersRef = useRef<WorkspaceMember[]>(members)
@@ -90,7 +92,7 @@ const CommentEditor: FC<CommentEditorProps> = ({
   ] : []
 
   return (
-    <div className="flex-1 min-w-0 border dark:border-neutral-600 rounded bg-white dark:bg-neutral-900 focus-within:ring-1 focus-within:ring-primary overflow-hidden">
+    <div className={`flex-1 min-w-0 border dark:border-neutral-600 rounded bg-white dark:bg-neutral-900 overflow-hidden ${focusRing ? "focus-within:ring-1 focus-within:ring-primary" : ""}`}>
       <div className="flex items-center gap-0.5 px-1 py-0.5 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 overflow-x-auto hide-scrollbar">
         {toolbarItems.map(({ icon: Icon, title, onClick }, i) => (
           <button

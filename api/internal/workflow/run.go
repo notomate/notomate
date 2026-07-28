@@ -18,6 +18,8 @@ type EventPayload struct {
 	Sender    *PayloadSender    `json:"sender,omitempty"`
 	Note      *model.Note       `json:"note,omitempty"`
 	Comment   *model.Comment    `json:"comment,omitempty"`
+	Channel   *model.Channel    `json:"channel,omitempty"`
+	Message   *model.Message    `json:"message,omitempty"`
 	Inputs    map[string]string `json:"inputs,omitempty"`
 }
 

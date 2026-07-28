@@ -8,6 +8,7 @@ export default {
     notes: "Notes",
     files: "Files",
     workflows: "Workflows",
+    messaging: "Messaging",
     views: "Views",
     createWithName: "Create workspace：{{name}}",
     workspaceSettings: "Workspace Settings",
@@ -617,6 +618,28 @@ export default {
       blockquote: "Quote",
       codeBlock: "Code block"
     }
+  },
+  messaging: {
+    channels: "Channels",
+    newChannel: "New Channel",
+    channelName: "Channel name",
+    channelDescription: "Description (optional)",
+    createChannel: "Create channel",
+    renameChannel: "Rename channel",
+    deleteChannel: "Delete channel",
+    confirmDeleteChannel: "Are you sure you want to delete this channel? All messages in it will be deleted.",
+    noChannels: "No channels yet. Create one to start chatting.",
+    selectChannel: "Select a channel to start chatting",
+    composerPlaceholder: "Message #{{name}}",
+    noMessages: "No messages yet. Say hello!",
+    edited: "(edited)",
+    confirmDeleteMessage: "Are you sure you want to delete this message?",
+    createChannelFailed: "Failed to create channel",
+    updateChannelFailed: "Failed to update channel",
+    deleteChannelFailed: "Failed to delete channel",
+    createMessageFailed: "Failed to send message",
+    updateMessageFailed: "Failed to update message",
+    deleteMessageFailed: "Failed to delete message"
   },
   whiteboard: {
     loading: "Loading...",

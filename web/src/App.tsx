@@ -16,6 +16,7 @@ import WorkflowEditPage from './pages/workspace/workflows/WorkflowEditPage';
 import WorkflowSettingsPage from './pages/workspace/workflows/WorkflowSettingsPage';
 import RunsPage from './pages/workspace/workflows/RunsPage';
 import RunDetailPage from './pages/workspace/workflows/RunDetailPage';
+import MessagingPage from './pages/workspace/messaging/MessagingPage';
 import { Toast } from './components/toast/Toast'
 import { useToastStore } from './stores/toast';
 import WorkspaceLayout from './components/workspacelayout/WorkspaceLayout';
@@ -86,6 +87,8 @@ function App() {
               <Route path='workflows/:workflowId' element={<WorkflowEditPage />} />
               <Route path='workflows/:workflowId/runs' element={<RunsPage />} />
               <Route path='workflows/:workflowId/runs/:runId' element={<RunDetailPage />} />
+              <Route path='messaging' element={<MessagingPage />} />
+              <Route path='messaging/:channelId' element={<MessagingPage />} />
               <Route path='calendar/:calendarId' element={<CalendarPage />}>
                 <Route path='slot/:slotId' element={<CalendarSlotDetailPage />} />
               </Route>

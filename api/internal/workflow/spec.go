@@ -32,6 +32,7 @@ type ConcurrencySpec struct {
 type Triggers struct {
 	Note             *NoteTrigger
 	Comment          *CommentTrigger
+	Message          *MessageTrigger
 	Schedule         []ScheduleTrigger
 	WorkflowDispatch *WorkflowDispatchTrigger
 }
@@ -41,6 +42,10 @@ type NoteTrigger struct {
 }
 
 type CommentTrigger struct {
+	Types []string
+}
+
+type MessageTrigger struct {
 	Types []string
 }
 
@@ -86,6 +91,12 @@ var validCommentEventTypes = map[string]string{
 	"deleted": model.WorkflowEventCommentDeleted,
 }
 
+var validMessageEventTypes = map[string]string{
+	"created": model.WorkflowEventMessageCreated,
+	"updated": model.WorkflowEventMessageUpdated,
+	"deleted": model.WorkflowEventMessageDeleted,
+}
+
 // MatchesNoteEvent reports whether the spec's note trigger covers the given
 // full event name (e.g. "note.updated").
 func (s Spec) MatchesNoteEvent(event string) bool {
@@ -108,6 +119,20 @@ func (s Spec) MatchesCommentEvent(event string) bool {
 	}
 	for _, t := range s.On.Comment.Types {
 		if validCommentEventTypes[t] == event {
+			return true
+		}
+	}
+	return false
+}
+
+// MatchesMessageEvent reports whether the spec's message trigger covers the
+// given full event name (e.g. "message.created").
+func (s Spec) MatchesMessageEvent(event string) bool {
+	if s.On.Message == nil {
+		return false
+	}
+	for _, t := range s.On.Message.Types {
+		if validMessageEventTypes[t] == event {
 			return true
 		}
 	}
@@ -169,8 +194,8 @@ func ParseAndValidate(definition string) (Spec, []ValidationError) {
 		errs = append(errs, ValidationError{Line: doc.Line, Message: "workflow must declare at least one trigger under 'on:'"})
 	} else {
 		errs = append(errs, parseTriggers(onNode, &spec.On)...)
-		if spec.On.Note == nil && spec.On.Comment == nil && len(spec.On.Schedule) == 0 && spec.On.WorkflowDispatch == nil && len(errs) == 0 {
-			errs = append(errs, ValidationError{Line: onNode.Line, Message: "no supported trigger found; supported triggers are 'note', 'comment', 'schedule' and 'workflow_dispatch'"})
+		if spec.On.Note == nil && spec.On.Comment == nil && spec.On.Message == nil && len(spec.On.Schedule) == 0 && spec.On.WorkflowDispatch == nil && len(errs) == 0 {
+			errs = append(errs, ValidationError{Line: onNode.Line, Message: "no supported trigger found; supported triggers are 'note', 'comment', 'message', 'schedule' and 'workflow_dispatch'"})
 		}
 	}
 
@@ -219,12 +244,14 @@ func parseTriggerName(key *yaml.Node, value *yaml.Node, out *Triggers) []Validat
 		return parseNoteTrigger(key, value, out)
 	case "comment":
 		return parseCommentTrigger(key, value, out)
+	case "message":
+		return parseMessageTrigger(key, value, out)
 	case "schedule":
 		return parseScheduleTrigger(key, value, out)
 	case "workflow_dispatch":
 		return parseWorkflowDispatchTrigger(key, value, out)
 	default:
-		return []ValidationError{{Line: key.Line, Message: fmt.Sprintf("unsupported trigger %q; supported triggers are 'note', 'comment', 'schedule' and 'workflow_dispatch'", key.Value)}}
+		return []ValidationError{{Line: key.Line, Message: fmt.Sprintf("unsupported trigger %q; supported triggers are 'note', 'comment', 'message', 'schedule' and 'workflow_dispatch'", key.Value)}}
 	}
 }
 
@@ -289,6 +316,38 @@ func parseCommentTrigger(key *yaml.Node, value *yaml.Node, out *Triggers) []Vali
 	}
 
 	out.Comment = trigger
+	return nil
+}
+
+func parseMessageTrigger(key *yaml.Node, value *yaml.Node, out *Triggers) []ValidationError {
+	trigger := &MessageTrigger{}
+
+	if value != nil && value.Kind == yaml.MappingNode {
+		var raw struct {
+			Types []string `yaml:"types"`
+		}
+		if err := value.Decode(&raw); err != nil {
+			return []ValidationError{{Line: value.Line, Message: fmt.Sprintf("invalid 'message' trigger: %v", err)}}
+		}
+		trigger.Types = raw.Types
+	}
+
+	// Without an explicit types filter the trigger matches every message event.
+	if len(trigger.Types) == 0 {
+		trigger.Types = []string{"created", "updated", "deleted"}
+	}
+
+	var errs []ValidationError
+	for _, t := range trigger.Types {
+		if _, ok := validMessageEventTypes[t]; !ok {
+			errs = append(errs, ValidationError{Line: key.Line, Message: fmt.Sprintf("invalid message event type %q; valid types are 'created', 'updated' and 'deleted'", t)})
+		}
+	}
+	if len(errs) > 0 {
+		return errs
+	}
+
+	out.Message = trigger
 	return nil
 }
 
