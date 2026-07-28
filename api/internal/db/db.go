@@ -11,6 +11,8 @@ type DB interface {
 	UserRepository
 	NoteRepository
 	CommentRepository
+	ChannelRepository
+	MessageRepository
 	FileRepository
 	WorkspaceRepository
 	WorkspaceUserRepository
@@ -53,6 +55,20 @@ type CommentRepository interface {
 	DeleteComment(c model.Comment) error
 	FindComment(c model.Comment) (model.Comment, error)
 	FindComments(f model.CommentFilter) ([]model.Comment, error)
+}
+type ChannelRepository interface {
+	CreateChannel(c model.Channel) error
+	UpdateChannel(c model.Channel) error
+	DeleteChannel(c model.Channel) error
+	FindChannel(c model.Channel) (model.Channel, error)
+	FindChannels(f model.ChannelFilter) ([]model.Channel, error)
+}
+type MessageRepository interface {
+	CreateMessage(m model.Message) error
+	UpdateMessage(m model.Message) error
+	DeleteMessage(m model.Message) error
+	FindMessage(m model.Message) (model.Message, error)
+	FindMessages(f model.MessageFilter) ([]model.Message, error)
 }
 type FileRepository interface {
 	CreateFile(u model.File) error

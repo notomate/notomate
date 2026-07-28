@@ -8,6 +8,7 @@ export default {
     notes: "筆記",
     files: "檔案",
     workflows: "工作流",
+    messaging: "訊息",
     views: "視圖",
     createWithName: "新增工作區：{{name}}",
     workspaceSettings: "工作區設定",
@@ -617,6 +618,28 @@ export default {
       blockquote: "引用",
       codeBlock: "程式碼區塊"
     }
+  },
+  messaging: {
+    channels: "頻道",
+    newChannel: "新增頻道",
+    channelName: "頻道名稱",
+    channelDescription: "描述（選填）",
+    createChannel: "建立頻道",
+    renameChannel: "重新命名頻道",
+    deleteChannel: "刪除頻道",
+    confirmDeleteChannel: "確定要刪除此頻道嗎？頻道中的所有訊息都會被刪除。",
+    noChannels: "尚無頻道，建立一個開始聊天吧。",
+    selectChannel: "選擇一個頻道開始聊天",
+    composerPlaceholder: "傳送訊息至 #{{name}}",
+    noMessages: "尚無訊息，打聲招呼吧！",
+    edited: "（已編輯）",
+    confirmDeleteMessage: "確定要刪除這則訊息嗎？",
+    createChannelFailed: "建立頻道失敗",
+    updateChannelFailed: "更新頻道失敗",
+    deleteChannelFailed: "刪除頻道失敗",
+    createMessageFailed: "傳送訊息失敗",
+    updateMessageFailed: "更新訊息失敗",
+    deleteMessageFailed: "刪除訊息失敗"
   },
   whiteboard: {
     loading: "載入中...",

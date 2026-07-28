@@ -94,6 +94,11 @@ func (e *Engine) NotifyCommentEvent(event string, comment model.Comment, actorID
 	e.dispatcher.NotifyCommentEvent(event, comment, actorID)
 }
 
+// NotifyMessageEvent reports a channel message change from the REST handler.
+func (e *Engine) NotifyMessageEvent(event string, message model.Message, actorID string) {
+	e.dispatcher.NotifyMessageEvent(event, message, actorID)
+}
+
 // ClaimJob hands the oldest matching queued job to a runner.
 func (e *Engine) ClaimJob(runnerID string, labels []string) (model.WorkflowJob, error) {
 	return e.queue.Claim(e.db, runnerID, labels)

@@ -1,4 +1,4 @@
-import { Plus, Search, Folder, PanelRight, Workflow, Settings, Pin } from "lucide-react"
+import { Plus, Search, Folder, PanelRight, Workflow, Settings, Pin, MessageSquare } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { getNotes, NoteData } from "@/api/note"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
@@ -47,6 +47,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
     const isSearchActive = location.pathname.endsWith('/search')
     const isFilesActive = location.pathname.endsWith('/files')
     const isWorkflowsActive = location.pathname.includes('/workflows')
+    const isMessagingActive = location.pathname.includes('/messaging')
     const isSettingsActive = location.pathname.endsWith('/settings') && !location.pathname.includes('/workflows')
 
     return (
@@ -115,6 +116,19 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 >
                     <Workflow className="shrink-0 size-4 lg:size-3.5" />
                     <span className="leading-snug">{t("menu.workflows")}</span>
+                </Link>
+                <Link
+                    to={`${workspaceBase}/messaging`}
+                    onClick={onClose}
+                    className={[
+                        "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
+                        isMessagingActive
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
+                            : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
+                    ].join(" ")}
+                >
+                    <MessageSquare className="shrink-0 size-4 lg:size-3.5" />
+                    <span className="leading-snug">{t("menu.messaging")}</span>
                 </Link>
                 <Link
                     to={`${workspaceBase}/settings`}

@@ -288,3 +288,11 @@ func (h Handler) notifyCommentEvent(event string, comment model.Comment, actorID
 		h.workflowEngine.NotifyCommentEvent(event, comment, actorID)
 	}
 }
+
+// notifyMessageEvent reports a channel message change to the trigger engine
+// (no-op when no engine is attached).
+func (h Handler) notifyMessageEvent(event string, message model.Message, actorID string) {
+	if h.workflowEngine != nil {
+		h.workflowEngine.NotifyMessageEvent(event, message, actorID)
+	}
+}

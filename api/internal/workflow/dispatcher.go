@@ -28,6 +28,7 @@ type Dispatcher struct {
 	mu             sync.Mutex
 	pending        map[string]*pendingUpdate
 	pendingComment map[string]*pendingCommentUpdate
+	pendingMessage map[string]*pendingMessageUpdate
 	rates          map[string][]time.Time
 	stopped        bool
 }
@@ -44,6 +45,12 @@ type pendingCommentUpdate struct {
 	actorID string
 }
 
+type pendingMessageUpdate struct {
+	timer   *time.Timer
+	message model.Message
+	actorID string
+}
+
 func NewDispatcher(database db.DB, queue *Queue) *Dispatcher {
 	debounceSeconds := config.C.GetInt(config.WORKFLOW_NOTE_DEBOUNCE_SECONDS)
 	if debounceSeconds <= 0 {
@@ -55,6 +62,7 @@ func NewDispatcher(database db.DB, queue *Queue) *Dispatcher {
 		debounce:       time.Duration(debounceSeconds) * time.Second,
 		pending:        map[string]*pendingUpdate{},
 		pendingComment: map[string]*pendingCommentUpdate{},
+		pendingMessage: map[string]*pendingMessageUpdate{},
 		rates:          map[string][]time.Time{},
 	}
 }
@@ -133,6 +141,43 @@ func (d *Dispatcher) NotifyCommentEvent(event string, comment model.Comment, act
 	d.mu.Unlock()
 }
 
+func (d *Dispatcher) NotifyMessageEvent(event string, message model.Message, actorID string) {
+	d.mu.Lock()
+	if d.stopped {
+		d.mu.Unlock()
+		return
+	}
+
+	if event != model.WorkflowEventMessageUpdated {
+		d.mu.Unlock()
+		go d.dispatchMessage(event, message, actorID)
+		return
+	}
+
+	if p, ok := d.pendingMessage[message.ID]; ok {
+		p.message = message
+		p.actorID = actorID
+		p.timer.Reset(d.debounce)
+		d.mu.Unlock()
+		return
+	}
+
+	p := &pendingMessageUpdate{message: message, actorID: actorID}
+	p.timer = time.AfterFunc(d.debounce, func() {
+		d.mu.Lock()
+		delete(d.pendingMessage, message.ID)
+		stopped := d.stopped
+		latest := *p
+		d.mu.Unlock()
+		if stopped {
+			return
+		}
+		d.dispatchMessage(model.WorkflowEventMessageUpdated, latest.message, latest.actorID)
+	})
+	d.pendingMessage[message.ID] = p
+	d.mu.Unlock()
+}
+
 func (d *Dispatcher) Stop() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -144,6 +189,10 @@ func (d *Dispatcher) Stop() {
 	for id, p := range d.pendingComment {
 		p.timer.Stop()
 		delete(d.pendingComment, id)
+	}
+	for id, p := range d.pendingMessage {
+		p.timer.Stop()
+		delete(d.pendingMessage, id)
 	}
 }
 
@@ -263,6 +312,76 @@ func (d *Dispatcher) dispatchComment(event string, comment model.Comment, actorI
 			Sender:    sender,
 			Note:      note,
 			Comment:   &commentCopy,
+		}
+		if _, err := CreateRun(d.db, wf, spec, event, payload, actorID); err != nil {
+			log.Printf("[workflow] create run for workflow %s: %v", wf.ID, err)
+			continue
+		}
+		created = true
+	}
+
+	if created {
+		d.queue.Wake()
+	}
+}
+
+func (d *Dispatcher) dispatchMessage(event string, message model.Message, actorID string) {
+	enabled := true
+	workflows, err := d.db.FindWorkflows(model.WorkflowFilter{
+		WorkspaceID: message.WorkspaceID,
+		Enabled:     &enabled,
+	})
+	if err != nil {
+		log.Printf("[workflow] load workflows for message event: %v", err)
+		return
+	}
+	if len(workflows) == 0 {
+		return
+	}
+
+	workspace, err := d.db.FindWorkspaceByID(message.WorkspaceID)
+	if err != nil {
+		log.Printf("[workflow] load workspace %s: %v", message.WorkspaceID, err)
+		return
+	}
+
+	// Message events carry their parent channel alongside the message itself
+	// so workflow authors can reference channel fields (name, etc.) without a
+	// separate lookup step.
+	var channel *model.Channel
+	if ch, err := d.db.FindChannel(model.Channel{ID: message.ChannelID}); err == nil {
+		channel = &ch
+	} else {
+		log.Printf("[workflow] load parent channel %s for message event: %v", message.ChannelID, err)
+	}
+
+	var sender *PayloadSender
+	if actorID != "" {
+		name := actorID
+		if user, err := d.db.FindUserByID(actorID); err == nil {
+			name = user.Name
+		}
+		sender = &PayloadSender{ID: actorID, Name: name}
+	}
+
+	created := false
+	for _, wf := range workflows {
+		spec, errs := ParseAndValidate(wf.Definition)
+		if len(errs) > 0 || !spec.MatchesMessageEvent(event) {
+			continue
+		}
+		if !d.allowRun(wf.ID) {
+			log.Printf("[workflow] rate limit hit for workflow %s (%s); dropping %s event", wf.ID, wf.Name, event)
+			continue
+		}
+
+		messageCopy := message
+		payload := EventPayload{
+			Event:     event,
+			Workspace: PayloadWorkspace{ID: workspace.ID, Name: workspace.Name},
+			Sender:    sender,
+			Channel:   channel,
+			Message:   &messageCopy,
 		}
 		if _, err := CreateRun(d.db, wf, spec, event, payload, actorID); err != nil {
 			log.Printf("[workflow] create run for workflow %s: %v", wf.ID, err)
