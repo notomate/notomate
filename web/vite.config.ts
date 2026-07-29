@@ -23,6 +23,11 @@ export default defineConfig({
         ws: true,
         headers: { 'X-Public-Access': 'false' },
       },
+      '/socket.io': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        ws: true,
+      },
     }
   },
   resolve: {

@@ -169,8 +169,13 @@ type collabServer struct {
 	engine *workflow.Engine
 }
 
-func (s *collabServer) GetUser(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
-	user, err := s.db.FindUserByID(req.ID)
+// doGetUser/doValidateAPIKey/doIsWorkspaceMember hold the shared auth-lookup
+// logic used by both CollabService and MessagingService — each service
+// keeps its own thin wrapper methods (independent client protocols) but
+// delegates to the same implementation to avoid duplicating the bcrypt/
+// prefix-lookup logic.
+func doGetUser(database db.DB, req *GetUserRequest) (*GetUserResponse, error) {
+	user, err := database.FindUserByID(req.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return &GetUserResponse{Found: false}, nil
@@ -185,13 +190,13 @@ func (s *collabServer) GetUser(ctx context.Context, req *GetUserRequest) (*GetUs
 	}, nil
 }
 
-func (s *collabServer) ValidateAPIKey(ctx context.Context, req *ValidateAPIKeyRequest) (*ValidateAPIKeyResponse, error) {
+func doValidateAPIKey(database db.DB, req *ValidateAPIKeyRequest) (*ValidateAPIKeyResponse, error) {
 	if !util.ValidateAPIKeyFormat(req.Key) {
 		return &ValidateAPIKeyResponse{Valid: false}, nil
 	}
 
 	prefix := util.ExtractPrefix(req.Key)
-	apiKeyRecord, err := s.db.FindAPIKeyByPrefix(prefix)
+	apiKeyRecord, err := database.FindAPIKeyByPrefix(prefix)
 	if err != nil {
 		return &ValidateAPIKeyResponse{Valid: false}, nil
 	}
@@ -207,14 +212,14 @@ func (s *collabServer) ValidateAPIKey(ctx context.Context, req *ValidateAPIKeyRe
 		return &ValidateAPIKeyResponse{Valid: false}, nil
 	}
 
-	user, err := s.db.FindUserByID(apiKeyRecord.UserID)
+	user, err := database.FindUserByID(apiKeyRecord.UserID)
 	if err != nil {
 		return &ValidateAPIKeyResponse{Valid: false}, nil
 	}
 
 	go func() {
 		apiKeyRecord.LastUsedAt = time.Now().UTC().Format(time.RFC3339)
-		s.db.UpdateAPIKey(apiKeyRecord)
+		database.UpdateAPIKey(apiKeyRecord)
 	}()
 
 	return &ValidateAPIKeyResponse{
@@ -225,8 +230,8 @@ func (s *collabServer) ValidateAPIKey(ctx context.Context, req *ValidateAPIKeyRe
 	}, nil
 }
 
-func (s *collabServer) IsWorkspaceMember(ctx context.Context, req *IsWorkspaceMemberRequest) (*IsWorkspaceMemberResponse, error) {
-	members, err := s.db.FindWorkspaceUsers(model.WorkspaceUserFilter{
+func doIsWorkspaceMember(database db.DB, req *IsWorkspaceMemberRequest) (*IsWorkspaceMemberResponse, error) {
+	members, err := database.FindWorkspaceUsers(model.WorkspaceUserFilter{
 		UserID:      req.UserID,
 		WorkspaceID: req.WorkspaceID,
 	})
@@ -234,6 +239,18 @@ func (s *collabServer) IsWorkspaceMember(ctx context.Context, req *IsWorkspaceMe
 		return nil, status.Errorf(codes.Internal, "find workspace users: %v", err)
 	}
 	return &IsWorkspaceMemberResponse{IsMember: len(members) > 0}, nil
+}
+
+func (s *collabServer) GetUser(ctx context.Context, req *GetUserRequest) (*GetUserResponse, error) {
+	return doGetUser(s.db, req)
+}
+
+func (s *collabServer) ValidateAPIKey(ctx context.Context, req *ValidateAPIKeyRequest) (*ValidateAPIKeyResponse, error) {
+	return doValidateAPIKey(s.db, req)
+}
+
+func (s *collabServer) IsWorkspaceMember(ctx context.Context, req *IsWorkspaceMemberRequest) (*IsWorkspaceMemberResponse, error) {
+	return doIsWorkspaceMember(s.db, req)
 }
 
 func (s *collabServer) GetNote(ctx context.Context, req *GetNoteRequest) (*GetNoteResponse, error) {
@@ -312,6 +329,7 @@ func NewServer(database db.DB, engine *workflow.Engine, store storage.Storage) *
 	srv := grpc.NewServer(grpc.ChainUnaryInterceptor(runnerAuthInterceptor(database)))
 	registerCollabServiceServer(srv, &collabServer{db: database, engine: engine})
 	registerRunnerServiceServer(srv, &runnerServer{db: database, engine: engine, storage: store})
+	registerMessagingServiceServer(srv, &messagingServer{db: database, engine: engine})
 	return srv
 }
 

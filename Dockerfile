@@ -19,6 +19,13 @@ WORKDIR /app/collab
 COPY collab/package*.json ./
 RUN npm install --omit=dev
 
+# ---------- Stage 2b: install messaging service dependencies ----------
+FROM node:20-alpine AS messaging-deps
+WORKDIR /app/messaging
+
+COPY messaging/package*.json ./
+RUN npm install --omit=dev
+
 # ---------- Stage 3: build Go backend ----------
 FROM golang:1.25-alpine AS backend
 WORKDIR /app/api
@@ -83,6 +90,20 @@ COPY --from=collab-deps /app/collab/node_modules ./collab/node_modules
 COPY collab/src ./collab/src
 COPY collab/package.json ./collab/package.json
 CMD ["node", "collab/src/index.js"]
+
+# ---------- Stage 5b: messaging runtime (Socket.IO messaging service) ----------
+FROM node:20-alpine AS messaging-runtime
+WORKDIR /usr/local/app
+
+RUN apk add --no-cache tzdata
+
+ENV TZ="UTC"
+
+# Copy messaging service
+COPY --from=messaging-deps /app/messaging/node_modules ./messaging/node_modules
+COPY messaging/src ./messaging/src
+COPY messaging/package.json ./messaging/package.json
+CMD ["node", "messaging/src/index.js"]
 
 # ---------- Stage 6: nginx with static frontend ----------
 FROM nginx:alpine AS nginx-runtime

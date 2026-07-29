@@ -50,6 +50,7 @@ const (
 	APP_DISABLE_SIGNUP    = "app_disable_signup"
 	APP_SECRET            = "app_secret"
 	GRPC_PORT             = "grpc_port"
+	MESSAGING_ADDR        = "messaging_addr"
 
 	RUNNER_REGISTRATION_TOKEN      = "runner_registration_token"
 	WORKFLOW_NOTE_DEBOUNCE_SECONDS = "workflow_note_debounce_seconds"
@@ -77,6 +78,7 @@ func Init() {
 	C.SetDefault(APP_DISABLE_SIGNUP, false)
 	C.SetDefault(APP_SECRET, "default_secret")
 	C.SetDefault(GRPC_PORT, "50051")
+	C.SetDefault(MESSAGING_ADDR, "")
 	C.SetDefault(RUNNER_REGISTRATION_TOKEN, "")
 	C.SetDefault(WORKFLOW_NOTE_DEBOUNCE_SECONDS, 10)
 	C.SetDefault(WORKFLOW_LOG_MAX_LINES, 10000)

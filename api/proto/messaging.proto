@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package messaging;
+
+// MessagingService exposes data access operations for the Socket.IO
+// messaging service. Implementation uses JSON encoding over gRPC transport
+// (no protoc generation required), same convention as collab.proto. The Go
+// server registers a JSON codec under the "proto" name so that the standard
+// grpc+proto Content-Type from @grpc/grpc-js is accepted transparently.
+
+service MessagingService {
+  // Auth (shared implementation with CollabService, independent protocol)
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc ValidateAPIKey(ValidateAPIKeyRequest) returns (ValidateAPIKeyResponse);
+  rpc IsWorkspaceMember(IsWorkspaceMemberRequest) returns (IsWorkspaceMemberResponse);
+
+  // Channel/message data
+  rpc GetChannel(GetChannelRequest) returns (GetChannelResponse);
+  rpc CreateMessage(CreateMessageRequest) returns (CreateMessageResponse);
+
+  // Room/connection lifecycle -> workflow trigger events
+  rpc NotifyRoomCreated(NotifyRoomCreatedRequest) returns (NotifyRoomCreatedResponse);
+  rpc NotifyClientConnected(NotifyClientConnectedRequest) returns (NotifyClientConnectedResponse);
+  rpc NotifyClientDisconnected(NotifyClientDisconnectedRequest) returns (NotifyClientDisconnectedResponse);
+}
+
+message GetUserRequest        { string id = 1; }
+message GetUserResponse       { bool found = 1; string id = 2; string name = 3; bool disabled = 4; }
+
+message ValidateAPIKeyRequest  { string key = 1; }
+message ValidateAPIKeyResponse { bool valid = 1; string user_id = 2; string user_name = 3; bool disabled = 4; }
+
+message IsWorkspaceMemberRequest  { string user_id = 1; string workspace_id = 2; }
+message IsWorkspaceMemberResponse { bool is_member = 1; }
+
+message GetChannelRequest  { string id = 1; }
+message GetChannelResponse { bool found = 1; string id = 2; string workspace_id = 3; string name = 4; }
+
+message CreateMessageRequest {
+  string workspace_id = 1; string channel_id = 2; string body = 3; string user_id = 4;
+}
+message CreateMessageResponse {
+  string id = 1; string channel_id = 2; string body = 3; bool edited = 4;
+  string created_at = 5; string created_by = 6; string created_by_name = 7;
+  string created_by_avatar_url = 8; string updated_at = 9;
+}
+
+message NotifyRoomCreatedRequest  { string channel_id = 1; string user_id = 2; }
+message NotifyRoomCreatedResponse {}
+
+message NotifyClientConnectedRequest  { string channel_id = 1; string user_id = 2; }
+message NotifyClientConnectedResponse {}
+
+message NotifyClientDisconnectedRequest  { string channel_id = 1; string user_id = 2; }
+message NotifyClientDisconnectedResponse {}

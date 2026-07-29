@@ -32,7 +32,7 @@ type ConcurrencySpec struct {
 type Triggers struct {
 	Note             *NoteTrigger
 	Comment          *CommentTrigger
-	Message          *MessageTrigger
+	Channel          *ChannelTrigger
 	Schedule         []ScheduleTrigger
 	WorkflowDispatch *WorkflowDispatchTrigger
 }
@@ -45,7 +45,7 @@ type CommentTrigger struct {
 	Types []string
 }
 
-type MessageTrigger struct {
+type ChannelTrigger struct {
 	Types []string
 }
 
@@ -91,10 +91,11 @@ var validCommentEventTypes = map[string]string{
 	"deleted": model.WorkflowEventCommentDeleted,
 }
 
-var validMessageEventTypes = map[string]string{
-	"created": model.WorkflowEventMessageCreated,
-	"updated": model.WorkflowEventMessageUpdated,
-	"deleted": model.WorkflowEventMessageDeleted,
+var validChannelEventTypes = map[string]string{
+	"room_created":        model.WorkflowEventChannelRoomCreated,
+	"message":             model.WorkflowEventChannelMessage,
+	"client_connected":    model.WorkflowEventChannelClientConnected,
+	"client_disconnected": model.WorkflowEventChannelClientDisconnected,
 }
 
 // MatchesNoteEvent reports whether the spec's note trigger covers the given
@@ -125,14 +126,14 @@ func (s Spec) MatchesCommentEvent(event string) bool {
 	return false
 }
 
-// MatchesMessageEvent reports whether the spec's message trigger covers the
-// given full event name (e.g. "message.created").
-func (s Spec) MatchesMessageEvent(event string) bool {
-	if s.On.Message == nil {
+// MatchesChannelEvent reports whether the spec's channel trigger covers the
+// given full event name (e.g. "channel.message").
+func (s Spec) MatchesChannelEvent(event string) bool {
+	if s.On.Channel == nil {
 		return false
 	}
-	for _, t := range s.On.Message.Types {
-		if validMessageEventTypes[t] == event {
+	for _, t := range s.On.Channel.Types {
+		if validChannelEventTypes[t] == event {
 			return true
 		}
 	}
@@ -194,8 +195,8 @@ func ParseAndValidate(definition string) (Spec, []ValidationError) {
 		errs = append(errs, ValidationError{Line: doc.Line, Message: "workflow must declare at least one trigger under 'on:'"})
 	} else {
 		errs = append(errs, parseTriggers(onNode, &spec.On)...)
-		if spec.On.Note == nil && spec.On.Comment == nil && spec.On.Message == nil && len(spec.On.Schedule) == 0 && spec.On.WorkflowDispatch == nil && len(errs) == 0 {
-			errs = append(errs, ValidationError{Line: onNode.Line, Message: "no supported trigger found; supported triggers are 'note', 'comment', 'message', 'schedule' and 'workflow_dispatch'"})
+		if spec.On.Note == nil && spec.On.Comment == nil && spec.On.Channel == nil && len(spec.On.Schedule) == 0 && spec.On.WorkflowDispatch == nil && len(errs) == 0 {
+			errs = append(errs, ValidationError{Line: onNode.Line, Message: "no supported trigger found; supported triggers are 'note', 'comment', 'channel', 'schedule' and 'workflow_dispatch'"})
 		}
 	}
 
@@ -244,14 +245,14 @@ func parseTriggerName(key *yaml.Node, value *yaml.Node, out *Triggers) []Validat
 		return parseNoteTrigger(key, value, out)
 	case "comment":
 		return parseCommentTrigger(key, value, out)
-	case "message":
-		return parseMessageTrigger(key, value, out)
+	case "channel":
+		return parseChannelTrigger(key, value, out)
 	case "schedule":
 		return parseScheduleTrigger(key, value, out)
 	case "workflow_dispatch":
 		return parseWorkflowDispatchTrigger(key, value, out)
 	default:
-		return []ValidationError{{Line: key.Line, Message: fmt.Sprintf("unsupported trigger %q; supported triggers are 'note', 'comment', 'message', 'schedule' and 'workflow_dispatch'", key.Value)}}
+		return []ValidationError{{Line: key.Line, Message: fmt.Sprintf("unsupported trigger %q; supported triggers are 'note', 'comment', 'channel', 'schedule' and 'workflow_dispatch'", key.Value)}}
 	}
 }
 
@@ -319,35 +320,35 @@ func parseCommentTrigger(key *yaml.Node, value *yaml.Node, out *Triggers) []Vali
 	return nil
 }
 
-func parseMessageTrigger(key *yaml.Node, value *yaml.Node, out *Triggers) []ValidationError {
-	trigger := &MessageTrigger{}
+func parseChannelTrigger(key *yaml.Node, value *yaml.Node, out *Triggers) []ValidationError {
+	trigger := &ChannelTrigger{}
 
 	if value != nil && value.Kind == yaml.MappingNode {
 		var raw struct {
 			Types []string `yaml:"types"`
 		}
 		if err := value.Decode(&raw); err != nil {
-			return []ValidationError{{Line: value.Line, Message: fmt.Sprintf("invalid 'message' trigger: %v", err)}}
+			return []ValidationError{{Line: value.Line, Message: fmt.Sprintf("invalid 'channel' trigger: %v", err)}}
 		}
 		trigger.Types = raw.Types
 	}
 
-	// Without an explicit types filter the trigger matches every message event.
+	// Without an explicit types filter the trigger matches every channel event.
 	if len(trigger.Types) == 0 {
-		trigger.Types = []string{"created", "updated", "deleted"}
+		trigger.Types = []string{"room_created", "message", "client_connected", "client_disconnected"}
 	}
 
 	var errs []ValidationError
 	for _, t := range trigger.Types {
-		if _, ok := validMessageEventTypes[t]; !ok {
-			errs = append(errs, ValidationError{Line: key.Line, Message: fmt.Sprintf("invalid message event type %q; valid types are 'created', 'updated' and 'deleted'", t)})
+		if _, ok := validChannelEventTypes[t]; !ok {
+			errs = append(errs, ValidationError{Line: key.Line, Message: fmt.Sprintf("invalid channel event type %q; valid types are 'room_created', 'message', 'client_connected' and 'client_disconnected'", t)})
 		}
 	}
 	if len(errs) > 0 {
 		return errs
 	}
 
-	out.Message = trigger
+	out.Channel = trigger
 	return nil
 }
 

@@ -104,9 +104,14 @@ func (h Handler) CreateMessage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	h.notifyMessageEvent(model.WorkflowEventMessageCreated, message, user.ID)
+	h.notifyMessageSent(message, user.ID)
 
-	return c.JSON(http.StatusCreated, toMessageResponse(h, message))
+	res := toMessageResponse(h, message)
+	// "new" (not "created") to match the messaging service's message:new
+	// event name — the same event the socket.io send path emits.
+	h.broadcastMessageChange("new", res)
+
+	return c.JSON(http.StatusCreated, res)
 }
 
 func (h Handler) UpdateMessage(c echo.Context) error {
@@ -147,9 +152,12 @@ func (h Handler) UpdateMessage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	h.notifyMessageEvent(model.WorkflowEventMessageUpdated, existingMessage, user.ID)
+	// Editing a message no longer fires a workflow event; it only broadcasts
+	// the change to connected clients over the messaging service.
+	res := toMessageResponse(h, existingMessage)
+	h.broadcastMessageChange("updated", res)
 
-	return c.JSON(http.StatusOK, toMessageResponse(h, existingMessage))
+	return c.JSON(http.StatusOK, res)
 }
 
 func (h Handler) DeleteMessage(c echo.Context) error {
@@ -175,7 +183,9 @@ func (h Handler) DeleteMessage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	h.notifyMessageEvent(model.WorkflowEventMessageDeleted, existingMessage, user.ID)
+	// Deleting a message no longer fires a workflow event; it only
+	// broadcasts the change to connected clients over the messaging service.
+	h.broadcastMessageChange("deleted", toMessageResponse(h, existingMessage))
 
 	return c.NoContent(http.StatusNoContent)
 }

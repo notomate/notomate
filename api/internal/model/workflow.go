@@ -28,9 +28,10 @@ const (
 	WorkflowEventCommentCreated   = "comment.created"
 	WorkflowEventCommentUpdated   = "comment.updated"
 	WorkflowEventCommentDeleted   = "comment.deleted"
-	WorkflowEventMessageCreated   = "message.created"
-	WorkflowEventMessageUpdated   = "message.updated"
-	WorkflowEventMessageDeleted   = "message.deleted"
+	WorkflowEventChannelRoomCreated        = "channel.room_created"
+	WorkflowEventChannelMessage            = "channel.message"
+	WorkflowEventChannelClientConnected    = "channel.client_connected"
+	WorkflowEventChannelClientDisconnected = "channel.client_disconnected"
 	WorkflowEventSchedule         = "schedule"
 	WorkflowEventWorkflowDispatch = "workflow_dispatch"
 )

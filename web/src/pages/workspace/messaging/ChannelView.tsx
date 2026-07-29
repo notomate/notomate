@@ -4,16 +4,15 @@ import { useTranslation } from "react-i18next"
 import { Hash, Send, Pencil, Trash2, MoreVertical, ChevronDown } from "lucide-react"
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import { ChannelData } from "@/api/channel"
-import { MessageData, createMessage, deleteMessage, getMessages, updateMessage } from "@/api/message"
+import { MessageData, deleteMessage, getMessages, updateMessage } from "@/api/message"
 import { WorkspaceMember } from "@/api/workspace"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { useToastStore } from "@/stores/toast"
+import { useChannelSocket } from "@/hooks/use-channel-socket"
 import Avatar from "@/components/avatar/Avatar"
 import CommentEditor from "@/components/commentsidebar/CommentEditor"
 import { renderCommentBody } from "@/components/commentsidebar/commentMarkdown"
 import { cn } from "@/lib/utils"
-
-const MESSAGE_POLL_INTERVAL_MS = 4000
 
 interface ChannelViewProps {
   workspaceId: string
@@ -56,34 +55,51 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
     queryKey,
     queryFn: () => getMessages(workspaceId, channel.id),
     enabled: !!workspaceId && !!channel.id,
-    refetchInterval: MESSAGE_POLL_INTERVAL_MS,
   })
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" })
   }, [channel.id, messages.length])
 
-  const createMutation = useMutation({
-    mutationFn: (body: string) => createMessage(workspaceId, channel.id, body),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
-    onError: () => addToast({ title: t("messaging.createMessageFailed"), type: "error" }),
+  const upsertMessage = (message: MessageData) => {
+    queryClient.setQueryData<MessageData[]>(queryKey, (prev = []) => {
+      const idx = prev.findIndex(m => m.id === message.id)
+      if (idx === -1) return [...prev, message]
+      const next = prev.slice()
+      next[idx] = message
+      return next
+    })
+  }
+
+  const removeMessage = (message: MessageData) => {
+    queryClient.setQueryData<MessageData[]>(queryKey, (prev = []) => prev.filter(m => m.id !== message.id))
+  }
+
+  const { isConnected, sendMessage } = useChannelSocket({
+    channelId: channel.id,
+    workspaceId,
+    enabled: !!workspaceId && !!channel.id,
+    onMessageNew: upsertMessage,
+    onMessageUpdated: upsertMessage,
+    onMessageDeleted: removeMessage,
+    onResync: () => queryClient.invalidateQueries({ queryKey }),
   })
 
   const updateMutation = useMutation({
     mutationFn: (vars: { id: string; body: string }) => updateMessage(workspaceId, channel.id, vars.id, vars.body),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: (updated) => upsertMessage(updated),
     onError: () => addToast({ title: t("messaging.updateMessageFailed"), type: "error" }),
   })
 
   const deleteMutation = useMutation({
     mutationFn: (message: MessageData) => deleteMessage(workspaceId, channel.id, message.id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: (_data, message) => removeMessage(message),
     onError: () => addToast({ title: t("messaging.deleteMessageFailed"), type: "error" }),
   })
 
   const handleSubmitComposer = () => {
     if (!composerBody.trim()) return
-    createMutation.mutate(composerBody.trim())
+    sendMessage(composerBody.trim(), () => addToast({ title: t("messaging.createMessageFailed"), type: "error" }))
     setComposerBody("")
     setComposerKey(k => k + 1)
   }
@@ -265,7 +281,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
           />
           <button
             className="flex items-center justify-center w-14 shrink-0 bg-primary text-white disabled:opacity-40"
-            disabled={!composerBody.trim()}
+            disabled={!composerBody.trim() || !isConnected}
             onClick={handleSubmitComposer}
           >
             <Send size={18} />
