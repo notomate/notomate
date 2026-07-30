@@ -38,6 +38,10 @@ const CommentEditor: FC<CommentEditorProps> = ({
   useEffect(() => { membersRef.current = members }, [members])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  // The native file picker steals focus as soon as it opens, which fires a real blur event on
+  // the editor. Suppress the `onBlur` callback (e.g. collapse-when-empty) for that entire
+  // round trip so an in-progress attach doesn't get treated as "user left with nothing typed".
+  const attachingRef = useRef(false)
 
   // The editor owns its own ProseMirror doc; `value` (markdown) is only re-applied when it
   // changes from outside (e.g. cleared after submit), never as an echo of our own onChange.
@@ -79,7 +83,10 @@ const CommentEditor: FC<CommentEditorProps> = ({
       lastEmitted.current = markdown
       onChange(markdown)
     },
-    onBlur: () => onBlur?.(),
+    onBlur: () => {
+      if (attachingRef.current) return
+      onBlur?.()
+    },
   })
 
   useEffect(() => {
@@ -101,10 +108,26 @@ const CommentEditor: FC<CommentEditorProps> = ({
     { icon: Code2, title: t("comments.editor.codeBlock"), onClick: () => editor.chain().focus().toggleCodeBlock().run() },
   ] : []
 
+  const handleAttachClick = () => {
+    attachingRef.current = true
+    fileInputRef.current?.click()
+    // If the user dismisses the picker without choosing a file, `change` never fires, so this
+    // is the only signal we get back. Give the (possibly still-firing) change event a head
+    // start before releasing the guard.
+    const releaseOnCancel = () => {
+      window.removeEventListener("focus", releaseOnCancel)
+      setTimeout(() => { attachingRef.current = false }, 300)
+    }
+    window.addEventListener("focus", releaseOnCancel)
+  }
+
   const handleFileSelected = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ""
-    if (!file || !editor) return
+    if (!file || !editor) {
+      attachingRef.current = false
+      return
+    }
     setUploading(true)
     try {
       const res = await uploadFile(workspaceId, file)
@@ -117,6 +140,7 @@ const CommentEditor: FC<CommentEditorProps> = ({
       addToast({ title: t("messaging.uploadFileFailed"), type: "error" })
     } finally {
       setUploading(false)
+      attachingRef.current = false
     }
   }
 
@@ -142,7 +166,7 @@ const CommentEditor: FC<CommentEditorProps> = ({
           disabled={uploading}
           className="p-1 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-neutral-700 hover:text-gray-800 dark:hover:text-gray-100 shrink-0 disabled:opacity-40"
           onMouseDown={e => e.preventDefault()}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleAttachClick}
         >
           <Paperclip size={13} />
         </button>
