@@ -270,7 +270,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
                     </div>
                   </div>
                 ) : (
-                  <div className={cn("flex items-center gap-1.5 mt-1", isOwn && "flex-row-reverse")}>
+                  <div className={cn("flex items-end gap-1.5 mt-1", isOwn && "flex-row-reverse")}>
                     <div
                       className={cn(
                         "note-comment-body text-sm break-words px-3 py-2 rounded-2xl max-w-[75vw] sm:max-w-md bg-white dark:bg-neutral-800 text-gray-700 dark:text-gray-300 shadow-sm",
