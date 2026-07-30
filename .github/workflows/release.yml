@@ -15,6 +15,7 @@ env:
   REGISTRY: docker.io
   IMAGE_API: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-api
   IMAGE_COLLAB: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-collab
+  IMAGE_MESSAGING: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-messaging
   IMAGE_NGINX: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-nginx
   IMAGE_RUNNER: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-runner
 
@@ -73,6 +74,15 @@ jobs:
             type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
             type=raw,value=latest
 
+      - name: Extract metadata (messaging)
+        id: meta-messaging
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_MESSAGING }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
+            type=raw,value=latest
+
       - name: Extract metadata (nginx)
         id: meta-nginx
         uses: docker/metadata-action@v5
@@ -115,6 +125,19 @@ jobs:
           push: true
           tags: ${{ steps.meta-collab.outputs.tags }}
           labels: ${{ steps.meta-collab.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push messaging image (messaging-runtime)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: messaging-runtime
+          push: true
+          tags: ${{ steps.meta-messaging.outputs.tags }}
+          labels: ${{ steps.meta-messaging.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
@@ -171,6 +194,10 @@ jobs:
           echo "**Collab:**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_COLLAB }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_COLLAB }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Messaging:**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_MESSAGING }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_MESSAGING }}:latest\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Nginx (static frontend):**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_NGINX }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
