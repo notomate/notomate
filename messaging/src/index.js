@@ -120,6 +120,17 @@ io.on('connection', (socket) => {
     }
   })
 
+  socket.on('message:update', async ({ messageId, body } = {}, ack) => {
+    try {
+      const message = await db.updateMessage(channel.workspace_id, channel.id, messageId, body, user.id)
+      io.to(roomName).emit('message:updated', message)
+      ack?.({ ok: true })
+    } catch (err) {
+      console.error('[messaging] updateMessage', err)
+      ack?.({ ok: false })
+    }
+  })
+
   socket.on('disconnect', () => {
     // Fires unconditionally on every disconnect - there's no "room
     // destroyed" event, so no emptiness check is needed here.
