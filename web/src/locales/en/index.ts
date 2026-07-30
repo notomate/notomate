@@ -632,6 +632,8 @@ export default {
     selectChannel: "Select a channel to start chatting",
     composerPlaceholder: "Message #{{name}}",
     noMessages: "No messages yet. Say hello!",
+    userJoinedChannel: "{{name}} joined the channel",
+    userLeftChannel: "{{name}} left the channel",
     edited: "(edited)",
     confirmDeleteMessage: "Are you sure you want to delete this message?",
     createChannelFailed: "Failed to create channel",

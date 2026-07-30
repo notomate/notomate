@@ -47,6 +47,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
   const [composerKey, setComposerKey] = useState(0)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingBody, setEditingBody] = useState("")
+  const [presenceNotices, setPresenceNotices] = useState<{ id: string; userId: string; type: "join" | "leave"; at: number }[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
   const queryKey = ["messages", workspaceId, channel.id]
@@ -60,6 +61,10 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" })
   }, [channel.id, messages.length])
+
+  useEffect(() => {
+    setPresenceNotices([])
+  }, [channel.id])
 
   const upsertMessage = (message: MessageData) => {
     queryClient.setQueryData<MessageData[]>(queryKey, (prev = []) => {
@@ -83,9 +88,26 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
     onMessageUpdated: upsertMessage,
     onMessageDeleted: removeMessage,
     onResync: () => queryClient.invalidateQueries({ queryKey }),
+    onUserJoined: (userId) => {
+      if (userId === user?.id) return
+      setPresenceNotices(prev => [...prev.slice(-49), { id: `${userId}-join-${Date.now()}`, userId, type: "join", at: Date.now() }])
+    },
+    onUserLeft: (userId) => {
+      if (userId === user?.id) return
+      setPresenceNotices(prev => [...prev.slice(-49), { id: `${userId}-leave-${Date.now()}`, userId, type: "leave", at: Date.now() }])
+    },
   })
 
   const onlineMembers = members.filter(m => onlineUserIds.includes(m.user_id))
+
+  type TimelineItem =
+    | { kind: "message"; ts: number; message: MessageData }
+    | { kind: "notice"; ts: number; notice: { id: string; userId: string; type: "join" | "leave" } }
+
+  const timeline: TimelineItem[] = [
+    ...messages.map((message): TimelineItem => ({ kind: "message", ts: new Date(message.created_at ?? "").getTime(), message })),
+    ...presenceNotices.map((notice): TimelineItem => ({ kind: "notice", ts: notice.at, notice })),
+  ].sort((a, b) => a.ts - b.ts)
 
   const updateMutation = useMutation({
     mutationFn: (vars: { id: string; body: string }) => updateMessage(workspaceId, channel.id, vars.id, vars.body),
@@ -208,7 +230,16 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
           <div className="text-center text-sm text-gray-400 py-8">{t("messaging.noMessages")}</div>
         )}
         <div className="flex flex-col gap-4">
-          {messages.map(message => {
+          {timeline.map(item => {
+            if (item.kind === "notice") {
+              const memberName = members.find(m => m.user_id === item.notice.userId)?.user_name ?? item.notice.userId
+              return (
+                <div key={item.notice.id} className="text-center text-xs text-gray-400">
+                  {t(item.notice.type === "join" ? "messaging.userJoinedChannel" : "messaging.userLeftChannel", { name: memberName })}
+                </div>
+              )
+            }
+            const message = item.message
             const isOwn = user?.id === message.created_by
             return (
             <div key={message.id} className={cn("flex gap-2", isOwn && "flex-row-reverse")}>

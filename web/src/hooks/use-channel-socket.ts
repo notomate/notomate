@@ -10,6 +10,8 @@ interface UseChannelSocketOptions {
   onMessageUpdated: (message: MessageData) => void
   onMessageDeleted: (message: MessageData) => void
   onResync: () => void
+  onUserJoined?: (userId: string) => void
+  onUserLeft?: (userId: string) => void
 }
 
 export function useChannelSocket(options: UseChannelSocketOptions) {
@@ -24,6 +26,11 @@ export function useChannelSocket(options: UseChannelSocketOptions) {
   const [isConnected, setIsConnected] = useState(false)
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([])
 
+  // Baseline of who's already online, used to tell "someone new joined"
+  // apart from the initial presence snapshot this socket receives on
+  // connect (which would otherwise look like everyone joining at once).
+  const knownUserIdsRef = useRef<Set<string> | null>(null)
+
   useEffect(() => {
     if (!enabled || !channelId || !workspaceId) return
 
@@ -32,6 +39,7 @@ export function useChannelSocket(options: UseChannelSocketOptions) {
       auth: { channelId },
     })
     socketRef.current = socket
+    knownUserIdsRef.current = null
 
     socket.on("connect", () => {
       setIsConnected(true)
@@ -42,17 +50,32 @@ export function useChannelSocket(options: UseChannelSocketOptions) {
     socket.on("disconnect", () => {
       setIsConnected(false)
       setOnlineUserIds([])
+      knownUserIdsRef.current = null
     })
     socket.on("message:new", (message: MessageData) => callbacksRef.current.onMessageNew(message))
     socket.on("message:updated", (message: MessageData) => callbacksRef.current.onMessageUpdated(message))
     socket.on("message:deleted", (message: MessageData) => callbacksRef.current.onMessageDeleted(message))
-    socket.on("presence:update", ({ userIds }: { userIds: string[] }) => setOnlineUserIds(userIds))
+    socket.on("presence:update", ({ userIds }: { userIds: string[] }) => {
+      const known = knownUserIdsRef.current
+      if (known) {
+        const nextIds = new Set(userIds)
+        for (const id of userIds) {
+          if (!known.has(id)) callbacksRef.current.onUserJoined?.(id)
+        }
+        for (const id of known) {
+          if (!nextIds.has(id)) callbacksRef.current.onUserLeft?.(id)
+        }
+      }
+      knownUserIdsRef.current = new Set(userIds)
+      setOnlineUserIds(userIds)
+    })
 
     return () => {
       socket.disconnect()
       socketRef.current = null
       setIsConnected(false)
       setOnlineUserIds([])
+      knownUserIdsRef.current = null
     }
   }, [channelId, workspaceId, enabled])
 
