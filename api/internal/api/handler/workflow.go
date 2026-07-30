@@ -1,13 +1,17 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
+	"github.com/notomate/notomate/internal/config"
 	"github.com/notomate/notomate/internal/model"
 	"github.com/notomate/notomate/internal/util"
 	"github.com/notomate/notomate/internal/workflow"
@@ -289,10 +293,54 @@ func (h Handler) notifyCommentEvent(event string, comment model.Comment, actorID
 	}
 }
 
-// notifyMessageEvent reports a channel message change to the trigger engine
+// notifyMessageSent reports a channel message send to the trigger engine
 // (no-op when no engine is attached).
-func (h Handler) notifyMessageEvent(event string, message model.Message, actorID string) {
+func (h Handler) notifyMessageSent(message model.Message, actorID string) {
 	if h.workflowEngine != nil {
-		h.workflowEngine.NotifyMessageEvent(event, message, actorID)
+		h.workflowEngine.NotifyMessageSent(message, actorID)
 	}
+}
+
+// broadcastMessageChange pushes a REST-originated message create/update/
+// delete to the messaging service so connected browser sockets see it too.
+// This is the ONLY path for bot/personal-API-key-posted creates, and the
+// ONLY path for any update/delete, since those stay REST-only. Fire-and-
+// forget: logs on error, never blocks or fails the HTTP response, and is a
+// no-op when MESSAGING_ADDR isn't configured (e.g. local dev without the
+// messaging service).
+//
+// DO NOT call this from the gRPC MessagingService.CreateMessage path — the
+// messaging Node service is the caller there and broadcasts the created
+// message to the room itself immediately after the RPC returns. Calling
+// this here too would double-deliver every socket-originated message.
+func (h Handler) broadcastMessageChange(changeType string, message GetMessageResponse) {
+	addr := config.C.GetString(config.MESSAGING_ADDR)
+	if addr == "" {
+		return
+	}
+	go func() {
+		payload, err := json.Marshal(map[string]any{
+			"channel_id": message.ChannelID,
+			"type":       changeType,
+			"message":    message,
+		})
+		if err != nil {
+			log.Printf("[messaging] marshal broadcast payload: %v", err)
+			return
+		}
+		req, err := http.NewRequest(http.MethodPost, addr+"/internal/broadcast", bytes.NewReader(payload))
+		if err != nil {
+			log.Printf("[messaging] build broadcast request: %v", err)
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Internal-Secret", config.C.GetString(config.APP_SECRET))
+		client := http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("[messaging] broadcast %s failed: %v", changeType, err)
+			return
+		}
+		resp.Body.Close()
+	}()
 }

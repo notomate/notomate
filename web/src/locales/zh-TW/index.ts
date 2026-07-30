@@ -632,6 +632,8 @@ export default {
     selectChannel: "選擇一個頻道開始聊天",
     composerPlaceholder: "傳送訊息至 #{{name}}",
     noMessages: "尚無訊息，打聲招呼吧！",
+    userJoinedChannel: "{{name}} 已加入頻道",
+    userLeftChannel: "{{name}} 已離開頻道",
     edited: "（已編輯）",
     confirmDeleteMessage: "確定要刪除這則訊息嗎？",
     createChannelFailed: "建立頻道失敗",
@@ -639,7 +641,9 @@ export default {
     deleteChannelFailed: "刪除頻道失敗",
     createMessageFailed: "傳送訊息失敗",
     updateMessageFailed: "更新訊息失敗",
-    deleteMessageFailed: "刪除訊息失敗"
+    deleteMessageFailed: "刪除訊息失敗",
+    attachFile: "附加檔案",
+    uploadFileFailed: "上傳檔案失敗"
   },
   whiteboard: {
     loading: "載入中...",

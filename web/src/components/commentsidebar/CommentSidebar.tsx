@@ -338,6 +338,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
               value={editingBody}
               onChange={setEditingBody}
               members={members}
+              workspaceId={workspaceId}
             />
             <div className="flex justify-end gap-2 mt-1">
               <button className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onClick={() => setEditingId(null)}>
@@ -411,6 +412,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
                       onChange={setComposerBody}
                       onBlur={() => { if (!composerBody.trim()) setComposerExpanded(false) }}
                       members={members}
+                      workspaceId={workspaceId}
                     />
                     <button
                       className="p-1.5 text-primary disabled:opacity-40 shrink-0"
@@ -492,6 +494,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
                         onChange={value => setReplyBodies(prev => ({ ...prev, [anchor.thread_id]: value }))}
                         onBlur={() => collapseReplyIfEmpty(anchor.thread_id)}
                         members={members}
+                        workspaceId={workspaceId}
                       />
                       <button
                         className="p-1.5 text-primary disabled:opacity-40"

@@ -1,0 +1,14 @@
+{
+  "name": "notomate-messaging",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.0",
+    "jsonwebtoken": "^9.0.0",
+    "socket.io": "^4.8.0"
+  }
+}

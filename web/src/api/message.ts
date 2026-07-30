@@ -17,11 +17,6 @@ export const getMessages = async (workspaceId: string, channelId: string) => {
   return response.data as MessageData[];
 };
 
-export const createMessage = async (workspaceId: string, channelId: string, body: string) => {
-  const response = await axios.post(`/api/v1/workspaces/${workspaceId}/channels/${channelId}/messages`, { body });
-  return response.data as MessageData;
-};
-
 export const updateMessage = async (workspaceId: string, channelId: string, id: string, body: string) => {
   const response = await axios.put(`/api/v1/workspaces/${workspaceId}/channels/${channelId}/messages/${id}`, { body });
   return response.data as MessageData;

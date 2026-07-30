@@ -94,9 +94,29 @@ func (e *Engine) NotifyCommentEvent(event string, comment model.Comment, actorID
 	e.dispatcher.NotifyCommentEvent(event, comment, actorID)
 }
 
-// NotifyMessageEvent reports a channel message change from the REST handler.
-func (e *Engine) NotifyMessageEvent(event string, message model.Message, actorID string) {
-	e.dispatcher.NotifyMessageEvent(event, message, actorID)
+// NotifyMessageSent reports a channel message send from either write path
+// (the messaging service's gRPC CreateMessage, or the REST handler used by
+// bots/personal API keys).
+func (e *Engine) NotifyMessageSent(message model.Message, actorID string) {
+	e.dispatcher.NotifyMessageSent(message, actorID)
+}
+
+// NotifyRoomCreated reports a channel's in-memory room transitioning from
+// empty to occupied, from the messaging service's gRPC handler.
+func (e *Engine) NotifyRoomCreated(channel model.Channel, actorID string) {
+	e.dispatcher.NotifyRoomCreated(channel, actorID)
+}
+
+// NotifyClientConnected reports a client joining a channel's room, from the
+// messaging service's gRPC handler.
+func (e *Engine) NotifyClientConnected(channel model.Channel, userID string) {
+	e.dispatcher.NotifyClientConnected(channel, userID)
+}
+
+// NotifyClientDisconnected reports a client leaving a channel's room, from
+// the messaging service's gRPC handler.
+func (e *Engine) NotifyClientDisconnected(channel model.Channel, userID string) {
+	e.dispatcher.NotifyClientDisconnected(channel, userID)
 }
 
 // ClaimJob hands the oldest matching queued job to a runner.

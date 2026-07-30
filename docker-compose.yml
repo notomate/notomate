@@ -4,13 +4,14 @@ services:
       context: .
       dockerfile: Dockerfile
       target: nginx-runtime
-    image: notomate/notomate-nginx:local
+    image: notomate/notomate-nginx
     container_name: notomate-nginx
     ports:
       - "8080:80"
     depends_on:
       - notomate-api
       - notomate-collab
+      - notomate-messaging
     restart: unless-stopped
 
   notomate-api:
@@ -18,16 +19,14 @@ services:
       context: .
       dockerfile: Dockerfile
       target: api-runtime
-    image: notomate/notomate-api:local
+    image: notomate/notomate-api
     container_name: notomate-api
     volumes:
       - "./bin:/usr/local/app/bin"
     environment:
-      - PORT=8080
-      - DB_DRIVER=sqlite3
-      - DB_DSN=/usr/local/app/bin/notomate.db
       - APP_DISABLE_SIGNUP=${APP_DISABLE_SIGNUP}
       - APP_SECRET=${APP_SECRET}
+      - MESSAGING_ADDR=http://notomate-messaging:4000
     ports:
       # gRPC port for the runner (docker-compose.runner.yml), which lives in
       # a separate compose project and can't reach notomate-api by service
@@ -41,10 +40,25 @@ services:
       context: .
       dockerfile: Dockerfile
       target: collab-runtime
-    image: notomate/notomate-collab:local
+    image: notomate/notomate-collab
     container_name: notomate-collab
     environment:
       - PORT=3000
+      - APP_SECRET=${APP_SECRET}
+      - GRPC_ADDR=notomate-api:50051
+    depends_on:
+      - notomate-api
+    restart: unless-stopped
+
+  notomate-messaging:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: messaging-runtime
+    image: notomate/notomate-messaging
+    container_name: notomate-messaging
+    environment:
+      - PORT=4000
       - APP_SECRET=${APP_SECRET}
       - GRPC_ADDR=notomate-api:50051
     depends_on:

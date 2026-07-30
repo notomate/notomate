@@ -14,12 +14,16 @@ import (
 // whose jobs modify notes can retrigger itself indefinitely.
 const maxRunsPerWorkflowPerMinute = 30
 
-// Dispatcher turns note and comment events into queued workflow runs.
+// Dispatcher turns note, comment and channel events into queued workflow
+// runs.
 //
 // note.updated and comment.updated events are debounced per entity: the
 // collab service write-back fires in bursts while a note is being edited
 // (and comment edits can similarly be rapid), and one run per burst is what
-// users expect. created/deleted events dispatch immediately.
+// users expect. created/deleted events dispatch immediately. Channel events
+// (room created, message sent, client connected/disconnected) are all
+// discrete occurrences, never bursty autosave-style updates, so none of them
+// are debounced.
 type Dispatcher struct {
 	db       db.DB
 	queue    *Queue
@@ -28,7 +32,6 @@ type Dispatcher struct {
 	mu             sync.Mutex
 	pending        map[string]*pendingUpdate
 	pendingComment map[string]*pendingCommentUpdate
-	pendingMessage map[string]*pendingMessageUpdate
 	rates          map[string][]time.Time
 	stopped        bool
 }
@@ -45,12 +48,6 @@ type pendingCommentUpdate struct {
 	actorID string
 }
 
-type pendingMessageUpdate struct {
-	timer   *time.Timer
-	message model.Message
-	actorID string
-}
-
 func NewDispatcher(database db.DB, queue *Queue) *Dispatcher {
 	debounceSeconds := config.C.GetInt(config.WORKFLOW_NOTE_DEBOUNCE_SECONDS)
 	if debounceSeconds <= 0 {
@@ -62,7 +59,6 @@ func NewDispatcher(database db.DB, queue *Queue) *Dispatcher {
 		debounce:       time.Duration(debounceSeconds) * time.Second,
 		pending:        map[string]*pendingUpdate{},
 		pendingComment: map[string]*pendingCommentUpdate{},
-		pendingMessage: map[string]*pendingMessageUpdate{},
 		rates:          map[string][]time.Time{},
 	}
 }
@@ -141,41 +137,52 @@ func (d *Dispatcher) NotifyCommentEvent(event string, comment model.Comment, act
 	d.mu.Unlock()
 }
 
-func (d *Dispatcher) NotifyMessageEvent(event string, message model.Message, actorID string) {
+// NotifyMessageSent reports a channel message send from either write path
+// (the socket.io messaging service's gRPC CreateMessage, or the REST
+// CreateMessage handler used by bots/personal API keys). Always dispatches
+// immediately: a message send is a discrete action, never a debounced burst.
+func (d *Dispatcher) NotifyMessageSent(message model.Message, actorID string) {
 	d.mu.Lock()
 	if d.stopped {
 		d.mu.Unlock()
 		return
 	}
-
-	if event != model.WorkflowEventMessageUpdated {
-		d.mu.Unlock()
-		go d.dispatchMessage(event, message, actorID)
-		return
-	}
-
-	if p, ok := d.pendingMessage[message.ID]; ok {
-		p.message = message
-		p.actorID = actorID
-		p.timer.Reset(d.debounce)
-		d.mu.Unlock()
-		return
-	}
-
-	p := &pendingMessageUpdate{message: message, actorID: actorID}
-	p.timer = time.AfterFunc(d.debounce, func() {
-		d.mu.Lock()
-		delete(d.pendingMessage, message.ID)
-		stopped := d.stopped
-		latest := *p
-		d.mu.Unlock()
-		if stopped {
-			return
-		}
-		d.dispatchMessage(model.WorkflowEventMessageUpdated, latest.message, latest.actorID)
-	})
-	d.pendingMessage[message.ID] = p
 	d.mu.Unlock()
+	go d.dispatchChannelEvent(model.WorkflowEventChannelMessage, message.WorkspaceID, nil, &message, actorID)
+}
+
+// NotifyRoomCreated reports that the messaging service's in-memory room for
+// a channel transitioned from empty to occupied.
+func (d *Dispatcher) NotifyRoomCreated(channel model.Channel, actorID string) {
+	d.mu.Lock()
+	if d.stopped {
+		d.mu.Unlock()
+		return
+	}
+	d.mu.Unlock()
+	go d.dispatchChannelEvent(model.WorkflowEventChannelRoomCreated, channel.WorkspaceID, &channel, nil, actorID)
+}
+
+// NotifyClientConnected reports a client joining a channel's room.
+func (d *Dispatcher) NotifyClientConnected(channel model.Channel, userID string) {
+	d.mu.Lock()
+	if d.stopped {
+		d.mu.Unlock()
+		return
+	}
+	d.mu.Unlock()
+	go d.dispatchChannelEvent(model.WorkflowEventChannelClientConnected, channel.WorkspaceID, &channel, nil, userID)
+}
+
+// NotifyClientDisconnected reports a client leaving a channel's room.
+func (d *Dispatcher) NotifyClientDisconnected(channel model.Channel, userID string) {
+	d.mu.Lock()
+	if d.stopped {
+		d.mu.Unlock()
+		return
+	}
+	d.mu.Unlock()
+	go d.dispatchChannelEvent(model.WorkflowEventChannelClientDisconnected, channel.WorkspaceID, &channel, nil, userID)
 }
 
 func (d *Dispatcher) Stop() {
@@ -189,10 +196,6 @@ func (d *Dispatcher) Stop() {
 	for id, p := range d.pendingComment {
 		p.timer.Stop()
 		delete(d.pendingComment, id)
-	}
-	for id, p := range d.pendingMessage {
-		p.timer.Stop()
-		delete(d.pendingMessage, id)
 	}
 }
 
@@ -325,34 +328,38 @@ func (d *Dispatcher) dispatchComment(event string, comment model.Comment, actorI
 	}
 }
 
-func (d *Dispatcher) dispatchMessage(event string, message model.Message, actorID string) {
+// dispatchChannelEvent handles all four channel-related workflow events
+// (room created, message sent, client connected/disconnected). exactly one
+// of channel/message's parent lookup applies: message-sent events pass
+// channel=nil and resolve the parent channel from message.ChannelID (so
+// workflow authors can reference channel fields without a separate lookup
+// step); the three lifecycle events pass channel directly and message=nil.
+func (d *Dispatcher) dispatchChannelEvent(event string, workspaceID string, channel *model.Channel, message *model.Message, actorID string) {
 	enabled := true
 	workflows, err := d.db.FindWorkflows(model.WorkflowFilter{
-		WorkspaceID: message.WorkspaceID,
+		WorkspaceID: workspaceID,
 		Enabled:     &enabled,
 	})
 	if err != nil {
-		log.Printf("[workflow] load workflows for message event: %v", err)
+		log.Printf("[workflow] load workflows for channel event: %v", err)
 		return
 	}
 	if len(workflows) == 0 {
 		return
 	}
 
-	workspace, err := d.db.FindWorkspaceByID(message.WorkspaceID)
+	workspace, err := d.db.FindWorkspaceByID(workspaceID)
 	if err != nil {
-		log.Printf("[workflow] load workspace %s: %v", message.WorkspaceID, err)
+		log.Printf("[workflow] load workspace %s: %v", workspaceID, err)
 		return
 	}
 
-	// Message events carry their parent channel alongside the message itself
-	// so workflow authors can reference channel fields (name, etc.) without a
-	// separate lookup step.
-	var channel *model.Channel
-	if ch, err := d.db.FindChannel(model.Channel{ID: message.ChannelID}); err == nil {
-		channel = &ch
-	} else {
-		log.Printf("[workflow] load parent channel %s for message event: %v", message.ChannelID, err)
+	if channel == nil && message != nil {
+		if ch, err := d.db.FindChannel(model.Channel{ID: message.ChannelID}); err == nil {
+			channel = &ch
+		} else {
+			log.Printf("[workflow] load parent channel %s for channel event: %v", message.ChannelID, err)
+		}
 	}
 
 	var sender *PayloadSender
@@ -367,7 +374,7 @@ func (d *Dispatcher) dispatchMessage(event string, message model.Message, actorI
 	created := false
 	for _, wf := range workflows {
 		spec, errs := ParseAndValidate(wf.Definition)
-		if len(errs) > 0 || !spec.MatchesMessageEvent(event) {
+		if len(errs) > 0 || !spec.MatchesChannelEvent(event) {
 			continue
 		}
 		if !d.allowRun(wf.ID) {
@@ -375,13 +382,12 @@ func (d *Dispatcher) dispatchMessage(event string, message model.Message, actorI
 			continue
 		}
 
-		messageCopy := message
 		payload := EventPayload{
 			Event:     event,
 			Workspace: PayloadWorkspace{ID: workspace.ID, Name: workspace.Name},
 			Sender:    sender,
 			Channel:   channel,
-			Message:   &messageCopy,
+			Message:   message,
 		}
 		if _, err := CreateRun(d.db, wf, spec, event, payload, actorID); err != nil {
 			log.Printf("[workflow] create run for workflow %s: %v", wf.ID, err)

@@ -1,11 +1,12 @@
 import type { JSONContent } from "@tiptap/core"
 import Token from "markdown-it/lib/token.mjs"
-import { md, mentionToken } from "./commentMarkdown"
+import { isImageAttachmentUrl, md, mentionToken } from "./commentMarkdown"
 
 // Converts between the flat markdown string comments are stored/rendered as (see
 // commentMarkdown.ts) and the ProseMirror doc shape the comment editor operates on.
 // Only the subset of markdown that editor actually supports is round-tripped:
-// bold/italic/strike/code, bullet/ordered/task lists, blockquotes, fenced code, mentions.
+// bold/italic/strike/code, bullet/ordered/task lists, blockquotes, fenced code, mentions,
+// and uploaded file attachments (rendered as ![name](url) images).
 
 interface Frame {
   type: string
@@ -34,6 +35,12 @@ function parseInline(children: Token[], taskAttrsTarget: Frame | undefined): JSO
       case "mention":
         nodes.push({ type: "mention", attrs: { id: child.meta?.userId ?? null, label: child.meta?.label ?? null } })
         break
+      case "image": {
+        const url = child.attrGet("src") || ""
+        const name = (child.children || []).map(c => c.content).join("") || url
+        nodes.push({ type: "commentAttachment", attrs: { url, name, isImage: isImageAttachmentUrl(url) } })
+        break
+      }
       case "html_inline":
         // Checkbox marker inserted by the task-list plugin; consume it into the parent
         // taskItem's `checked` attr instead of rendering it as text.
@@ -188,6 +195,10 @@ function serializeInline(nodes: JSONContent[] = []): string {
         return "\n"
       case "mention":
         return mentionToken((node.attrs?.label as string) ?? (node.attrs?.id as string) ?? "", (node.attrs?.id as string) ?? "")
+      case "commentAttachment": {
+        const name = ((node.attrs?.name as string) ?? "").replace(/[[\]]/g, m => `\\${m}`)
+        return `![${name}](${(node.attrs?.url as string) ?? ""})`
+      }
       default:
         return ""
     }

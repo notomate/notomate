@@ -632,6 +632,8 @@ export default {
     selectChannel: "Select a channel to start chatting",
     composerPlaceholder: "Message #{{name}}",
     noMessages: "No messages yet. Say hello!",
+    userJoinedChannel: "{{name}} joined the channel",
+    userLeftChannel: "{{name}} left the channel",
     edited: "(edited)",
     confirmDeleteMessage: "Are you sure you want to delete this message?",
     createChannelFailed: "Failed to create channel",
@@ -639,7 +641,9 @@ export default {
     deleteChannelFailed: "Failed to delete channel",
     createMessageFailed: "Failed to send message",
     updateMessageFailed: "Failed to update message",
-    deleteMessageFailed: "Failed to delete message"
+    deleteMessageFailed: "Failed to delete message",
+    attachFile: "Attach file",
+    uploadFileFailed: "Failed to upload file"
   },
   whiteboard: {
     loading: "Loading...",
