@@ -75,6 +75,20 @@ io.use(async (socket, next) => {
   next()
 })
 
+// Returns the deduplicated list of user IDs with a socket currently joined
+// to the room, derived from the adapter's live socket set (no separate
+// counter to keep in sync).
+function getOnlineUserIds(roomName) {
+  const socketIds = io.sockets.adapter.rooms.get(roomName)
+  if (!socketIds) return []
+  const userIds = new Set()
+  for (const id of socketIds) {
+    const s = io.sockets.sockets.get(id)
+    if (s) userIds.add(s.data.user.id)
+  }
+  return [...userIds]
+}
+
 io.on('connection', (socket) => {
   const { user, channel } = socket.data
   const roomName = `channel:${channel.id}`
@@ -90,6 +104,7 @@ io.on('connection', (socket) => {
     db.notifyRoomCreated(channel.id, user.id).catch((err) => console.error('[messaging] notifyRoomCreated', err))
   }
   db.notifyClientConnected(channel.id, user.id).catch((err) => console.error('[messaging] notifyClientConnected', err))
+  io.to(roomName).emit('presence:update', { userIds: getOnlineUserIds(roomName) })
 
   socket.on('message:send', async ({ body } = {}, ack) => {
     try {
@@ -109,6 +124,10 @@ io.on('connection', (socket) => {
     // Fires unconditionally on every disconnect - there's no "room
     // destroyed" event, so no emptiness check is needed here.
     db.notifyClientDisconnected(channel.id, user.id).catch((err) => console.error('[messaging] notifyClientDisconnected', err))
+    // Socket.IO removes the socket from its rooms before emitting
+    // 'disconnect', so getOnlineUserIds(roomName) here already reflects the
+    // departure - the remaining sockets in the room get the updated list.
+    io.to(roomName).emit('presence:update', { userIds: getOnlineUserIds(roomName) })
   })
 })
 

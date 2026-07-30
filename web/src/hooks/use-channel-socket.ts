@@ -22,6 +22,7 @@ export function useChannelSocket(options: UseChannelSocketOptions) {
 
   const socketRef = useRef<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [onlineUserIds, setOnlineUserIds] = useState<string[]>([])
 
   useEffect(() => {
     if (!enabled || !channelId || !workspaceId) return
@@ -38,15 +39,20 @@ export function useChannelSocket(options: UseChannelSocketOptions) {
       // resync refetch on every (re)connect replaces that safety net.
       callbacksRef.current.onResync()
     })
-    socket.on("disconnect", () => setIsConnected(false))
+    socket.on("disconnect", () => {
+      setIsConnected(false)
+      setOnlineUserIds([])
+    })
     socket.on("message:new", (message: MessageData) => callbacksRef.current.onMessageNew(message))
     socket.on("message:updated", (message: MessageData) => callbacksRef.current.onMessageUpdated(message))
     socket.on("message:deleted", (message: MessageData) => callbacksRef.current.onMessageDeleted(message))
+    socket.on("presence:update", ({ userIds }: { userIds: string[] }) => setOnlineUserIds(userIds))
 
     return () => {
       socket.disconnect()
       socketRef.current = null
       setIsConnected(false)
+      setOnlineUserIds([])
     }
   }, [channelId, workspaceId, enabled])
 
@@ -61,5 +67,5 @@ export function useChannelSocket(options: UseChannelSocketOptions) {
     })
   }, [])
 
-  return { isConnected, sendMessage }
+  return { isConnected, onlineUserIds, sendMessage }
 }

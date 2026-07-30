@@ -75,7 +75,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
     queryClient.setQueryData<MessageData[]>(queryKey, (prev = []) => prev.filter(m => m.id !== message.id))
   }
 
-  const { isConnected, sendMessage } = useChannelSocket({
+  const { isConnected, onlineUserIds, sendMessage } = useChannelSocket({
     channelId: channel.id,
     workspaceId,
     enabled: !!workspaceId && !!channel.id,
@@ -84,6 +84,8 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
     onMessageDeleted: removeMessage,
     onResync: () => queryClient.invalidateQueries({ queryKey }),
   })
+
+  const onlineMembers = members.filter(m => onlineUserIds.includes(m.user_id))
 
   const updateMutation = useMutation({
     mutationFn: (vars: { id: string; body: string }) => updateMessage(workspaceId, channel.id, vars.id, vars.body),
@@ -145,37 +147,60 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
             <span className="text-xs text-gray-400 truncate hidden sm:inline">— {channel.description}</span>
           )}
         </div>
-        {canManageChannel && (
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0">
-                <MoreVertical size={16} />
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content
-                align="end"
-                sideOffset={4}
-                className="min-w-[160px] bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg p-1 z-50"
-              >
-                <DropdownMenu.Item
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  onSelect={onRenameChannel}
+        <div className="flex items-center gap-2 shrink-0">
+          {onlineMembers.length > 0 && (
+            <div className="flex items-center -space-x-2" title={onlineMembers.map(m => m.user_name).join(", ")}>
+              {onlineMembers.slice(0, 5).map(member => (
+                <Avatar
+                  key={member.user_id}
+                  name={member.user_name}
+                  avatarUrl={member.user_avatar_url}
+                  size={24}
+                  className="ring-2 ring-white dark:ring-neutral-900"
+                />
+              ))}
+              {onlineMembers.length > 5 && (
+                <div
+                  style={{ width: 24, height: 24, fontSize: 10 }}
+                  className="rounded-full bg-gray-200 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 font-medium flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-neutral-900"
                 >
-                  <Pencil size={12} />
-                  {t("messaging.renameChannel")}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item
-                  className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                  onSelect={onDeleteChannel}
+                  +{onlineMembers.length - 5}
+                </div>
+              )}
+            </div>
+          )}
+          {canManageChannel && (
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0">
+                  <MoreVertical size={16} />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={4}
+                  className="min-w-[160px] bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg p-1 z-50"
                 >
-                  <Trash2 size={12} />
-                  {t("messaging.deleteChannel")}
-                </DropdownMenu.Item>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        )}
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    onSelect={onRenameChannel}
+                  >
+                    <Pencil size={12} />
+                    {t("messaging.renameChannel")}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item
+                    className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    onSelect={onDeleteChannel}
+                  >
+                    <Trash2 size={12} />
+                    {t("messaging.deleteChannel")}
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3 bg-gray-100 dark:bg-neutral-950">
