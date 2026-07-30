@@ -180,6 +180,34 @@ p.is-editor-empty:first-child::before {
 .note-comment-mention {
   @apply text-primary font-medium;
 }
+
+.note-comment-body .note-comment-attachment-image {
+  @apply inline-block mt-1;
+}
+
+.note-comment-body .note-comment-attachment-image img {
+  @apply max-w-[240px] max-h-[240px] rounded-lg border dark:border-neutral-700 object-cover align-top;
+}
+
+.note-comment-body .note-comment-attachment-file {
+  @apply inline-flex items-center gap-1.5 mt-1 px-2.5 py-1.5 rounded-lg border dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-xs no-underline text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700;
+}
+
+.note-comment-body .note-comment-attachment-file span {
+  @apply truncate max-w-[160px];
+}
+
+.note-comment-body .note-comment-attachment-chip {
+  @apply inline-flex items-center align-middle;
+}
+
+.note-comment-body .note-comment-attachment-chip img {
+  @apply max-w-[120px] max-h-[80px] rounded border dark:border-neutral-700 align-middle;
+}
+
+.note-comment-body .note-comment-attachment-chip span {
+  @apply inline-flex items-center gap-1 px-2 py-1 rounded border dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-xs text-gray-600 dark:text-gray-300;
+}
 p[data-placeholder] :not(.ProseMirror-trailingBreak) {
   display: none;
 }

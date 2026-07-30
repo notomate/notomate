@@ -243,11 +243,13 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
             const isOwn = user?.id === message.created_by
             return (
             <div key={message.id} className={cn("flex gap-2", isOwn && "flex-row-reverse")}>
-              <Avatar name={message.created_by_name} avatarUrl={message.created_by_avatar_url} size={28} />
+              {!isOwn && <Avatar name={message.created_by_name} avatarUrl={message.created_by_avatar_url} size={28} />}
               <div className={cn("flex-1 min-w-0 flex flex-col", isOwn ? "items-end" : "items-start")}>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{message.created_by_name}</span>
-                </div>
+                {!isOwn && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{message.created_by_name}</span>
+                  </div>
+                )}
 
                 {editingId === message.id ? (
                   <div className="mt-1 w-full">
@@ -258,6 +260,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
                       value={editingBody}
                       onChange={setEditingBody}
                       members={members}
+                      workspaceId={workspaceId}
                       focusRing={false}
                     />
                     <div className="flex justify-end gap-2 mt-1">
@@ -333,6 +336,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
             value={composerBody}
             onChange={setComposerBody}
             members={members}
+            workspaceId={workspaceId}
             focusRing={false}
           />
           <button

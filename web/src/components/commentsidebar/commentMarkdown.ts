@@ -62,12 +62,36 @@ function taskListPlugin(md: MarkdownIt) {
   })
 }
 
+// Uploaded files are embedded as standard markdown images (![name](url), see
+// commentDocConvert.ts). Whether they render as an inline thumbnail or a downloadable
+// file chip depends on the URL's extension.
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i
+
+export function isImageAttachmentUrl(url: string): boolean {
+  return IMAGE_EXT_RE.test(url.split('?')[0].split('#')[0])
+}
+
+function attachmentPlugin(md: MarkdownIt) {
+  md.renderer.rules.image = (tokens, idx, _options, _env, self) => {
+    const token = tokens[idx]
+    const url = token.attrGet('src') || ''
+    const name = self.renderInlineAsText(token.children || [], _options, _env) || url
+    const safeUrl = md.utils.escapeHtml(url)
+    const safeName = md.utils.escapeHtml(name)
+
+    if (isImageAttachmentUrl(url)) {
+      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="note-comment-attachment-image"><img src="${safeUrl}" alt="${safeName}" loading="lazy" /></a>`
+    }
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="note-comment-attachment-file"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg><span>${safeName}</span></a>`
+  }
+}
+
 export const md = new MarkdownIt({
   html: false,
   linkify: true,
   breaks: true,
   typographer: false,
-}).use(mentionPlugin).use(taskListPlugin)
+}).use(mentionPlugin).use(taskListPlugin).use(attachmentPlugin)
 
 export function mentionToken(label: string, userId: string): string {
   return `@[${label}](${userId})`

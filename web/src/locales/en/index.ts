@@ -641,7 +641,9 @@ export default {
     deleteChannelFailed: "Failed to delete channel",
     createMessageFailed: "Failed to send message",
     updateMessageFailed: "Failed to update message",
-    deleteMessageFailed: "Failed to delete message"
+    deleteMessageFailed: "Failed to delete message",
+    attachFile: "Attach file",
+    uploadFileFailed: "Failed to upload file"
   },
   whiteboard: {
     loading: "Loading...",

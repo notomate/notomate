@@ -641,7 +641,9 @@ export default {
     deleteChannelFailed: "刪除頻道失敗",
     createMessageFailed: "傳送訊息失敗",
     updateMessageFailed: "更新訊息失敗",
-    deleteMessageFailed: "刪除訊息失敗"
+    deleteMessageFailed: "刪除訊息失敗",
+    attachFile: "附加檔案",
+    uploadFileFailed: "上傳檔案失敗"
   },
   whiteboard: {
     loading: "載入中...",
