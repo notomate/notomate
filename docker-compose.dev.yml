@@ -1,0 +1,17 @@
+# Dev override: publishes notomate-collab and notomate-messaging on the
+# host so a locally-run Vite dev server (web/vite.config.ts proxies
+# /ws + /ws/public -> localhost:3000 and /socket.io -> localhost:4000) can
+# talk to them directly, without rebuilding notomate-nginx on every
+# frontend change.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#   cd web && npm run dev
+services:
+  notomate-collab:
+    ports:
+      - "3000:3000"
+
+  notomate-messaging:
+    ports:
+      - "4000:4000"
