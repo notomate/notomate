@@ -21,6 +21,7 @@ const METHODS = {
   IsWorkspaceMember:        '/messaging.MessagingService/IsWorkspaceMember',
   GetChannel:               '/messaging.MessagingService/GetChannel',
   CreateMessage:            '/messaging.MessagingService/CreateMessage',
+  UpdateMessage:            '/messaging.MessagingService/UpdateMessage',
   NotifyRoomCreated:        '/messaging.MessagingService/NotifyRoomCreated',
   NotifyClientConnected:    '/messaging.MessagingService/NotifyClientConnected',
   NotifyClientDisconnected: '/messaging.MessagingService/NotifyClientDisconnected',
@@ -70,6 +71,16 @@ function createGrpcClient(address) {
       return call(METHODS.CreateMessage, {
         workspace_id: workspaceId,
         channel_id: channelId,
+        body,
+        user_id: userId,
+      })
+    },
+
+    async updateMessage(workspaceId, channelId, messageId, body, userId) {
+      return call(METHODS.UpdateMessage, {
+        workspace_id: workspaceId,
+        channel_id: channelId,
+        message_id: messageId,
         body,
         user_id: userId,
       })

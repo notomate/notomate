@@ -47,6 +47,25 @@ type CreateMessageResponse struct {
 	UpdatedAt          string `json:"updated_at"`
 }
 
+type UpdateMessageRequest struct {
+	WorkspaceID string `json:"workspace_id"`
+	ChannelID   string `json:"channel_id"`
+	MessageID   string `json:"message_id"`
+	Body        string `json:"body"`
+	UserID      string `json:"user_id"`
+}
+type UpdateMessageResponse struct {
+	ID                 string `json:"id"`
+	ChannelID          string `json:"channel_id"`
+	Body               string `json:"body"`
+	Edited             bool   `json:"edited"`
+	CreatedAt          string `json:"created_at"`
+	CreatedBy          string `json:"created_by"`
+	CreatedByName      string `json:"created_by_name"`
+	CreatedByAvatarUrl string `json:"created_by_avatar_url"`
+	UpdatedAt          string `json:"updated_at"`
+}
+
 type NotifyRoomCreatedRequest struct {
 	ChannelID string `json:"channel_id"`
 	UserID    string `json:"user_id"`
@@ -73,6 +92,7 @@ type MessagingServiceServer interface {
 	IsWorkspaceMember(ctx context.Context, req *IsWorkspaceMemberRequest) (*IsWorkspaceMemberResponse, error)
 	GetChannel(ctx context.Context, req *GetChannelRequest) (*GetChannelResponse, error)
 	CreateMessage(ctx context.Context, req *CreateMessageRequest) (*CreateMessageResponse, error)
+	UpdateMessage(ctx context.Context, req *UpdateMessageRequest) (*UpdateMessageResponse, error)
 	NotifyRoomCreated(ctx context.Context, req *NotifyRoomCreatedRequest) (*NotifyRoomCreatedResponse, error)
 	NotifyClientConnected(ctx context.Context, req *NotifyClientConnectedRequest) (*NotifyClientConnectedResponse, error)
 	NotifyClientDisconnected(ctx context.Context, req *NotifyClientDisconnectedRequest) (*NotifyClientDisconnectedResponse, error)
@@ -99,6 +119,9 @@ func registerMessagingServiceServer(s *grpc.Server, srv MessagingServiceServer) 
 			}),
 			makeHandler("/messaging.MessagingService/CreateMessage", func(ctx context.Context, req *CreateMessageRequest) (interface{}, error) {
 				return srv.CreateMessage(ctx, req)
+			}),
+			makeHandler("/messaging.MessagingService/UpdateMessage", func(ctx context.Context, req *UpdateMessageRequest) (interface{}, error) {
+				return srv.UpdateMessage(ctx, req)
 			}),
 			makeHandler("/messaging.MessagingService/NotifyRoomCreated", func(ctx context.Context, req *NotifyRoomCreatedRequest) (interface{}, error) {
 				return srv.NotifyRoomCreated(ctx, req)
@@ -215,6 +238,54 @@ func (s *messagingServer) CreateMessage(ctx context.Context, req *CreateMessageR
 		CreatedByName:      name,
 		CreatedByAvatarUrl: avatarUrl,
 		UpdatedAt:          message.UpdatedAt,
+	}, nil
+}
+
+// UpdateMessage re-validates ownership server-side rather than trusting the
+// messaging service's join-time channel-membership check, mirroring the
+// REST UpdateMessage handler: only the message's original author may edit
+// it. Like CreateMessage, it never pushes to /internal/broadcast itself —
+// the messaging service broadcasts the returned message to the room
+// immediately after this RPC returns.
+func (s *messagingServer) UpdateMessage(ctx context.Context, req *UpdateMessageRequest) (*UpdateMessageResponse, error) {
+	existing, err := s.db.FindMessage(model.Message{ID: req.MessageID})
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "message not found")
+	}
+	if existing.ChannelID != req.ChannelID || existing.WorkspaceID != req.WorkspaceID {
+		return nil, status.Errorf(codes.NotFound, "message not found")
+	}
+	if existing.CreatedBy != req.UserID {
+		return nil, status.Errorf(codes.PermissionDenied, "you do not have permission to edit this message")
+	}
+	if strings.TrimSpace(req.Body) == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "body is required")
+	}
+
+	existing.Body = req.Body
+	existing.Edited = true
+	existing.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	existing.UpdatedBy = req.UserID
+
+	if err := s.db.UpdateMessage(existing); err != nil {
+		return nil, status.Errorf(codes.Internal, "update message: %v", err)
+	}
+
+	name, avatarUrl := req.UserID, ""
+	if user, err := s.db.FindUserByID(existing.CreatedBy); err == nil {
+		name, avatarUrl = user.Name, user.AvatarUrl
+	}
+
+	return &UpdateMessageResponse{
+		ID:                 existing.ID,
+		ChannelID:          existing.ChannelID,
+		Body:               existing.Body,
+		Edited:             existing.Edited,
+		CreatedAt:          existing.CreatedAt,
+		CreatedBy:          existing.CreatedBy,
+		CreatedByName:      name,
+		CreatedByAvatarUrl: avatarUrl,
+		UpdatedAt:          existing.UpdatedAt,
 	}, nil
 }
 

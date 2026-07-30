@@ -17,6 +17,7 @@ service MessagingService {
   // Channel/message data
   rpc GetChannel(GetChannelRequest) returns (GetChannelResponse);
   rpc CreateMessage(CreateMessageRequest) returns (CreateMessageResponse);
+  rpc UpdateMessage(UpdateMessageRequest) returns (UpdateMessageResponse);
 
   // Room/connection lifecycle -> workflow trigger events
   rpc NotifyRoomCreated(NotifyRoomCreatedRequest) returns (NotifyRoomCreatedResponse);
@@ -40,6 +41,16 @@ message CreateMessageRequest {
   string workspace_id = 1; string channel_id = 2; string body = 3; string user_id = 4;
 }
 message CreateMessageResponse {
+  string id = 1; string channel_id = 2; string body = 3; bool edited = 4;
+  string created_at = 5; string created_by = 6; string created_by_name = 7;
+  string created_by_avatar_url = 8; string updated_at = 9;
+}
+
+message UpdateMessageRequest {
+  string workspace_id = 1; string channel_id = 2; string message_id = 3;
+  string body = 4; string user_id = 5;
+}
+message UpdateMessageResponse {
   string id = 1; string channel_id = 2; string body = 3; bool edited = 4;
   string created_at = 5; string created_by = 6; string created_by_name = 7;
   string created_by_avatar_url = 8; string updated_at = 9;
