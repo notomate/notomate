@@ -26,6 +26,7 @@ COPY --from=builder /out/notomate-runner ./notomate-runner
 # Registration state lives in /data (mount a volume to survive restarts).
 RUN mkdir -p /data
 ENV NM_RUNNER_STATE_FILE=/data/.runner
+ENV NM_RUNNER_CACHE_DIR=/data/actcache
 VOLUME /data
 
 ENTRYPOINT ["./notomate-runner"]

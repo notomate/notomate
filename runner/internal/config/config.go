@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -25,9 +26,21 @@ type Config struct {
 	// DaemonSocket is passed to act as the Docker daemon socket for job
 	// containers. Empty lets act use its default (/var/run/docker.sock).
 	DaemonSocket string
+	// CacheDir persists the act cache server's contents (actions/cache).
+	// Empty lets act use its own default (~/.cache/actcache).
+	CacheDir string
+	// CachePort is the fixed port the cache server binds to. It must be
+	// published on the host (see docker-compose.runner.yml) because job
+	// containers run in Docker's "host" network mode and reach the cache
+	// server via the host's loopback address, not the runner container's
+	// own network namespace.
+	CachePort uint16
 }
 
-const defaultLabels = "ubuntu-latest:docker://catthehacker/ubuntu:act-latest"
+const (
+	defaultLabels    = "ubuntu-latest:docker://catthehacker/ubuntu:act-latest"
+	defaultCachePort = 8085
+)
 
 func Load() (Config, error) {
 	cfg := Config{
@@ -36,6 +49,7 @@ func Load() (Config, error) {
 		Name:              os.Getenv("NM_RUNNER_NAME"),
 		StateFile:         envOr("NM_RUNNER_STATE_FILE", ".runner"),
 		DaemonSocket:      os.Getenv("NM_RUNNER_DAEMON_SOCKET"),
+		CacheDir:          os.Getenv("NM_RUNNER_CACHE_DIR"),
 	}
 
 	if cfg.Name == "" {
@@ -51,6 +65,16 @@ func Load() (Config, error) {
 		return cfg, err
 	}
 	cfg.Labels = labels
+
+	cachePort := defaultCachePort
+	if raw := os.Getenv("NM_RUNNER_CACHE_PORT"); raw != "" {
+		port, err := strconv.Atoi(raw)
+		if err != nil || port <= 0 || port > 65535 {
+			return cfg, fmt.Errorf("invalid NM_RUNNER_CACHE_PORT %q", raw)
+		}
+		cachePort = port
+	}
+	cfg.CachePort = uint16(cachePort)
 
 	return cfg, nil
 }
