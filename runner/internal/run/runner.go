@@ -14,8 +14,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nektos/act/pkg/artifactcache"
 	"github.com/nektos/act/pkg/model"
 	"github.com/nektos/act/pkg/runner"
+	"github.com/sirupsen/logrus"
 
 	"github.com/notomate/notomate-runner/internal/client"
 	"github.com/notomate/notomate-runner/internal/config"
@@ -31,12 +33,38 @@ const (
 )
 
 type Runner struct {
-	cfg    config.Config
-	client *client.Client
+	cfg          config.Config
+	client       *client.Client
+	cacheHandler *artifactcache.Handler
 }
 
+// New starts a Runner along with the act cache server backing
+// actions/cache. Job containers run in Docker's "host" network mode (see
+// config.Config.CachePort), so the cache server binds every interface
+// inside the runner container and advertises the loopback address that the
+// host's published port mapping forwards to — not the runner container's
+// own address, which those containers can't route to.
+//
+// A cache server failure only degrades actions/cache to always-miss for
+// job containers, so it's logged rather than fatal.
 func New(cfg config.Config, c *client.Client) *Runner {
-	return &Runner{cfg: cfg, client: c}
+	r := &Runner{cfg: cfg, client: c}
+
+	externalURL := fmt.Sprintf("http://127.0.0.1:%d", cfg.CachePort)
+	handler, err := artifactcache.StartHandler(cfg.CacheDir, externalURL, "0.0.0.0", cfg.CachePort, logrus.StandardLogger())
+	if err != nil {
+		log.Printf("Cache server disabled: %v", err)
+	} else {
+		r.cacheHandler = handler
+		log.Printf("Cache server listening on port %d", cfg.CachePort)
+	}
+
+	return r
+}
+
+// Close releases the runner's resources, including the cache server.
+func (r *Runner) Close() error {
+	return r.cacheHandler.Close()
 }
 
 // Run executes one task and reports its result. The returned error is for
@@ -234,6 +262,9 @@ func (r *Runner) jobEnv(task *client.TaskPayload) map[string]string {
 	}
 	if serverURL := os.Getenv("NM_SERVER_URL"); serverURL != "" {
 		env["NM_SERVER_URL"] = serverURL
+	}
+	if r.cacheHandler != nil {
+		env["ACTIONS_CACHE_URL"] = r.cacheHandler.ExternalURL() + "/"
 	}
 
 	var payload struct {

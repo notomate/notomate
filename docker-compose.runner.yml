@@ -21,6 +21,12 @@ services:
       - NM_RUNNER_REGISTRATION_TOKEN=${RUNNER_REGISTRATION_TOKEN}
       - NM_RUNNER_NAME=default-runner
       - NM_RUNNER_LABELS=ubuntu-latest:docker://catthehacker/ubuntu:act-latest
+      # Backs actions/cache. Job containers run in Docker's "host" network
+      # mode, so they reach the cache server via this published loopback
+      # port, not the runner container's own network namespace.
+      - NM_RUNNER_CACHE_PORT=${NM_RUNNER_CACHE_PORT:-8085}
+    ports:
+      - "127.0.0.1:${NM_RUNNER_CACHE_PORT:-8085}:${NM_RUNNER_CACHE_PORT:-8085}"
     extra_hosts:
       # host.docker.internal is native on Docker Desktop; this makes it
       # resolve on Linux Docker Engine too.

@@ -51,6 +51,7 @@ func main() {
 	log.Printf("Runner %q (%s) polling %s with labels %v", state.Name, state.RunnerID, cfg.InstanceAddr, state.Labels)
 
 	runner := run.New(cfg, c)
+	defer runner.Close()
 	backoff := backoffInitial
 
 	for {
