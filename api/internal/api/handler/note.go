@@ -37,6 +37,7 @@ type GetNoteResponse struct {
 	Files              []string `json:"files"`
 	CreatedAt          string   `json:"created_at"`
 	CreatedBy          string   `json:"created_by"`
+	CreatedByID        string   `json:"created_by_id"`
 	CreatedByAvatarUrl string   `json:"created_by_avatar_url"`
 	UpdatedAt          string   `json:"updated_at"`
 	UpdatedBy          string   `json:"updated_by"`
@@ -127,6 +128,7 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 			Content:            b.Content,
 			CreatedAt:          b.CreatedAt,
 			CreatedBy:          createdByName,
+			CreatedByID:        b.CreatedBy,
 			CreatedByAvatarUrl: createdByAvatarUrl,
 			UpdatedAt:          b.UpdatedAt,
 			UpdatedBy:          h.getUserNameByID(b.UpdatedBy),
@@ -191,6 +193,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 			Content:            b.Content,
 			CreatedAt:          b.CreatedAt,
 			CreatedBy:          createdByName,
+			CreatedByID:        b.CreatedBy,
 			CreatedByAvatarUrl: createdByAvatarUrl,
 			UpdatedAt:          b.UpdatedAt,
 			UpdatedBy:          h.getUserNameByID(b.UpdatedBy),
@@ -242,6 +245,7 @@ func (h Handler) GetNote(c echo.Context) error {
 		Content:            b.Content,
 		CreatedAt:          b.CreatedAt,
 		CreatedBy:          createdByName,
+		CreatedByID:        b.CreatedBy,
 		CreatedByAvatarUrl: createdByAvatarUrl,
 		UpdatedAt:          b.UpdatedAt,
 		UpdatedBy:          h.getUserNameByID(b.UpdatedBy),
