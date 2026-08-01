@@ -7,6 +7,7 @@ import { Trash2, Ellipsis, Globe2, Lock, Building, Pin, PinOff } from "lucide-re
 import { useParams, useNavigate } from "react-router-dom"
 import { useToastStore } from "@/stores/toast"
 import { Visibility } from "@/types/visibility"
+import { useCurrentUserStore } from "@/stores/current-user"
 
 interface NoteDetailMenuProps {
     note: NoteData
@@ -18,6 +19,8 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
     const { addToast } = useToastStore()
     const queryClient = useQueryClient()
     const navigate = useNavigate()
+    const { user } = useCurrentUserStore()
+    const isCreator = !!user?.id && user.id === note.created_by_id
     const [isMenuOpened, setIsMenuOpened] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
@@ -116,14 +119,16 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
 
     const menuItems = workspaceId && (
         <>
-            <button
-                className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                onClick={handleTogglePin}
-            >
-                {note.pinned ? <PinOff size={16} /> : <Pin size={16} />}
-                {note.pinned ? t("actions.unpin") : t("actions.pin")}
-            </button>
-            {note.visibility !== "private" && (
+            {isCreator && (
+                <button
+                    className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    onClick={handleTogglePin}
+                >
+                    {note.pinned ? <PinOff size={16} /> : <Pin size={16} />}
+                    {note.pinned ? t("actions.unpin") : t("actions.pin")}
+                </button>
+            )}
+            {isCreator && note.visibility !== "private" && (
                 <button
                     className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                     onClick={() => handleUpdateVisibility("private")}
@@ -132,7 +137,7 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
                     {t("actions.makePrivate")}
                 </button>
             )}
-            {note.visibility !== "workspace" && (
+            {isCreator && note.visibility !== "workspace" && (
                 <button
                     className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                     onClick={() => handleUpdateVisibility("workspace")}
@@ -141,7 +146,7 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
                     {t("actions.makeWorkspace")}
                 </button>
             )}
-            {note.visibility !== "public" && (
+            {isCreator && note.visibility !== "public" && (
                 <button
                     className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                     onClick={() => handleUpdateVisibility("public")}
