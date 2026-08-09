@@ -26,6 +26,7 @@ services:
     volumes:
       - notomate_data:/usr/local/app/bin
     environment:
+      MESSAGING_ADDR: http://notomate-messaging:4000
       # APP_SECRET: your-secret-key
       # APP_DISABLE_SIGNUP: true
     restart: unless-stopped
@@ -33,6 +34,16 @@ services:
   collab:
     image: notomate/notomate-collab
     container_name: notomate-collab
+    environment:
+      GRPC_ADDR: notomate-api:50051
+      # APP_SECRET: your-secret-key
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  messaging:
+    image: notomate/notomate-messaging
+    container_name: notomate-messaging
     environment:
       GRPC_ADDR: notomate-api:50051
       # APP_SECRET: your-secret-key
@@ -48,6 +59,7 @@ services:
     depends_on:
       - api
       - collab
+      - messaging
     restart: unless-stopped
 
 volumes:
@@ -60,6 +72,57 @@ docker compose up -d
 ```
 
 The app will be available at `http://localhost`. See [`.env.example`](./.env.example) for configuration options.
+
+All four services are required — `collab` backs the realtime editor and `messaging` backs channel chat, and nginx proxies to both. Two things to keep in mind:
+
+- **`APP_SECRET` must be identical on `api`, `collab` and `messaging`.** It signs the session JWT that all three verify, and authenticates the api → messaging broadcast call.
+- **Don't rename the containers.** nginx resolves `notomate-api`, `notomate-collab` and `notomate-messaging` by name, and `MESSAGING_ADDR` / `GRPC_ADDR` point at those same names.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    browser["<b>Browser</b><br/>React SPA"]
+
+    subgraph core["Core stack — docker-compose.yml"]
+        direction LR
+        nginx["<b>nginx</b> :80<br/>serves SPA<br/>+ reverse proxy"]
+        api["<b>api</b> — Go<br/>REST :8080<br/>gRPC :50051"]
+        collab["<b>collab</b> — Node<br/>Hocuspocus / Yjs :3000"]
+        messaging["<b>messaging</b> — Node<br/>Socket.IO :4000"]
+        db[("SQLite<br/>or PostgreSQL")]
+        store[("Local disk<br/>or S3 / MinIO")]
+    end
+
+    subgraph runnerstack["Optional — docker-compose.runner.yml"]
+        runner["<b>runner</b><br/>act + Docker daemon"]
+    end
+
+    browser -->|"/ · /api/"| nginx
+    browser -->|"/ws/ · /ws/public/"| nginx
+    browser -->|"/socket.io/"| nginx
+
+    nginx -->|"REST"| api
+    nginx -->|"WebSocket"| collab
+    nginx -->|"WebSocket"| messaging
+
+    collab -->|"gRPC: load/persist docs"| api
+    messaging -->|"gRPC: auth, persist messages"| api
+    api -.->|"POST /internal/broadcast<br/>(REST-originated changes)"| messaging
+
+    api --> db
+    api --> store
+
+    runner -->|"gRPC :50051<br/>published on host"| api
+```
+
+| Service | Role |
+| --- | --- |
+| **nginx** | Single entrypoint on `:80`. Serves the built SPA and reverse-proxies `/api/` to api, `/ws/` + `/ws/public/` to collab, `/socket.io/` to messaging. |
+| **api** | Go backend and the only writer to the database and object storage. Serves the REST API, plus a gRPC service that collab, messaging and the runner call. |
+| **collab** | Hocuspocus/Yjs server for realtime, multi-cursor note editing. Stateless — it loads and persists documents through the api's gRPC service. |
+| **messaging** | Socket.IO server for channel chat and presence. Sockets are scoped to one channel; messages are persisted via gRPC to api. Room state is in-memory, so run exactly one replica. |
+| **runner** | Optional workflow executor, in its own compose project. Long-polls api over gRPC for queued jobs and runs each one in a container via [act](https://github.com/nektos/act). See [Workflows](#workflows-beta). |
 
 ## Workflows (beta)
 
