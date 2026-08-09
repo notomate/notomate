@@ -21,17 +21,18 @@
 ```yaml
 services:
   api:
-    image: ti777777/notomate-api
+    image: notomate/notomate-api
     container_name: notomate-api
     volumes:
       - notomate_data:/usr/local/app/bin
     environment:
+      MESSAGING_ADDR: http://notomate-messaging:4000
       # APP_SECRET: your-secret-key
       # APP_DISABLE_SIGNUP: true
     restart: unless-stopped
 
   collab:
-    image: ti777777/notomate-collab
+    image: notomate/notomate-collab
     container_name: notomate-collab
     environment:
       GRPC_ADDR: notomate-api:50051
@@ -40,14 +41,25 @@ services:
       - api
     restart: unless-stopped
 
+  messaging:
+    image: notomate/notomate-messaging
+    container_name: notomate-messaging
+    environment:
+      GRPC_ADDR: notomate-api:50051
+      # APP_SECRET: your-secret-key
+    depends_on:
+      - api
+    restart: unless-stopped
+
   nginx:
-    image: ti777777/notomate-nginx
+    image: notomate/notomate-nginx
     container_name: notomate-nginx
     ports:
       - "80:80"
     depends_on:
       - api
       - collab
+      - messaging
     restart: unless-stopped
 
 volumes:
@@ -60,6 +72,57 @@ docker compose up -d
 ```
 
 啟動後即可於 `http://localhost` 存取應用程式。設定選項請參閱 [`.env.example`](./.env.example)。
+
+四個服務都是必要的 —— `collab` 支撐即時協作編輯器，`messaging` 支撐頻道聊天，nginx 會同時反向代理到這兩者。有兩點要注意：
+
+- **`APP_SECRET` 在 `api`、`collab`、`messaging` 上必須一致。** 它用來簽發三者都要驗證的 session JWT，也用來驗證 api → messaging 的廣播呼叫。
+- **不要更改 container 名稱。** nginx 以 `notomate-api`、`notomate-collab`、`notomate-messaging` 這些名稱解析服務，`MESSAGING_ADDR` 與 `GRPC_ADDR` 也指向同樣的名稱。
+
+## 架構
+
+```mermaid
+flowchart LR
+    browser["<b>瀏覽器</b><br/>React SPA"]
+
+    subgraph core["核心服務 — docker-compose.yml"]
+        direction LR
+        nginx["<b>nginx</b> :80<br/>提供 SPA<br/>+ 反向代理"]
+        api["<b>api</b> — Go<br/>REST :8080<br/>gRPC :50051"]
+        collab["<b>collab</b> — Node<br/>Hocuspocus / Yjs :3000"]
+        messaging["<b>messaging</b> — Node<br/>Socket.IO :4000"]
+        db[("SQLite<br/>或 PostgreSQL")]
+        store[("本機磁碟<br/>或 S3 / MinIO")]
+    end
+
+    subgraph runnerstack["選用 — docker-compose.runner.yml"]
+        runner["<b>runner</b><br/>act + Docker daemon"]
+    end
+
+    browser -->|"/ · /api/"| nginx
+    browser -->|"/ws/ · /ws/public/"| nginx
+    browser -->|"/socket.io/"| nginx
+
+    nginx -->|"REST"| api
+    nginx -->|"WebSocket"| collab
+    nginx -->|"WebSocket"| messaging
+
+    collab -->|"gRPC：讀取／保存文件"| api
+    messaging -->|"gRPC：驗證、保存訊息"| api
+    api -.->|"POST /internal/broadcast<br/>（REST 來源的異動）"| messaging
+
+    api --> db
+    api --> store
+
+    runner -->|"gRPC :50051<br/>發布於主機"| api
+```
+
+| 服務 | 職責 |
+| --- | --- |
+| **nginx** | 唯一入口（`:80`）。提供打包好的 SPA，並將 `/api/` 反向代理到 api、`/ws/` 與 `/ws/public/` 到 collab、`/socket.io/` 到 messaging。 |
+| **api** | Go 後端，也是唯一會寫入資料庫與物件儲存的服務。提供 REST API，以及給 collab、messaging、runner 呼叫的 gRPC 服務。 |
+| **collab** | Hocuspocus/Yjs 伺服器，負責即時多人協作編輯。本身無狀態 —— 透過 api 的 gRPC 服務讀取與保存文件。 |
+| **messaging** | Socket.IO 伺服器，負責頻道聊天與線上狀態。每條連線只綁定單一頻道，訊息透過 gRPC 交由 api 保存。房間狀態存於記憶體，因此只能跑單一副本。 |
+| **runner** | 選用的工作流執行器，自成一個 compose 專案。透過 gRPC 向 api 長輪詢排隊中的 job，並以 [act](https://github.com/nektos/act) 在容器中執行。詳見[工作流](#工作流beta)。 |
 
 ## 工作流(Beta)
 
@@ -112,7 +175,7 @@ docker compose -f docker-compose.runner.yml up -d
 
 ```yaml
   notomate-runner:
-    image: ti777777/notomate-runner
+    image: notomate/notomate-runner
     container_name: notomate-runner
     environment:
       NM_INSTANCE_ADDR: host.docker.internal:50051 # 或 remote-host:50051
