@@ -5,6 +5,7 @@ WORKDIR /app/runner
 ARG APP_VERSION=dev
 
 COPY go.mod go.sum ./
+COPY third_party/act ./third_party/act
 RUN go mod download
 
 COPY . .

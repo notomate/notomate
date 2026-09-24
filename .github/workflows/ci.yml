@@ -63,7 +63,9 @@ jobs:
 
       - name: Run go test
         working-directory: ./runner
-        run: go test -v -race ./...
+        run: |
+          go test -v -race ./...
+          go -C third_party/act test -v -race ./pkg/container
 
       - name: Build runner
         working-directory: ./runner
@@ -86,7 +88,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./web
-        run: rm -f package-lock.json && npm install
+        run: npm ci
 
       - name: Build frontend
         working-directory: ./web
