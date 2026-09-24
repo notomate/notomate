@@ -72,7 +72,7 @@ const UserMenu = () => {
                 <button
                     ref={buttonRef}
                     onClick={() => setIsMenuOpen(prev => !prev)}
-                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left"
                 >
                     <Avatar name={user.name} avatarUrl={user.avatar_url} size={24} />
                     <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{user.name}</span>

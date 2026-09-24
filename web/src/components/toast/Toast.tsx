@@ -27,13 +27,13 @@ export function Toast({ toast }: { toast: ToastMessage }) {
           {toast.title}
         </RadixToast.Title>
         {toast.description && (
-          <RadixToast.Description className="text-sm text-gray-600">
+          <RadixToast.Description className="text-sm text-muted-foreground">
             {toast.description}
           </RadixToast.Description>
         )}
       </div>
       <RadixToast.Close
-        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+        className="absolute top-2 right-2 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
         onClick={(e) => {
           e.stopPropagation();
           handleClose();

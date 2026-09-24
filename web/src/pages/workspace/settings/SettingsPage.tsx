@@ -171,7 +171,7 @@ const Settings = () => {
                                                 />
                                                 <button
                                                     onClick={handleRenameClick}
-                                                    className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300"
+                                                    className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300"
                                                 >
 
                                                     {isRenaming
@@ -195,7 +195,7 @@ const Settings = () => {
                                             {isOwnerOrAdmin && (
                                                 <button
                                                     onClick={() => setShowInviteForm(!showInviteForm)}
-                                                    className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+                                                    className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                                                 >
                                                     {showInviteForm ? <X size={16} /> : <UserPlus size={16} />}
                                                     {t("pages.settings.inviteMember")}
@@ -252,9 +252,9 @@ const Settings = () => {
                                                         <div className="flex flex-col">
                                                             <div className="font-medium">
                                                                 {member.user_name}
-                                                                {isSelf && <span className="ml-2 text-sm text-neutral-500">(You)</span>}
+                                                                {isSelf && <span className="ml-2 text-sm text-muted-foreground">(You)</span>}
                                                             </div>
-                                                            <div className="text-sm text-neutral-500 dark:text-neutral-400">
+                                                            <div className="text-sm text-muted-foreground">
                                                                 {member.user_email}
                                                             </div>
                                                         </div>
@@ -270,7 +270,7 @@ const Settings = () => {
                                                                     <option value="admin">{t("pages.settings.admin")}</option>
                                                                 </select>
                                                             ) : (
-                                                                <span className="px-2 py-1 text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                                                                <span className="px-2 py-1 text-sm font-medium text-muted-foreground dark:text-neutral-300">
                                                                     {t(`pages.settings.${member.role}`)}
                                                                 </span>
                                                             )}

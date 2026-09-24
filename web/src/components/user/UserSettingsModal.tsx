@@ -465,7 +465,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                     activeTab === 'account'
                                         ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                        : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                             >
                                 {t("menu.user")}
@@ -475,7 +475,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                     activeTab === 'preferences'
                                         ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                        : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                             >
                                 {t("pages.preferences.language")} & {t("pages.preferences.theme")}
@@ -485,7 +485,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                     activeTab === 'apiKeys'
                                         ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                        : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                             >
                                 {t("pages.preferences.apiKeys")}
@@ -496,7 +496,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                         activeTab === 'users'
                                             ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                            : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
                                     }`}
                                 >
                                     {t("pages.preferences.userManagement")}
@@ -508,7 +508,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
                                         activeTab === 'system'
                                             ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                            : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
                                     }`}
                                 >
                                     {t("pages.preferences.systemSettings")}
@@ -523,7 +523,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     <div className="flex flex-col gap-6">
                                         {/* Avatar field */}
                                         <div className="flex flex-col">
-                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                            <div className="text-xs font-semibold text-muted-foreground mb-2">
                                                 {t("pages.preferences.changeAvatar")}
                                             </div>
                                             <div className="relative w-fit">
@@ -531,7 +531,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                 <button
                                                     onClick={() => avatarInputRef.current?.click()}
                                                     disabled={avatarUploading || avatarRemoving}
-                                                    className="absolute -bottom-1 -right-1 p-1 rounded-full bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50"
+                                                    className="absolute -bottom-1 -right-1 p-1 rounded-full bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 text-muted-foreground dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
                                                     title={t("pages.preferences.changeAvatar")}
                                                 >
                                                     <Camera size={12} />
@@ -558,7 +558,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
 
                                         {/* Name field */}
                                         <div className="flex flex-col">
-                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                            <div className="text-xs font-semibold text-muted-foreground mb-2">
                                                 {t("form.username")}
                                             </div>
                                             <p className="text-sm font-medium">{user?.name}</p>
@@ -566,7 +566,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
 
                                         {/* Email field */}
                                         <div className="flex flex-col">
-                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                            <div className="text-xs font-semibold text-muted-foreground mb-2">
                                                 {t("form.email")}
                                             </div>
                                             {editingEmail ? (
@@ -589,7 +589,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                     <button
                                                         onClick={cancelEditingEmail}
                                                         disabled={emailSaving}
-                                                        className="p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors disabled:opacity-50"
+                                                        className="p-1.5 text-muted-foreground hover:bg-gray-100 dark:hover:bg-neutral-800 rounded transition-colors disabled:opacity-50"
                                                         title={t("actions.cancel")}
                                                     >
                                                         <X size={14} />
@@ -610,7 +610,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
 
                                         {/* Password field */}
                                         <div className="flex flex-col">
-                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                            <div className="text-xs font-semibold text-muted-foreground mb-2">
                                                 {t("form.password")}
                                             </div>
                                             <div className="flex items-center justify-between gap-2">
@@ -645,7 +645,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 <div className="w-full">
                                     <div className="flex flex-col gap-6">
                                         <div className="flex flex-col">
-                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                            <div className="text-xs font-semibold text-muted-foreground mb-2">
                                                 {t("pages.preferences.language")}
                                             </div>
                                             <div>
@@ -659,7 +659,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                             </div>
                                         </div>
                                         <div className="flex flex-col">
-                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                            <div className="text-xs font-semibold text-muted-foreground mb-2">
                                                 {t("pages.preferences.theme")}
                                             </div>
                                             <div>
@@ -673,7 +673,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                             </div>
                                         </div>
                                         <div className="flex flex-col">
-                                            <div className="text-xs font-semibold text-gray-500 mb-2">
+                                            <div className="text-xs font-semibold text-muted-foreground mb-2">
                                                 {t("pages.preferences.primaryColor")}
                                             </div>
 
@@ -699,7 +699,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
 
                                             {/* Custom color picker */}
                                             <div className="flex items-center gap-3">
-                                                <label className="text-sm text-gray-600 dark:text-gray-400">
+                                                <label className="text-sm text-muted-foreground">
                                                     {t("pages.preferences.customColor")}
                                                 </label>
                                                 <input
@@ -708,7 +708,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                     onChange={(e) => setPrimaryColor(e.target.value)}
                                                     className="w-12 h-8 rounded border cursor-pointer"
                                                 />
-                                                <span className="text-sm font-mono text-gray-500">
+                                                <span className="text-sm font-mono text-muted-foreground">
                                                     {primaryColor.toUpperCase()}
                                                 </span>
                                             </div>
@@ -721,7 +721,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             {activeTab === 'apiKeys' && (
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        <p className="text-sm text-muted-foreground">
                                             {t("pages.preferences.apiKeyDescription")}
                                         </p>
                                         <Button onClick={() => setShowCreationDialog(true)}>
@@ -733,7 +733,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     {loading ? (
                                         <div className="text-center py-8">{t("common.loading")}</div>
                                     ) : apiKeys.length === 0 ? (
-                                        <div className="p-8 text-center text-gray-500">
+                                        <div className="p-8 text-center text-muted-foreground">
                                             {t("pages.preferences.noApiKeys")}
                                         </div>
                                     ) : (
@@ -750,10 +750,10 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                                                            <p className="text-sm text-muted-foreground font-mono">
                                                                 {key.prefix}...
                                                             </p>
-                                                            <div className="text-xs text-gray-500 mt-1">
+                                                            <div className="text-xs text-muted-foreground mt-1">
                                                                 <span>{t("pages.preferences.created")}: {formatDate(key.created_at)}</span>
                                                                 {key.last_used_at && (
                                                                     <span className="ml-4">
@@ -786,7 +786,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             {activeTab === 'users' && isOwner && (
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        <p className="text-sm text-muted-foreground">
                                             {t("pages.preferences.userList")}
                                         </p>
                                         <Button onClick={() => setShowUserDialog(true)}>
@@ -798,7 +798,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     {usersLoading ? (
                                         <div className="text-center py-8">{t("common.loading")}</div>
                                     ) : users.length === 0 ? (
-                                        <div className="p-8 text-center text-gray-500">
+                                        <div className="p-8 text-center text-muted-foreground">
                                             {t("pages.preferences.noUsers")}
                                         </div>
                                     ) : (
@@ -826,10 +826,10 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                            <p className="text-sm text-muted-foreground">
                                                                 {u.email}
                                                             </p>
-                                                            <div className="text-xs text-gray-500 mt-1">
+                                                            <div className="text-xs text-muted-foreground mt-1">
                                                                 <span>{t("pages.preferences.created")}: {formatDate(u.created_at)}</span>
                                                             </div>
                                                         </div>

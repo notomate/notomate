@@ -38,7 +38,7 @@ function useViewPreviewData(workspaceId: string, viewId: string) {
 
 const LoadingState = () => (
     <div className="flex items-center justify-center h-full bg-white dark:bg-neutral-900">
-        <LoaderCircle size={20} className="text-gray-400 animate-spin" />
+        <LoaderCircle size={20} className="text-muted-foreground animate-spin" />
     </div>
 )
 
@@ -104,7 +104,7 @@ export const CalendarInlinePreview: React.FC<PreviewProps> = ({ viewId, workspac
 
     if (events.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500 gap-2">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
                 <CalendarDays size={32} className="opacity-40" />
                 <span className="text-sm">No events</span>
             </div>
@@ -125,12 +125,12 @@ export const CalendarInlinePreview: React.FC<PreviewProps> = ({ viewId, workspac
                                     <span className="text-base font-bold text-gray-700 dark:text-gray-200 leading-none">{String(d.getDate()).padStart(2,'0')}</span>
                                 </>
                             ) : (
-                                <CalendarDays size={20} className="text-gray-400" />
+                                <CalendarDays size={20} className="text-muted-foreground" />
                             )}
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{ev.name || 'Untitled'}</p>
-                            {ev.startTime && <p className="text-xs text-gray-400">{ev.startTime}</p>}
+                            {ev.startTime && <p className="text-xs text-muted-foreground">{ev.startTime}</p>}
                         </div>
                         {ev.color && <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: ev.color }} />}
                     </div>

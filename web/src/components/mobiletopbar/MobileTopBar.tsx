@@ -12,7 +12,7 @@ const MobileTopBar = ({ title, onOpenSidebar, rightActions }: MobileTopBarProps)
         <div className="shrink-0 py-3 pl-4 pr-5 lg:hidden flex items-center justify-between border-b border-neutral-200 dark:border-neutral-700">
             <button
                 aria-label="open sidebar"
-                className="p-2 -ml-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-600 dark:text-gray-400"
+                className="p-2 -ml-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-muted-foreground"
                 onClick={onOpenSidebar}
             >
                 <Menu size={16} />

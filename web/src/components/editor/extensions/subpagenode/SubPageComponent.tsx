@@ -86,8 +86,8 @@ const SubPageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttr
         return (
             <NodeViewWrapper className="sub-page-node my-1">
                 <div className="flex items-center gap-2 border dark:border-neutral-700 rounded-lg p-3 bg-gray-50 dark:bg-neutral-800/50">
-                    <Loader2 size={16} className="text-gray-400 animate-spin flex-shrink-0" />
-                    <span className="text-sm text-gray-400">{t("notes.untitled")}</span>
+                    <Loader2 size={16} className="text-muted-foreground animate-spin flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground">{t("notes.untitled")}</span>
                 </div>
             </NodeViewWrapper>
         )
@@ -105,11 +105,11 @@ const SubPageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttr
                         onClick={isTouchDevice ? undefined : handleNavigate}
                         className={`flex items-center gap-2 flex-1 min-w-0 transition-colors ${!isTouchDevice ? 'cursor-pointer hover:text-blue-600 dark:hover:text-blue-400' : ''}`}
                     >
-                        <FileText size={16} className="text-gray-400 flex-shrink-0" />
-                        <span className={`flex-1 text-sm font-medium truncate ${title ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500 italic'}`}>
+                        <FileText size={16} className="text-muted-foreground flex-shrink-0" />
+                        <span className={`flex-1 text-sm font-medium truncate ${title ? 'text-gray-700 dark:text-gray-300' : 'text-muted-foreground italic'}`}>
                             {title || t("notes.untitled")}
                         </span>
-                        {!isTouchDevice && <ExternalLink size={14} className="text-gray-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                        {!isTouchDevice && <ExternalLink size={14} className="text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />}
                     </div>
                     {!isTouchDevice && isEditable && showActions && (
                         <button

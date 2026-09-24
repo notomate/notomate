@@ -90,7 +90,7 @@ const Sidebar: FC<Props> = function ({ children }) {
                                 >
                                     <div className="px-3 py-2 border-b dark:border-neutral-600">
                                         <p className="font-semibold">{user.name}</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                                        <p className="text-xs text-muted-foreground">{user.email}</p>
                                     </div>
 
                                     <DropdownMenu.Item className="select-none rounded-lg leading-none outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-neutral-200 dark:data-[highlighted]:bg-neutral-700">

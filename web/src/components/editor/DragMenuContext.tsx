@@ -81,7 +81,7 @@ export function NodeTouchMenu({
               className={`flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors ${
                 action.variant === 'danger'
                   ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-700'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-neutral-800'
               }`}
             >
               {action.icon}

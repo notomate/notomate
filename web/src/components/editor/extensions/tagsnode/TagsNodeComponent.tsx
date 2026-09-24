@@ -3,7 +3,7 @@ import { ChevronUp, ChevronDown, Trash2, X, Plus } from 'lucide-react'
 import { useState, useRef, useEffect, KeyboardEvent, useCallback } from 'react'
 import { useDragMenu, NodeTouchMenu } from '@/components/editor/DragMenuContext'
 
-const TAG_STYLE = { bg: 'bg-gray-100 dark:bg-neutral-700', text: 'text-gray-600 dark:text-gray-300' }
+const TAG_STYLE = { bg: 'bg-gray-100 dark:bg-neutral-700', text: 'text-muted-foreground dark:text-gray-300' }
 
 function TagChip({ label, onRemove }: { label: string; onRemove?: () => void }) {
   const { bg, text } = TAG_STYLE
@@ -109,7 +109,7 @@ const TagsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, se
             onBlur={() => { setIsFocused(false); commitInput() }}
           />
           {inputValue.trim() && (
-            <button onMouseDown={e => { e.preventDefault(); commitInput() }} className="shrink-0 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-500 transition-colors" tabIndex={-1}>
+            <button onMouseDown={e => { e.preventDefault(); commitInput() }} className="shrink-0 p-0.5 rounded hover:bg-gray-100 dark:hover:bg-neutral-800 text-muted-foreground transition-colors" tabIndex={-1}>
               <Plus size={14} />
             </button>
           )}

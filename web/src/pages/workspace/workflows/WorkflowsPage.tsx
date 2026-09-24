@@ -48,14 +48,14 @@ const WorkflowsPage = () => {
                         <div className="flex items-center gap-1">
                             <Link
                                 to="settings"
-                                className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+                                className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                             >
                                 <Settings size={16} />
                                 {t("pages.workflows.settingsTitle")}
                             </Link>
                             <button
                                 onClick={() => navigate("new")}
-                                className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+                                className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                             >
                                 <Plus size={16} />
                                 {t("pages.workflows.newWorkflow")}
@@ -65,7 +65,7 @@ const WorkflowsPage = () => {
                 </div>
                 <div className="bg-white dark:bg-neutral-800 rounded shadow-sm w-full max-w-3xl">
                     {workflows.length === 0 ? (
-                        <div className="p-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                        <div className="p-8 text-center text-sm text-muted-foreground">
                             {t("pages.workflows.noWorkflows")}
                         </div>
                     ) : (
@@ -77,13 +77,13 @@ const WorkflowsPage = () => {
                                         <Link to={wf.id} className="font-medium hover:underline truncate block">
                                             {wf.name}
                                         </Link>
-                                        <div className="text-xs text-gray-400 dark:text-gray-500">
+                                        <div className="text-xs text-muted-foreground">
                                             {wf.enabled ? t("pages.workflows.enabled") : t("pages.workflows.disabled")}
                                         </div>
                                     </div>
                                     <Link
                                         to={`${wf.id}/runs`}
-                                        className="p-2 flex gap-1.5 items-center text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+                                        className="p-2 flex gap-1.5 items-center text-sm text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                                     >
                                         <History size={15} />
                                         {t("pages.workflows.runs")}

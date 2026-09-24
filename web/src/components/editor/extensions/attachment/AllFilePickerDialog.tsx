@@ -31,10 +31,10 @@ const getFileIcon = (ext: string) => {
         return <Code size={20} className="text-pink-500" />
     }
     if (['.txt', '.md', '.pdf', '.doc', '.docx'].includes(lowerExt)) {
-        return <FileText size={20} className="text-gray-500" />
+        return <FileText size={20} className="text-muted-foreground" />
     }
 
-    return <File size={20} className="text-gray-400" />
+    return <File size={20} className="text-muted-foreground" />
 }
 
 const formatFileSize = (bytes: number) => {
@@ -52,7 +52,7 @@ const AllFilePickerDialog: FC<AllFilePickerDialogProps> = (props) => {
             title="Select File from Files"
             gridClassName="space-y-2"
             emptyState={
-                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                     <File size={48} className="mb-4" />
                     <p>No files found</p>
                 </div>
@@ -60,12 +60,12 @@ const AllFilePickerDialog: FC<AllFilePickerDialogProps> = (props) => {
             renderFile={(file, onSelectFile) => (
                 <button
                     onClick={() => onSelectFile(file)}
-                    className="w-full p-3 rounded-lg border dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors flex items-center gap-3 text-left"
+                    className="w-full p-3 rounded-lg border dark:border-neutral-600 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors flex items-center gap-3 text-left"
                 >
                     {getFileIcon(file.ext)}
                     <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{file.original_name}</div>
-                        <div className="text-xs text-gray-500 flex gap-2">
+                        <div className="text-xs text-muted-foreground flex gap-2">
                             <span>{formatFileSize(file.size)}</span>
                             <span>•</span>
                             <span>{new Date(file.created_at).toLocaleDateString()}</span>

@@ -61,7 +61,7 @@ const DispatchDialog: FC<Props> = ({ definition, isPending, onDispatch, onClose 
             >
                 <div className="flex items-center justify-between">
                     <div className="text-lg font-semibold">{t("pages.workflows.dispatch")}</div>
-                    <button onClick={onClose} className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700" aria-label="close">
+                    <button onClick={onClose} className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800" aria-label="close">
                         <X size={16} />
                     </button>
                 </div>
@@ -80,7 +80,7 @@ const DispatchDialog: FC<Props> = ({ definition, isPending, onDispatch, onClose 
                         ))}
                     </div>
                 ) : (
-                    <div className="text-sm text-gray-400 dark:text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                         {t("pages.workflows.noInputs")}
                     </div>
                 )}

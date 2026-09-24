@@ -75,7 +75,7 @@ const NotesPage = () => {
     return (
         <div className="flex flex-col items-center justify-center h-full text-center px-6 bg-neutral-50 dark:bg-neutral-950">
             <FileText size={48} className="text-gray-200 dark:text-neutral-700 mb-4" />
-            <p className="text-gray-400 dark:text-neutral-500 text-sm mb-6">
+            <p className="text-muted-foreground text-sm mb-6">
                 {t("messages.noMoreNotes")}
             </p>
             <button

@@ -30,12 +30,12 @@ const ConnectedRunnersSection = () => {
                     onClick={() => setShowExample(s => !s)}
                     title={t("pages.settings.runsOnExample")}
                     aria-label={t("pages.settings.runsOnExample")}
-                    className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
+                    className="text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300"
                 >
                     <CircleHelp size={16} />
                 </button>
             </div>
-            <div className="text-xs text-gray-400 dark:text-gray-500 -mt-2">
+            <div className="text-xs text-muted-foreground -mt-2">
                 {t("pages.settings.connectedRunnersHint")}
             </div>
 
@@ -46,7 +46,7 @@ const ConnectedRunnersSection = () => {
             )}
 
             {onlineRunners.length === 0 ? (
-                <div className="text-sm text-gray-400 dark:text-gray-500">
+                <div className="text-sm text-muted-foreground">
                     {t("pages.settings.noConnectedRunners")}
                 </div>
             ) : (
@@ -56,7 +56,7 @@ const ConnectedRunnersSection = () => {
                             <span className="shrink-0 inline-block w-2 h-2 rounded-full bg-green-500" title={runner.status} />
                             <div className="flex-1 min-w-0">
                                 <div className="font-medium truncate">{runner.name}</div>
-                                <div className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                                <div className="text-xs text-muted-foreground truncate">
                                     {runner.labels.join(", ")}
                                 </div>
                             </div>

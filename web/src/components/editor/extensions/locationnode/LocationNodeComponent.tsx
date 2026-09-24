@@ -257,10 +257,10 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
 
           {/* Header + search bar */}
           <div className="flex flex-col gap-2 p-3">
-            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin size={16} />
               <span className="text-sm font-medium">Location</span>
-              <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">Drag map or search</span>
+              <span className="ml-auto text-xs text-muted-foreground">Drag map or search</span>
             </div>
 
             {/* Search */}
@@ -277,8 +277,8 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
                     onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); searchNominatim(query) } }}
                   />
                   {isSearching
-                    ? <Loader2 size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
-                    : <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    ? <Loader2 size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
+                    : <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   }
                 </div>
                 <button
@@ -295,11 +295,11 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
                   {results.map((r, i) => (
                     <li key={i}>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-800 dark:text-gray-200 border-b last:border-b-0 border-gray-100 dark:border-neutral-700"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-800 dark:text-gray-200 border-b last:border-b-0 border-gray-100 dark:border-neutral-700"
                         onClick={() => handleSelectResult(r)}
                       >
                         <span className="font-medium">{r.display_name.split(",")[0]}</span>
-                        <span className="block text-xs text-gray-400 dark:text-gray-500 truncate">{r.display_name}</span>
+                        <span className="block text-xs text-muted-foreground truncate">{r.display_name}</span>
                       </button>
                     </li>
                   ))}
@@ -336,9 +336,9 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
                 {pendingName ? (
                   <p className="text-xs font-medium text-gray-800 dark:text-gray-100 truncate">{pendingName}</p>
                 ) : (
-                  <p className="text-xs text-gray-400 dark:text-gray-500 italic">Drag map to pick a location</p>
+                  <p className="text-xs text-muted-foreground italic">Drag map to pick a location</p>
                 )}
-                <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">
+                <p className="text-xs text-muted-foreground font-mono">
                   {pendingLat.toFixed(5)}, {pendingLng.toFixed(5)}
                 </p>
               </div>
@@ -352,7 +352,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
               </button>
               {hasLocation && (
                 <button
-                  className="px-3 py-1.5 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-300 transition-colors"
+                  className="px-3 py-1.5 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300 transition-colors"
                   onClick={handleCancelEdit}
                 >
                   Cancel
@@ -377,7 +377,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
           onClick={() => setShowMap(s => !s)}
         >
           {name && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 select-none">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-muted-foreground dark:text-gray-300 select-none">
               <MapPin size={12} className="shrink-0" />
               {name}
             </span>
@@ -386,7 +386,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
             href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-0.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="p-0.5 rounded text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
             title="Open in OpenStreetMap"
             onClick={e => e.stopPropagation()}
           >

@@ -52,7 +52,7 @@ const CalendarViewContent = ({
                                     className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
                                         viewMode === 'month'
                                             ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100'
-                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                                            : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-100'
                                     }`}
                                 >
                                     {t('views.month') || 'Month'}
@@ -62,7 +62,7 @@ const CalendarViewContent = ({
                                     className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
                                         viewMode === 'week'
                                             ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100'
-                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                                            : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-100'
                                     }`}
                                 >
                                     {t('views.week') || 'Week'}
@@ -72,7 +72,7 @@ const CalendarViewContent = ({
                                     className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
                                         viewMode === 'day'
                                             ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100'
-                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                                            : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-100'
                                     }`}
                                 >
                                     {t('views.day') || 'Day'}

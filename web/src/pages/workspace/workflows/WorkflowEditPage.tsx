@@ -111,7 +111,7 @@ const WorkflowEditPage = () => {
                             <>
                                 <Link
                                     to="runs"
-                                    className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+                                    className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                                 >
                                     <History size={16} />
                                     {t("pages.workflows.runs")}
@@ -119,7 +119,7 @@ const WorkflowEditPage = () => {
                                 <button
                                     onClick={() => setShowDispatch(true)}
                                     disabled={dispatchMutation.isPending}
-                                    className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded disabled:opacity-50"
+                                    className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                                 >
                                     <Play size={16} />
                                     {t("pages.workflows.dispatch")}
@@ -129,7 +129,7 @@ const WorkflowEditPage = () => {
                                         if (confirm(t("pages.workflows.deleteConfirm"))) deleteMutation.mutate()
                                     }}
                                     disabled={deleteMutation.isPending}
-                                    className="px-3 py-2 flex gap-2 items-center text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded disabled:opacity-50"
+                                    className="px-3 py-2 flex gap-2 items-center text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                                 >
                                     <Trash2 size={16} />
                                 </button>

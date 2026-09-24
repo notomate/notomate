@@ -53,7 +53,7 @@ export function Modal({
                 <Dialog.Close asChild>
                   <button
                     aria-label="close"
-                    className="p-1 rounded-md text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                    className="p-1 rounded-md text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800"
                   >
                     <X size={20} />
                   </button>

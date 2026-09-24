@@ -75,7 +75,7 @@ const SignUp: React.FC = () => {
             <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
               {t("actions.signup")}
             </h2>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-muted-foreground">
               {t("pages.signup.alreadyHaveAccount")}{' '}
               <a href="/signin" className="font-semibold text-primary hover:text-primary-hover transition-colors">
                 {t("actions.signin")}
@@ -126,7 +126,7 @@ const SignUp: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
                 >
                   {showPassword ? <EyeOff className="!w-4 !h-4" /> : <Eye className="!w-4 !h-4" />}
                 </button>
@@ -155,7 +155,7 @@ const SignUp: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+                    className="text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
                   >
                     {showConfirmPassword ? <EyeOff className="!w-4 !h-4" /> : <Eye className="!w-4 !h-4" />}
                   </button>

@@ -138,12 +138,12 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{comment.created_by_name}</span>
-          <span className="text-xs text-gray-400"><NoteTime time={comment.created_at} /></span>
-          {comment.edited && <span className="text-xs text-gray-400">{t("comments.edited")}</span>}
+          <span className="text-xs text-muted-foreground"><NoteTime time={comment.created_at} /></span>
+          {comment.edited && <span className="text-xs text-muted-foreground">{t("comments.edited")}</span>}
           {!readOnly && user?.id === comment.created_by && editingId !== comment.id && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="ml-auto p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0">
+                <button className="ml-auto p-0.5 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200 shrink-0">
                   <MoreVertical size={14} />
                 </button>
               </DropdownMenu.Trigger>
@@ -185,10 +185,10 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
               workspaceId={workspaceId}
             />
             <div className="flex justify-end gap-2 mt-1">
-              <button className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onClick={() => setEditingId(null)}>
+              <button className="text-xs px-2 py-1 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300" onClick={() => setEditingId(null)}>
                 {t("actions.cancel")}
               </button>
-              <button className="text-xs px-3 py-1 bg-primary text-white rounded disabled:opacity-50" disabled={!editingBody.trim()} onClick={handleSubmitEdit}>
+              <button className="text-xs px-3 py-1 bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active rounded disabled:opacity-50" disabled={!editingBody.trim()} onClick={handleSubmitEdit}>
                 {t("actions.save")}
               </button>
             </div>
@@ -207,7 +207,7 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
     <div className="-mx-4 -mb-4 border-t dark:border-neutral-700 flex flex-col">
       <div className="px-4 py-3">
         <button
-          className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 "
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200 "
           onClick={() => setExpanded(prev => !prev)}
         >
           <MessageCircle size={16} />
@@ -248,7 +248,7 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
                 ) : (
                   <button
                     type="button"
-                    className="w-full text-left text-sm text-gray-400 dark:text-gray-500 border dark:border-neutral-600 rounded px-3 py-1.5 hover:border-gray-300 dark:hover:border-neutral-500 hover:text-gray-500 dark:hover:text-gray-400"
+                    className="w-full text-left text-sm text-muted-foreground border dark:border-neutral-600 rounded px-3 py-1.5 hover:border-gray-300 dark:hover:border-neutral-500 hover:text-gray-700 dark:hover:text-gray-300"
                     onClick={() => setComposerExpanded(true)}
                   >
                     {t("comments.composerPlaceholder")}
@@ -267,7 +267,7 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
                 return (
                   <div key={anchor.thread_id} className="px-4 py-2 border-t dark:border-neutral-700 first:border-t-0">
                     {anchor.quoted_text && (
-                      <blockquote className="text-xs italic text-gray-500 dark:text-gray-400 border-l-2 border-primary/40 pl-2 mb-2 line-clamp-3">
+                      <blockquote className="text-xs italic text-muted-foreground border-l-2 border-primary/40 pl-2 mb-2 line-clamp-3">
                         {anchor.quoted_text}
                       </blockquote>
                     )}
@@ -278,7 +278,7 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
                     {replies.length > 0 && (
                       <button
                         type="button"
-                        className="mt-2 ml-7 flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                        className="mt-2 ml-7 flex items-center gap-1 text-xs text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300"
                         onClick={() => toggleReplies(anchor.thread_id)}
                       >
                         <ChevronDown size={12} className={`transition-transform duration-200 ${repliesExpanded ? "rotate-180" : ""}`} />
@@ -323,7 +323,7 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
                       ) : (
                         <button
                           type="button"
-                          className="mt-2 ml-7 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                          className="mt-2 ml-7 text-xs text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300"
                           onClick={() => openReply(anchor.thread_id)}
                         >
                           {t("comments.replyPlaceholder")}

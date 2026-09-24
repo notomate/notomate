@@ -58,7 +58,7 @@ const CommentEditor: FC<CommentEditorProps> = ({
           HTMLAttributes: { class: "rounded bg-gray-100 dark:bg-neutral-800 p-2 font-mono text-xs" },
         },
         blockquote: {
-          HTMLAttributes: { class: "border-l-2 border-gray-300 dark:border-neutral-600 pl-2 text-gray-500 dark:text-gray-400" },
+          HTMLAttributes: { class: "border-l-2 border-gray-300 dark:border-neutral-600 pl-2 text-muted-foreground" },
         },
       }),
       Placeholder.configure({ placeholder: placeholder ?? "" }),
@@ -153,7 +153,7 @@ const CommentEditor: FC<CommentEditorProps> = ({
             key={i}
             type="button"
             title={title}
-            className="p-1 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-neutral-700 hover:text-gray-800 dark:hover:text-gray-100 shrink-0"
+            className="p-1 rounded text-muted-foreground hover:bg-gray-100 dark:hover:bg-neutral-800 hover:text-gray-800 dark:hover:text-gray-100 shrink-0"
             onMouseDown={e => e.preventDefault()}
             onClick={onClick}
           >
@@ -164,7 +164,7 @@ const CommentEditor: FC<CommentEditorProps> = ({
           type="button"
           title={t("messaging.attachFile") as string}
           disabled={uploading}
-          className="p-1 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-neutral-700 hover:text-gray-800 dark:hover:text-gray-100 shrink-0 disabled:opacity-40"
+          className="p-1 rounded text-muted-foreground hover:bg-gray-100 dark:hover:bg-neutral-800 hover:text-gray-800 dark:hover:text-gray-100 shrink-0 disabled:opacity-40"
           onMouseDown={e => e.preventDefault()}
           onClick={handleAttachClick}
         >

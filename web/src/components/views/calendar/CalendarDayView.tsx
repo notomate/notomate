@@ -307,7 +307,7 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                     {/* All-day events section */}
                     {allDayEvents.length > 0 && (
                         <div className="bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700 p-3">
-                            <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                            <div className="text-xs font-semibold text-muted-foreground mb-2">
                                 {t('views.allDay') || 'All day'}
                             </div>
                             <div className="flex gap-1 overflow-auto">
@@ -344,7 +344,7 @@ const CalendarDayView = ({ viewObjects = [], focusedObjectId, isPublic = false }
                                         hour === 0 ? 'border-t-2 dark:border-t-neutral-600' : ''
                                     } ${isToday ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}
                                 >
-                                    <div className="w-20 p-2 text-xs font-medium text-gray-600 dark:text-gray-400 border-r dark:border-neutral-700 shrink-0">
+                                    <div className="w-20 p-2 text-xs font-medium text-muted-foreground border-r dark:border-neutral-700 shrink-0">
                                         {timeStr}
                                     </div>
                                     <div className="flex-1 p-2 min-h-[80px] relative">

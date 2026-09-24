@@ -320,7 +320,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                 <div className="border dark:border-neutral-700 rounded-lg overflow-hidden flex flex-col h-[calc(100dvh-140px)]">
                     {/* Header row with day names and dates */}
                     <div className="flex bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700">
-                        <div className="w-16 p-2 text-sm font-semibold text-gray-600 dark:text-gray-400"></div>
+                        <div className="w-16 p-2 text-sm font-semibold text-muted-foreground"></div>
                         {weekDays.map((day, i) => (
                             <div
                                 key={i}
@@ -328,7 +328,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                                     isToday(day) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                                 }`}
                             >
-                                <div className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                                <div className="text-xs font-semibold text-muted-foreground">
                                     {weekDayNames[i]}
                                 </div>
                                 <div className={`text-sm font-medium ${
@@ -342,7 +342,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
 
                     {/* All-day events row */}
                     <div className="flex bg-neutral-50 dark:bg-neutral-800 border-b dark:border-neutral-700 shrink-0">
-                        <div className="w-16 p-2 text-xs font-semibold text-gray-600 dark:text-gray-400">
+                        <div className="w-16 p-2 text-xs font-semibold text-muted-foreground">
                             {t('views.allDay') || 'All day'}
                         </div>
                         {weekDays.map((day, i) => {
@@ -385,7 +385,7 @@ const CalendarWeekView = ({ viewObjects = [], focusedObjectId, isPublic = false 
                                         key={hour}
                                         className="border-b dark:border-neutral-700 border-r dark:border-neutral-700 h-[80px] flex items-start justify-center pt-2"
                                     >
-                                        <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                        <div className="text-xs font-medium text-muted-foreground">
                                             {hour.toString().padStart(2, '0')}:00
                                         </div>
                                     </div>

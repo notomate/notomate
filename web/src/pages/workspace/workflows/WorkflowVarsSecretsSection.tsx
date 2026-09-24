@@ -58,7 +58,7 @@ const AddEntryForm = ({
             <div className="flex gap-2 justify-end">
                 <button
                     onClick={onCancel}
-                    className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-600 rounded"
+                    className="px-3 py-1.5 text-sm text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                 >
                     {t("actions.cancel")}
                 </button>
@@ -141,13 +141,13 @@ const WorkflowVarsSecretsSection = () => {
                     <div className="text-lg font-semibold">{t("pages.settings.workflowVars")}</div>
                     <button
                         onClick={() => setShowAddVar(s => !s)}
-                        className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded text-sm"
+                        className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded text-sm"
                     >
                         {showAddVar ? <X size={15} /> : <Plus size={15} />}
                         {t("pages.settings.addVariable")}
                     </button>
                 </div>
-                <div className="text-xs text-gray-400 dark:text-gray-500 -mt-2">
+                <div className="text-xs text-muted-foreground -mt-2">
                     {t("pages.settings.workflowVarsHint")}
                 </div>
 
@@ -162,7 +162,7 @@ const WorkflowVarsSecretsSection = () => {
                 )}
 
                 {vars.length === 0 ? (
-                    <div className="text-sm text-gray-400 dark:text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                         {t("pages.settings.noVars")}
                     </div>
                 ) : (
@@ -171,7 +171,7 @@ const WorkflowVarsSecretsSection = () => {
                             <div key={v.id} className="flex items-center gap-3 py-3">
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium font-mono truncate">{v.key}</div>
-                                    <div className="text-xs text-gray-400 dark:text-gray-500 truncate font-mono">
+                                    <div className="text-xs text-muted-foreground truncate font-mono">
                                         {v.value}
                                     </div>
                                 </div>
@@ -182,7 +182,7 @@ const WorkflowVarsSecretsSection = () => {
                                         }
                                     }}
                                     disabled={deleteVarMutation.isPending}
-                                    className="p-2 text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded disabled:opacity-50"
+                                    className="p-2 text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                                     aria-label="delete variable"
                                 >
                                     <Trash2 size={15} />
@@ -198,13 +198,13 @@ const WorkflowVarsSecretsSection = () => {
                     <div className="text-lg font-semibold">{t("pages.settings.workflowSecrets")}</div>
                     <button
                         onClick={() => setShowAddSecret(s => !s)}
-                        className="px-3 py-2 flex gap-2 items-center text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded text-sm"
+                        className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded text-sm"
                     >
                         {showAddSecret ? <X size={15} /> : <Plus size={15} />}
                         {t("pages.settings.addSecret")}
                     </button>
                 </div>
-                <div className="text-xs text-gray-400 dark:text-gray-500 -mt-2">
+                <div className="text-xs text-muted-foreground -mt-2">
                     {t("pages.settings.workflowSecretsHint")}
                 </div>
 
@@ -219,7 +219,7 @@ const WorkflowVarsSecretsSection = () => {
                 )}
 
                 {secrets.length === 0 ? (
-                    <div className="text-sm text-gray-400 dark:text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                         {t("pages.settings.noSecrets")}
                     </div>
                 ) : (
@@ -228,7 +228,7 @@ const WorkflowVarsSecretsSection = () => {
                             <div key={s.id} className="flex items-center gap-3 py-3">
                                 <div className="flex-1 min-w-0">
                                     <div className="font-medium font-mono truncate">{s.key}</div>
-                                    <div className="text-xs text-gray-400 dark:text-gray-500 truncate font-mono">
+                                    <div className="text-xs text-muted-foreground truncate font-mono">
                                         &bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;
                                     </div>
                                 </div>
@@ -239,7 +239,7 @@ const WorkflowVarsSecretsSection = () => {
                                         }
                                     }}
                                     disabled={deleteSecretMutation.isPending}
-                                    className="p-2 text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded disabled:opacity-50"
+                                    className="p-2 text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                                     aria-label="delete secret"
                                 >
                                     <Trash2 size={15} />

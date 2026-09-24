@@ -876,7 +876,7 @@ const WhiteboardViewComponent = ({
             <div className="relative w-full h-full bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-8 h-8 border-2 border-neutral-300 border-t-primary rounded-full animate-spin" />
-                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <span className="text-sm text-muted-foreground">
                         {t('whiteboard.loading') || 'Loading whiteboard...'}
                     </span>
                 </div>
@@ -953,7 +953,7 @@ const WhiteboardViewComponent = ({
                         <div className={`w-2 h-2 rounded-full ${
                             isConnected ? 'bg-green-500' : 'bg-red-500'
                         }`} />
-                        <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                        <span className="text-xs text-muted-foreground">
                             {isConnected ? t('whiteboard.connected') || 'Connected' : t('whiteboard.disconnected') || 'Disconnected'}
                         </span>
                     </div>
@@ -967,8 +967,8 @@ const WhiteboardViewComponent = ({
                                 onClick={() => setIsLocked(!isLocked)}
                                 className={`p-2 rounded transition-colors flex justify-center ${
                                     isLocked
-                                        ? 'bg-primary text-white'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                        ? 'bg-primary-light text-foreground'
+                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                 }`}
                                 title={isLocked ? (t('whiteboard.unlock') || 'Unlock') : (t('whiteboard.lock') || 'Lock')}
                             >
@@ -979,21 +979,21 @@ const WhiteboardViewComponent = ({
                     )}
                     <button
                         onClick={handleZoomIn}
-                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm font-medium"
+                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium"
                         title={t('whiteboard.zoomIn') || 'Zoom In'}
                     >
                         +
                     </button>
                     <button
                         onClick={handleResetZoom}
-                        className="p-1 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-xs font-medium"
+                        className="p-1 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-medium"
                         title={t('whiteboard.resetZoom') || 'Reset Zoom'}
                     >
                         {Math.round(viewport.zoom * 100)}%
                     </button>
                     <button
                         onClick={handleZoomOut}
-                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors text-sm font-medium"
+                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium"
                         title={t('whiteboard.zoomOut') || 'Zoom Out'}
                     >
                         −
@@ -1028,7 +1028,7 @@ const WhiteboardViewComponent = ({
                 {/* Empty state */}
                 {canvasObjects.size === 0 && viewObjects.size === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 35 }}>
-                        <div className="text-neutral-400 dark:text-neutral-500">
+                        <div className="text-muted-foreground">
                             {t('whiteboard.emptyState') || 'Start drawing or add notes'}
                         </div>
                     </div>

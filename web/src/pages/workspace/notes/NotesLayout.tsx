@@ -22,7 +22,7 @@ const NotesLayout = () => {
                     <Link
                         to={`/workspaces/${currentWorkspaceId}/notes/search`}
                         aria-label={t("placeholder.search")}
-                        className="p-2 -mr-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-600 dark:text-gray-400"
+                        className="p-2 -mr-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-muted-foreground"
                     >
                         <Search size={16} />
                     </Link>

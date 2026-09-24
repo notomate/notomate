@@ -41,7 +41,7 @@ const RunsPage = () => {
                 </div>
                 <div className="bg-white dark:bg-neutral-800 rounded shadow-sm w-full max-w-3xl">
                     {runs.length === 0 ? (
-                        <div className="p-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                        <div className="p-8 text-center text-sm text-muted-foreground">
                             {t("pages.workflows.noRuns")}
                         </div>
                     ) : (
@@ -52,12 +52,12 @@ const RunsPage = () => {
                                     to={run.id}
                                     className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-neutral-700/50"
                                 >
-                                    <span className="font-mono text-sm text-gray-400 dark:text-gray-500 w-12 shrink-0">
+                                    <span className="font-mono text-sm text-muted-foreground w-12 shrink-0">
                                         #{run.run_number}
                                     </span>
                                     <div className="flex-1 min-w-0">
                                         <StatusBadge status={run.status} />
-                                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                                        <div className="text-xs text-muted-foreground mt-0.5">
                                             {run.event} · {new Date(run.created_at).toLocaleString()}
                                         </div>
                                     </div>

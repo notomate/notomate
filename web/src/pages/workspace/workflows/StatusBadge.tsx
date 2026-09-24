@@ -7,7 +7,7 @@ const styles: Record<WorkflowRunData['status'], string> = {
     running: "text-blue-600 dark:text-blue-400",
     success: "text-green-600 dark:text-green-400",
     failure: "text-red-600 dark:text-red-400",
-    cancelled: "text-gray-500 dark:text-gray-400",
+    cancelled: "text-muted-foreground",
 }
 
 const StatusBadge: FC<{ status: WorkflowRunData['status'] }> = ({ status }) => {

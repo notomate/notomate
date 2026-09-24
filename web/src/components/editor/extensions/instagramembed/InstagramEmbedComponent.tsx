@@ -131,7 +131,7 @@ const InstagramEmbedComponent: React.FC<NodeViewProps> = ({ node, updateAttribut
     return (
       <NodeViewWrapper className="instagram-embed-node select-none border dark:border-neutral-700 rounded p-3 bg-gray-100 dark:bg-neutral-800">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <InstagramIcon />
             <span className="text-sm font-medium">Instagram Embed</span>
           </div>
@@ -154,7 +154,7 @@ const InstagramEmbedComponent: React.FC<NodeViewProps> = ({ node, updateAttribut
             </button>
             {url && (
               <button
-                className="px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-300 transition-colors"
+                className="px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300 transition-colors"
                 onClick={() => { setInputValue(url); setIsEditing(false); setError(false) }}
               >
                 Cancel

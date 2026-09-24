@@ -134,7 +134,7 @@ const ExplorePage: React.FC = () => {
                     </button>
                     <button
                         onClick={() => setIsSearchOpen(prev => !prev)}
-                        className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                        className="p-2 rounded-md text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                         title="Search"
                         aria-pressed={isSearchOpen}
                     >
@@ -149,7 +149,7 @@ const ExplorePage: React.FC = () => {
                         <div className="relative">
                             <Search
                                 size={16}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
                             />
                             <input
                                 ref={searchInputRef}
@@ -162,7 +162,7 @@ const ExplorePage: React.FC = () => {
                             {search && (
                                 <button
                                     onClick={() => setSearch('')}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                                     title="Clear search"
                                 >
                                     <Trash2 size={14} />
@@ -174,7 +174,7 @@ const ExplorePage: React.FC = () => {
                     {isLoading ? (
                         <NoteListSkeleton />
                     ) : notes.length === 0 ? (
-                        <div className="text-center text-gray-500 dark:text-gray-400 py-20">
+                        <div className="text-center text-muted-foreground py-20">
                             {debouncedSearch ? t("pages.explore.noSearchResults") : t("pages.explore.noPublicNotes")}
                         </div>
                     ) : (
@@ -182,7 +182,7 @@ const ExplorePage: React.FC = () => {
                             <NoteList notes={notes} showLink={false} commentsReadOnly maxNodes={8} />
                             <div ref={loadMoreRef} className="h-px" />
                             {isFetchingNextPage && (
-                                <div className="text-center text-gray-500 dark:text-gray-400 py-4 text-sm">
+                                <div className="text-center text-muted-foreground py-4 text-sm">
                                     Loading more…
                                 </div>
                             )}

@@ -24,7 +24,7 @@ const AboutModal = ({ open, onOpenChange }: AboutModalProps) => {
                         <div className="text-2xl font-bold text-primary dark:text-primary">
                             {appName}
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                             {t("about.description")}
                         </p>
                     </div>
@@ -33,7 +33,7 @@ const AboutModal = ({ open, onOpenChange }: AboutModalProps) => {
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {t("about.version")}
                     </span>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                    <span className="text-sm text-muted-foreground font-mono">
                         {appVersion}
                     </span>
                 </div>

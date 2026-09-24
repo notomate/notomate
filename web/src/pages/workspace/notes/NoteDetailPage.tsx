@@ -98,7 +98,7 @@ const NoteDetailPage = () => {
                 menu={note ? (
                     <div className="flex items-center gap-1">
                         <button
-                            className={`p-2 rounded ${showComments ? 'text-primary' : 'text-gray-500 dark:text-gray-400'} hover:bg-gray-100 dark:hover:bg-neutral-700`}
+                            className={`p-2 rounded ${showComments ? 'text-primary' : 'text-muted-foreground'} hover:bg-gray-100 dark:hover:bg-neutral-800`}
                             onClick={() => setShowComments(prev => !prev)}
                         >
                             <MessageCircle size={16} />
