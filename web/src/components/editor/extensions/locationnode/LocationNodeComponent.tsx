@@ -25,10 +25,12 @@ interface NominatimResult {
 // ── Fly map to a position when pendingLat/Lng change from search ──────────────
 function MapFlyTo({ lat, lng, trigger }: { lat: number; lng: number; trigger: number }) {
   const map = useMap()
+  const previousTrigger = useRef(trigger)
   useEffect(() => {
-    if (trigger === 0) return
+    if (trigger === previousTrigger.current) return
+    previousTrigger.current = trigger
     map.flyTo([lat, lng], 15, { duration: 0.8 })
-  }, [trigger]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [map, lat, lng, trigger])
   return null
 }
 
@@ -42,11 +44,6 @@ function MapDragTracker({
 }) {
   const map = useMapEvents({
     moveend() {
-      if (!enabled) return
-      const c = map.getCenter()
-      onMoveEnd(c.lat, c.lng)
-    },
-    zoomend() {
       if (!enabled) return
       const c = map.getCenter()
       onMoveEnd(c.lat, c.lng)
@@ -120,6 +117,19 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reverseDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const reverseRequestRef = useRef(0)
+
+  const cancelReverseGeocode = useCallback(() => {
+    if (reverseDebounceRef.current) clearTimeout(reverseDebounceRef.current)
+    reverseRequestRef.current += 1
+    setIsGeocoding(false)
+  }, [])
+
+  useEffect(() => () => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    if (reverseDebounceRef.current) clearTimeout(reverseDebounceRef.current)
+    reverseRequestRef.current += 1
+  }, [])
 
   useEffect(() => {
     if (isEditing) setTimeout(() => searchInputRef.current?.focus(), 50)
@@ -147,6 +157,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
   }
 
   const handleSelectResult = (r: NominatimResult) => {
+    cancelReverseGeocode()
     const newLat = parseFloat(r.lat)
     const newLng = parseFloat(r.lon)
     const newName = r.display_name.split(",")[0].trim()
@@ -162,7 +173,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
   }
 
   // ── Reverse geocoding (called when map drag ends) ───────────────────────────
-  const reverseGeocode = useCallback(async (rlat: number, rlng: number) => {
+  const reverseGeocode = useCallback(async (rlat: number, rlng: number, request: number) => {
     setIsGeocoding(true)
     try {
       const res = await fetch(
@@ -171,6 +182,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
       )
       if (res.ok) {
         const data = await res.json()
+        if (request !== reverseRequestRef.current) return
         const newName = (
           data.namedetails?.name ||
           data.address?.amenity ||
@@ -183,29 +195,34 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
         setQuery(newName)
       }
     } catch { /* ignore */ }
-    finally { setIsGeocoding(false) }
+    finally {
+      if (request === reverseRequestRef.current) setIsGeocoding(false)
+    }
   }, [])
 
   const handleMapMoveEnd = useCallback((rlat: number, rlng: number) => {
-    setPendingLat(rlat)
-    setPendingLng(rlng)
     if (skipReverseRef.current) {
       skipReverseRef.current = false
       return
     }
-    // debounce so rapid flyTo animations don't hammer the API
-    if (reverseDebounceRef.current) clearTimeout(reverseDebounceRef.current)
-    reverseDebounceRef.current = setTimeout(() => reverseGeocode(rlat, rlng), 300)
-  }, [reverseGeocode])
+    setPendingLat(rlat)
+    setPendingLng(rlng)
+    // Invalidate older responses immediately, including during the debounce window.
+    cancelReverseGeocode()
+    const request = reverseRequestRef.current
+    reverseDebounceRef.current = setTimeout(() => reverseGeocode(rlat, rlng, request), 300)
+  }, [cancelReverseGeocode, reverseGeocode])
 
   // ── Save / cancel ───────────────────────────────────────────────────────────
   const handleSave = () => {
+    cancelReverseGeocode()
     updateAttributes({ lat: pendingLat, lng: pendingLng, name: pendingName, address: pendingAddress, zoom: 15 })
     setIsEditing(false)
   }
 
   const handleCancelEdit = () => {
     if (!hasLocation) return
+    cancelReverseGeocode()
     setPendingLat(lat)
     setPendingLng(lng)
     setPendingName(name ?? "")
