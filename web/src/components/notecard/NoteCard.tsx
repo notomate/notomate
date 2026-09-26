@@ -30,7 +30,7 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
                 {(showLink || (showActions && workspaceId && note.id)) && (
                     <div className="absolute top-4 right-4 flex items-center gap-1.5 p-1">
                         {showLink && (
-                            <Link to={linkTo || ""} title={t("actions.edit")} className="p-1 text-gray-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md">
+                            <Link to={linkTo || ""} title={t("actions.edit")} className="p-1 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md">
                                 <SquarePen size={16} />
                             </Link>
                         )}
@@ -40,10 +40,10 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
                     </div>
                 )}
                 {note.parent_id && (
-                    <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <CornerDownRight size={12} />
                         {parentNoteLinkTo ? (
-                            <Link to={parentNoteLinkTo} className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors truncate max-w-[200px]">
+                            <Link to={parentNoteLinkTo} className="hover:text-gray-700 dark:hover:text-gray-300 transition-colors truncate max-w-[200px]">
                                 {parentNoteTitle || note.parent_id}
                             </Link>
                         ) : (
@@ -51,12 +51,12 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
                         )}
                     </div>
                 )}
-                <div className="flex items-center text-gray-500">
+                <div className="flex items-center text-muted-foreground">
                     <div className="flex items-center gap-2 min-w-0">
                         {note.created_by && <Avatar name={note.created_by} avatarUrl={note.created_by_avatar_url} size={32} />}
                         <div className="flex flex-col min-w-0">
                             {note.created_by && (
-                                <span className="font-medium text-gray-600 dark:text-gray-300 truncate max-w-[140px]">
+                                <span className="font-medium text-muted-foreground dark:text-gray-300 truncate max-w-[140px]">
                                     {note.created_by}
                                 </span>
                             )}

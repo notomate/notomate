@@ -80,7 +80,7 @@ export const SlashMenu = forwardRef<SlashMenuRef, Props>(
     categoryOrder.forEach(cat => {
       if (cat) {
         rendered.push(
-          <div key={`cat-${cat}`} className="px-3 pt-2 pb-0.5 text-xs font-semibold text-gray-400 dark:text-stone-500 uppercase tracking-wide select-none">
+          <div key={`cat-${cat}`} className="px-3 pt-2 pb-0.5 text-xs font-semibold text-muted-foreground dark:text-stone-500 uppercase tracking-wide select-none">
             {t(`editor.slashCategories.${cat}`, cat)}
           </div>
         )
@@ -91,7 +91,7 @@ export const SlashMenu = forwardRef<SlashMenuRef, Props>(
             key={i}
             ref={(el) => (itemRefs.current[i] = el!)}
             className={`w-full text-left px-3 py-1.5 rounded-md text-sm flex gap-2 items-center ${i === selectedIndex
-                ? 'bg-gray-200 text-gray-950 dark:bg-stone-950 dark:text-stone-200'
+                ? 'bg-gray-100 text-gray-900 dark:bg-neutral-900 dark:text-neutral-100'
                 : 'hover:bg-gray-100 text-gray-900 dark:hover:bg-stone-950 dark:text-stone-100'
               }`}
             onClick={() => command(item)}

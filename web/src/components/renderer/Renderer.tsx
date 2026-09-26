@@ -171,7 +171,7 @@ const ThreadsRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
     return (
         <div className="relative">
             {loading && (
-                <div className="flex items-center justify-center gap-2 py-12 max-w-[650px] rounded-2xl border border-black/10 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 dark:text-gray-500">
+                <div className="flex items-center justify-center gap-2 py-12 max-w-[650px] rounded-2xl border border-black/10 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-muted-foreground">
                     <LoaderCircle size={16} className="animate-spin" />
                     <span className="text-sm">Loading Threads post…</span>
                 </div>
@@ -205,7 +205,7 @@ function MiniCalendar({ date }: { date: string }) {
             </div>
             <div className="grid grid-cols-7 gap-0.5 text-center">
                 {WEEKDAYS.map(w => (
-                    <div key={w} className="text-[10px] text-gray-400 dark:text-gray-500 font-medium py-0.5">{w[0]}</div>
+                    <div key={w} className="text-[10px] text-muted-foreground font-medium py-0.5">{w[0]}</div>
                 ))}
                 {cells.map((day, i) => (
                     <div key={i} className="flex items-center justify-center">
@@ -213,7 +213,7 @@ function MiniCalendar({ date }: { date: string }) {
                             <span className={`flex items-center justify-center w-6 h-6 text-xs rounded-full ${
                                 day === eventDay
                                     ? 'bg-blue-600 text-white font-semibold'
-                                    : 'text-gray-600 dark:text-gray-300'
+                                    : 'text-muted-foreground dark:text-gray-300'
                             }`}>
                                 {day}
                             </span>
@@ -234,7 +234,7 @@ const CalendarEventRenderer: React.FC<{ date?: string; title?: string }> = ({ da
                 onClick={() => setShowCalendar(s => !s)}
             >
                 {title && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 select-none">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-muted-foreground dark:text-gray-300 select-none">
                         <CalendarDays size={12} className="shrink-0" />
                         {title}
                     </span>
@@ -260,7 +260,7 @@ const LocationRenderer: React.FC<{ lat: number; lng: number; name?: string; zoom
                 onClick={() => setShowMap(s => !s)}
             >
                 {name && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 select-none">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-muted-foreground dark:text-gray-300 select-none">
                         <MapPin size={12} className="shrink-0" />
                         {name}
                     </span>
@@ -269,7 +269,7 @@ const LocationRenderer: React.FC<{ lat: number; lng: number; name?: string; zoom
                     href={`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-0.5 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="p-0.5 rounded text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                     title="Open in OpenStreetMap"
                     onClick={e => e.stopPropagation()}
                 >
@@ -301,7 +301,7 @@ const LocationRenderer: React.FC<{ lat: number; lng: number; name?: string; zoom
 function RendererPartialStar({ fill, size }: { fill: number; size: number }) {
     return (
         <span className="relative inline-flex shrink-0" style={{ width: size, height: size }}>
-            <Star size={size} className="text-gray-300 dark:text-neutral-600" />
+            <Star size={size} className="text-gray-300 dark:text-muted-foreground" />
             {fill > 0 && (
                 <span className="absolute inset-0 overflow-hidden inline-flex" style={{ width: `${fill * 100}%` }}>
                     <Star size={size} className="text-yellow-400 fill-yellow-400 shrink-0" />
@@ -317,7 +317,7 @@ const formatRating = (r: number) => parseFloat(r.toFixed(1)).toString()
 const RatingRenderer: React.FC<{ rating: number; maxRating: number; label?: string }> = ({ rating, maxRating, label }) => (
     <div className="flex flex-wrap items-center gap-1.5 py-1">
         {label && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 select-none">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-muted-foreground dark:text-gray-300 select-none">
                 {label}
             </span>
         )}
@@ -326,7 +326,7 @@ const RatingRenderer: React.FC<{ rating: number; maxRating: number; label?: stri
                 <RendererPartialStar key={i} size={14} fill={getStarFill(i, rating)} />
             ))}
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">{formatRating(rating)}/{maxRating}</span>
+        <span className="text-xs text-muted-foreground">{formatRating(rating)}/{maxRating}</span>
     </div>
 )
 
@@ -336,7 +336,7 @@ const TagsRenderer: React.FC<{ tags: string[] }> = ({ tags }) => {
     return (
         <div className="flex flex-wrap items-center gap-1.5 my-1">
             {tags.map(t => (
-                <span key={t} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300">
+                <span key={t} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-muted-foreground dark:text-gray-300">
                     <span className="opacity-50">#</span>{t}
                 </span>
             ))}
@@ -437,7 +437,7 @@ const ViewNodeRenderer: React.FC<{ viewId: string; viewType: string; name?: stri
             <div className="flex items-center gap-2 border dark:border-neutral-700 rounded-lg p-3 bg-gray-50 dark:bg-neutral-800/50 my-1">
                 <span className="text-blue-500 dark:text-blue-400 flex-shrink-0">{meta.icon}</span>
                 <span className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{name || meta.label}</span>
-                <span className="text-xs text-gray-400 dark:text-gray-500 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-neutral-700">{meta.label}</span>
+                <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded bg-gray-100 dark:bg-neutral-700">{meta.label}</span>
             </div>
         )
     }
@@ -490,19 +490,19 @@ const SubPageRendererBlock: React.FC<{ noteId: string; title: string; workspaceI
                 className={`flex items-center gap-2 p-3 bg-gray-50 dark:bg-neutral-800/50 transition-colors ${workspaceId ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-700/50' : 'cursor-default'}`}
                 onClick={handleClick}
             >
-                <FileText size={16} className="text-gray-400 flex-shrink-0" />
+                <FileText size={16} className="text-muted-foreground flex-shrink-0" />
                 <span className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
                     {title || t("notes.untitled")}
                 </span>
                 {workspaceId && (
-                    <ChevronDown size={14} className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`text-muted-foreground flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                 )}
             </div>
             {isExpanded && (
                 <div className="p-3 border-t dark:border-neutral-700">
                     {isLoading ? (
                         <div className="flex items-center justify-center py-3">
-                            <LoaderCircle size={16} className="text-gray-400 animate-spin" />
+                            <LoaderCircle size={16} className="text-muted-foreground animate-spin" />
                         </div>
                     ) : subNote ? (
                         <>
@@ -585,7 +585,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 </div>
             case 'blockquote':
                 return <div className='py-1' key={key}>
-                    <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-600">{renderContent()}</blockquote>
+                    <blockquote className="border-l-4 border-gray-300 pl-4 italic text-muted-foreground">{renderContent()}</blockquote>
                 </div>
             case 'horizontalRule':
                 return <div className='' key={key}>
@@ -693,7 +693,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                                 text = <s className="line-through">{text}</s>
                                 break
                             case 'code':
-                                text = <code className='rounded text-sm bg-gray-300 text-gray-600 px-1 py-0.5'>{text}</code>
+                                text = <code className='rounded text-sm bg-gray-300 text-muted-foreground px-1 py-0.5'>{text}</code>
                                 break
                             case 'link':
                                 text = (
@@ -760,7 +760,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 return null
             }}
         >
-            <div className='prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl max-w-full overflow-x-auto text-neutral-800 dark:text-gray-400'>
+            <div className='prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl max-w-full overflow-x-auto text-neutral-800 dark:text-muted-foreground'>
                 {nodesToRender.map((node, idx) => renderNode(node, idx))}
                 {hasHiddenNodes && (
                     <button

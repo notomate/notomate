@@ -57,7 +57,7 @@ const WorkflowSettingsPage = () => {
                                     <ConnectedRunnersSection />
                                 </div>
                             ) : (
-                                <div className="text-sm text-gray-400 dark:text-gray-500">
+                                <div className="text-sm text-muted-foreground">
                                     {t("pages.workflows.settingsNoAccess")}
                                 </div>
                             )}

@@ -97,7 +97,7 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
                 <div className="flex gap-2 w-full h-32">
                     <button
                         type="button"
-                        className="flex-1 rounded flex flex-col gap-2 items-center justify-center hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors text-gray-700 dark:text-gray-300"
+                        className="flex-1 rounded flex flex-col gap-2 items-center justify-center hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-gray-700 dark:text-gray-300"
                         onClick={(e) => { e.stopPropagation(); setIsPickerOpen(true) }}
                     >
                         <Images size={20} />

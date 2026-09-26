@@ -71,7 +71,7 @@ const WorkspaceSetupPage: React.FC = () => {
                             type="button"
                             onClick={() => signOutMutation.mutate()}
                             disabled={signOutMutation.isPending}
-                            className="inline-flex items-center gap-1.5 text-sm text-neutral-400 dark:text-neutral-500 hover:text-primary transition-colors disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
                         >
                             {signOutMutation.isPending
                                 ? <Loader2 className="!w-4 !h-4 animate-spin" />
@@ -95,7 +95,7 @@ const WorkspaceSetupPage: React.FC = () => {
                             <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
                                 {t("pages.workspaceSetup.createYourFirstWorkspace")}
                             </h2>
-                            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                            <p className="text-sm text-muted-foreground">
                                 {t("pages.workspaceSetup.pleaseEnterYourWorkspaceName")}
                             </p>
                         </div>

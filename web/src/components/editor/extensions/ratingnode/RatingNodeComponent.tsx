@@ -6,7 +6,7 @@ import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 function PartialStar({ fill, size }: { fill: number; size: number }) {
   return (
     <span className="relative inline-flex shrink-0" style={{ width: size, height: size }}>
-      <Star size={size} className="text-gray-300 dark:text-neutral-600" />
+      <Star size={size} className="text-gray-300 dark:text-muted-foreground" />
       {fill > 0 && (
         <span className="absolute inset-0 overflow-hidden inline-flex" style={{ width: `${fill * 100}%` }}>
           <Star size={size} className="text-yellow-400 fill-yellow-400 shrink-0" />
@@ -82,14 +82,14 @@ const RatingNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
     return (
       <NodeViewWrapper className="rating-node select-none border dark:border-neutral-700 rounded p-3 bg-gray-100 dark:bg-neutral-800">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Star size={18} />
             <span className="text-sm font-medium">Rating</span>
           </div>
           <input ref={labelRef} type="text" className="px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Label (optional)..." value={inputLabel} onChange={e => setInputLabel(e.target.value)} onKeyDown={handleKeyDown} />
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">Rating</span>
+              <span className="text-xs text-muted-foreground">Rating</span>
               <input
                 type="number"
                 step="0.1"
@@ -103,7 +103,7 @@ const RatingNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
                 onKeyDown={handleKeyDown}
                 className="w-16 px-2 py-0.5 text-sm rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <span className="text-xs text-gray-500 dark:text-gray-400">/ {inputMaxRating}</span>
+              <span className="text-xs text-muted-foreground">/ {inputMaxRating}</span>
             </div>
             <div className="flex items-center gap-1" onMouseLeave={() => setHoverRating(0)}>
               {Array.from({ length: inputMaxRating }, (_, i) => i + 1).map(i => (
@@ -126,15 +126,15 @@ const RatingNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Max stars:</span>
+            <span className="text-xs text-muted-foreground">Max stars:</span>
             {[3, 5, 10].map(n => (
-              <button key={n} type="button" onClick={() => { setInputMaxRating(n); if (inputRating > n) setInputRating(n) }} className={`px-2 py-0.5 text-xs rounded border transition-colors ${inputMaxRating === n ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 dark:border-neutral-600 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-neutral-700'}`}>{n}</button>
+              <button key={n} type="button" onClick={() => { setInputMaxRating(n); if (inputRating > n) setInputRating(n) }} className={`px-2 py-0.5 text-xs rounded border transition-colors ${inputMaxRating === n ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 dark:border-neutral-600 text-muted-foreground hover:bg-gray-100 dark:hover:bg-neutral-800'}`}>{n}</button>
             ))}
           </div>
           <div className="flex gap-2">
             <button className="px-3 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors" onClick={handleSubmit}>Save</button>
             {(rating > 0 || label) && (
-              <button className="px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-300 transition-colors" onClick={() => { setInputRating(rating ?? 0); setInputMaxRating(maxRating ?? 5); setInputLabel(label ?? ''); setIsEditing(false) }}>Cancel</button>
+              <button className="px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300 transition-colors" onClick={() => { setInputRating(rating ?? 0); setInputMaxRating(maxRating ?? 5); setInputLabel(label ?? ''); setIsEditing(false) }}>Cancel</button>
             )}
           </div>
         </div>
@@ -147,7 +147,7 @@ const RatingNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
       <div className="relative group my-1">
         <div className="flex flex-wrap items-center gap-1.5 px-1 py-1">
           {label && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 select-none">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-muted-foreground dark:text-gray-300 select-none">
               {label}
             </span>
           )}
@@ -156,7 +156,7 @@ const RatingNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, 
               <PartialStar key={i} size={14} fill={getStarFill(i, rating)} />
             ))}
           </div>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{formatRating(rating)}/{maxRating}</span>
+          <span className="text-xs text-muted-foreground">{formatRating(rating)}/{maxRating}</span>
         </div>
         {isTouchDevice && isEditable && (
           <NodeTouchMenu visible={selected} actions={nodeActions} />

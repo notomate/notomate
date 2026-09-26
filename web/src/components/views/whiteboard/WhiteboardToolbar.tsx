@@ -44,8 +44,8 @@ const WhiteboardToolbar = ({
                         onClick={() => setCurrentTool(tool.id)}
                         className={`p-2 rounded transition-colors ${
                             currentTool === tool.id
-                                ? 'bg-primary text-white'
-                                : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                ? 'bg-primary-light text-foreground'
+                                : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                         }`}
                         title={tool.label}
                     >

@@ -89,7 +89,7 @@ const AddElementDialog = ({
                     {/* Search */}
                     <div className="mb-4">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -108,18 +108,18 @@ const AddElementDialog = ({
                                     key={note.id}
                                     onClick={() => addElementMutation.mutate(note.id)}
                                     disabled={addElementMutation.isPending}
-                                    className="w-full text-left p-3 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-700 disabled:opacity-50 transition-colors"
+                                    className="w-full text-left p-3 border dark:border-neutral-600 rounded-lg hover:bg-gray-50 dark:hover:bg-neutral-800 disabled:opacity-50 transition-colors"
                                 >
                                     <div className="font-medium truncate">
                                         {note.title || t('notes.untitled') || 'Untitled'}
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                         {note.content ? extractTextFromTipTapJSON(note.content).substring(0, 100) : t('notes.emptyNote') || 'Empty note'}
                                     </div>
                                 </button>
                             ))
                         ) : (
-                            <p className="text-center text-gray-500 py-8">
+                            <p className="text-center text-muted-foreground py-8">
                                 {searchQuery
                                     ? (t('whiteboard.noResultsFound') || 'No results found')
                                     : (t('whiteboard.noNotes') || 'No notes available')}
@@ -129,7 +129,7 @@ const AddElementDialog = ({
 
                     <div className="mt-6 flex justify-end">
                         <Dialog.Close asChild>
-                            <button className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                            <button className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
                                 {t('common.cancel')}
                             </button>
                         </Dialog.Close>

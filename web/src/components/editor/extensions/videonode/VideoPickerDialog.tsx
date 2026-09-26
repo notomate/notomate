@@ -21,7 +21,7 @@ const VideoPickerDialog: FC<VideoPickerDialogProps> = (props) => {
             accept="video/*"
             gridClassName="grid grid-cols-2 md:grid-cols-3 gap-4"
             emptyState={
-                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                     <VideoIcon size={48} className="mb-4" />
                     <p>No video files found</p>
                 </div>

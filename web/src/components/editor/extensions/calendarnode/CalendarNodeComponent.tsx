@@ -31,7 +31,7 @@ function MiniCalendar({ date }: { date: string }) {
       </div>
       <div className="grid grid-cols-7 gap-0.5 text-center">
         {WEEKDAYS.map(w => (
-          <div key={w} className="text-[10px] text-gray-400 dark:text-gray-500 font-medium py-0.5">{w[0]}</div>
+          <div key={w} className="text-[10px] text-muted-foreground font-medium py-0.5">{w[0]}</div>
         ))}
         {cells.map((day, i) => (
           <div key={i} className="flex items-center justify-center">
@@ -39,7 +39,7 @@ function MiniCalendar({ date }: { date: string }) {
               <span className={`flex items-center justify-center w-6 h-6 text-xs rounded-full ${
                 day === eventDay
                   ? 'bg-blue-600 text-white font-semibold'
-                  : 'text-gray-600 dark:text-gray-300'
+                  : 'text-muted-foreground dark:text-gray-300'
               }`}>
                 {day}
               </span>
@@ -114,7 +114,7 @@ const CalendarNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes
     return (
       <NodeViewWrapper className="calendar-node select-none border dark:border-neutral-700 rounded p-3 bg-gray-100 dark:bg-neutral-800">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <CalendarDays size={18} />
             <span className="text-sm font-medium">Calendar Event</span>
           </div>
@@ -124,7 +124,7 @@ const CalendarNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes
           <div className="flex gap-2">
             <button className="px-3 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:opacity-50" onClick={handleSubmit} disabled={!inputTitle.trim() && !inputDate}>Save</button>
             {(date || title) && (
-              <button className="px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-300 transition-colors" onClick={() => { setInputDate(date ?? ''); setInputTitle(title ?? ''); setInputDescription(description ?? ''); setIsEditing(false) }}>Cancel</button>
+              <button className="px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300 transition-colors" onClick={() => { setInputDate(date ?? ''); setInputTitle(title ?? ''); setInputDescription(description ?? ''); setIsEditing(false) }}>Cancel</button>
             )}
           </div>
         </div>
@@ -140,7 +140,7 @@ const CalendarNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes
           onClick={() => setShowCalendar(s => !s)}
         >
           {title && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 select-none">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-neutral-700 text-muted-foreground dark:text-gray-300 select-none">
               <CalendarDays size={12} className="shrink-0" />
               {title}
             </span>

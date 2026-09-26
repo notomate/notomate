@@ -59,8 +59,8 @@ const ViewComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttribu
         return (
             <NodeViewWrapper className="view-node my-1">
                 <div className="flex items-center gap-2 border dark:border-neutral-700 rounded-lg p-3 bg-gray-50 dark:bg-neutral-800/50">
-                    <Loader2 size={16} className="text-gray-400 animate-spin flex-shrink-0" />
-                    <span className="text-sm text-gray-400">{t('views.creating', 'Creating view...')}</span>
+                    <Loader2 size={16} className="text-muted-foreground animate-spin flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground">{t('views.creating', 'Creating view...')}</span>
                 </div>
             </NodeViewWrapper>
         )
@@ -82,10 +82,10 @@ const ViewComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttribu
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                                 onClick={(e) => { e.stopPropagation(); handleNavigate() }}
-                                className="p-1 hover:bg-gray-200 dark:hover:bg-neutral-600 rounded transition-colors"
+                                className="p-1 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded transition-colors"
                                 title={t("actions.open")}
                             >
-                                <ExternalLink size={12} className="text-gray-400" />
+                                <ExternalLink size={12} className="text-muted-foreground" />
                             </button>
                             {isEditable && (
                                 <button
@@ -134,13 +134,13 @@ const ViewComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttribu
                 onClick={handleNavigate}
             >
                 <span className="text-blue-500 dark:text-blue-400 flex-shrink-0">{meta.icon}</span>
-                <span className={`flex-1 text-sm font-medium truncate ${name ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500 italic'}`}>
+                <span className={`flex-1 text-sm font-medium truncate ${name ? 'text-gray-700 dark:text-gray-300' : 'text-muted-foreground italic'}`}>
                     {name || meta.label}
                 </span>
-                <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-neutral-700">
+                <span className="text-xs text-muted-foreground flex-shrink-0 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-neutral-700">
                     {meta.label}
                 </span>
-                <ExternalLink size={14} className="text-gray-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ExternalLink size={14} className="text-muted-foreground flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 {isEditable && showActions && (
                     <button
                         onClick={(e) => {

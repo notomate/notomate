@@ -75,7 +75,7 @@ const WhiteboardToolProperties = ({
                 {/* Text properties - show when text is selected */}
                 {showTextProperties && (
                     <>
-                        <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                             {t('whiteboard.textProperties') || 'Text'}
                         </div>
 
@@ -108,8 +108,8 @@ const WhiteboardToolProperties = ({
                                     key={size}
                                     onClick={() => onTextUpdate({ fontSize: size })}
                                     className={`px-2 py-1 text-xs rounded transition-colors ${selectedTextData.fontSize === size
-                                            ? 'bg-primary text-white'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                            ? 'bg-primary-light text-foreground'
+                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                         }`}
                                 >
                                     {size}
@@ -122,8 +122,8 @@ const WhiteboardToolProperties = ({
                             <button
                                 onClick={() => onTextUpdate({ fontWeight: selectedTextData.fontWeight === 'bold' ? 'normal' : 'bold' })}
                                 className={`p-2 rounded transition-colors ${selectedTextData.fontWeight === 'bold'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                        ? 'bg-primary-light text-foreground'
+                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                     }`}
                                 title={t('whiteboard.bold') || 'Bold'}
                             >
@@ -132,8 +132,8 @@ const WhiteboardToolProperties = ({
                             <button
                                 onClick={() => onTextUpdate({ fontStyle: selectedTextData.fontStyle === 'italic' ? 'normal' : 'italic' })}
                                 className={`p-2 rounded transition-colors ${selectedTextData.fontStyle === 'italic'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                        ? 'bg-primary-light text-foreground'
+                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                     }`}
                                 title={t('whiteboard.italic') || 'Italic'}
                             >
@@ -142,8 +142,8 @@ const WhiteboardToolProperties = ({
                             <button
                                 onClick={() => onTextUpdate({ textDecoration: selectedTextData.textDecoration === 'underline' ? 'none' : 'underline' })}
                                 className={`p-2 rounded transition-colors ${selectedTextData.textDecoration === 'underline'
-                                        ? 'bg-primary text-white'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                        ? 'bg-primary-light text-foreground'
+                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                     }`}
                                 title={t('whiteboard.underline') || 'Underline'}
                             >
@@ -180,13 +180,13 @@ const WhiteboardToolProperties = ({
                 {/* Edge properties - show when edge is selected */}
                 {showEdgeProperties && (
                     <>
-                        <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                             {t('whiteboard.edgeProperties') || 'Edge Properties'}
                         </div>
 
                         {/* Curve Type */}
                         <div className="flex flex-col gap-1">
-                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                            <div className="text-xs text-muted-foreground">
                                 {t('whiteboard.curveType') || 'Curve Type'}
                             </div>
                             <div className="flex gap-1">
@@ -195,8 +195,8 @@ const WhiteboardToolProperties = ({
                                         key={type.value}
                                         onClick={() => onEdgeUpdate({ curveType: type.value })}
                                         className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.curveType === type.value
-                                            ? 'bg-primary text-white'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                            ? 'bg-primary-light text-foreground'
+                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                             }`}
                                     >
                                         {type.label}
@@ -207,7 +207,7 @@ const WhiteboardToolProperties = ({
 
                         {/* Arrow Type */}
                         <div className="flex flex-col gap-1">
-                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                            <div className="text-xs text-muted-foreground">
                                 {t('whiteboard.arrowType') || 'Arrow Type'}
                             </div>
                             <div className="flex gap-1">
@@ -216,8 +216,8 @@ const WhiteboardToolProperties = ({
                                         key={type.value}
                                         onClick={() => onEdgeUpdate({ arrowType: type.value })}
                                         className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.arrowType === type.value
-                                            ? 'bg-primary text-white'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                            ? 'bg-primary-light text-foreground'
+                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                             }`}
                                     >
                                         {type.label}
@@ -228,7 +228,7 @@ const WhiteboardToolProperties = ({
 
                         {/* Line Style */}
                         <div className="flex flex-col gap-1">
-                            <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                            <div className="text-xs text-muted-foreground">
                                 {t('whiteboard.lineStyle') || 'Line Style'}
                             </div>
                             <div className="flex gap-1">
@@ -237,8 +237,8 @@ const WhiteboardToolProperties = ({
                                         key={style.value}
                                         onClick={() => onEdgeUpdate({ lineStyle: style.value })}
                                         className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.lineStyle === style.value
-                                            ? 'bg-primary text-white'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                            ? 'bg-primary-light text-foreground'
+                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                             }`}
                                     >
                                         {style.label}
@@ -277,8 +277,8 @@ const WhiteboardToolProperties = ({
                                     key={width}
                                     onClick={() => onEdgeUpdate({ strokeWidth: width })}
                                     className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${selectedEdgeData.strokeWidth === width
-                                        ? 'bg-primary text-white'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                        ? 'bg-primary-light text-foreground'
+                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                         }`}
                                     title={`${width}px`}
                                 >
@@ -328,8 +328,8 @@ const WhiteboardToolProperties = ({
                                     key={width}
                                     onClick={() => setCurrentStrokeWidth(width)}
                                     className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${currentStrokeWidth === width
-                                        ? 'bg-primary text-white'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600'
+                                        ? 'bg-primary-light text-foreground'
+                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
                                         }`}
                                     title={`${width}px`}
                                 >

@@ -241,7 +241,7 @@ const SpreadsheetViewComponent = ({
                 <div className="absolute inset-0 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center z-20">
                     <div className="flex flex-col items-center gap-3">
                         <div className="w-8 h-8 border-2 border-neutral-300 border-t-primary rounded-full animate-spin" />
-                        <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                        <span className="text-sm text-muted-foreground">
                             {t('spreadsheet.loading') || 'Loading spreadsheet...'}
                         </span>
                     </div>

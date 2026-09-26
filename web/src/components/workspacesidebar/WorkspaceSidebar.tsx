@@ -61,7 +61,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 </div>
                 <button
                     aria-label="close sidebar"
-                    className="lg:hidden shrink-0 p-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-500 dark:text-gray-400"
+                    className="lg:hidden shrink-0 p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-muted-foreground"
                     onClick={onClose}
                 >
                     <PanelRight size={16} />
@@ -73,7 +73,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 <button
                     onClick={() => { onClose(); handleCreateNote() }}
                     disabled={isCreatingNote}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-40"
                 >
                     <Plus className="shrink-0 size-4 lg:size-3.5" />
                     <span className="leading-snug">{t("actions.newNote")}</span>
@@ -84,8 +84,8 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isSearchActive
-                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                            : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            : "text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
                     <Search className="shrink-0 size-4 lg:size-3.5" />
@@ -97,8 +97,8 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isFilesActive
-                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                            : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            : "text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
                     <Folder className="shrink-0 size-4 lg:size-3.5" />
@@ -110,8 +110,8 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isWorkflowsActive
-                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                            : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            : "text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
                     <Workflow className="shrink-0 size-4 lg:size-3.5" />
@@ -123,8 +123,8 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isMessagingActive
-                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                            : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            : "text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
                     <MessageSquare className="shrink-0 size-4 lg:size-3.5" />
@@ -136,8 +136,8 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                     className={[
                         "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100",
                         isSettingsActive
-                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-200 dark:hover:bg-neutral-800"
-                            : "text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
+                            ? "text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                            : "text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300"
                     ].join(" ")}
                 >
                     <Settings className="shrink-0 size-4 lg:size-3.5" />
@@ -145,7 +145,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                 </Link>
                 {pinnedNotes.length > 0 && (
                     <div className="mb-2">
-                        <div className="px-1 py-2 text-xs font-medium text-gray-400 dark:text-neutral-600 select-none">
+                        <div className="px-1 py-2 text-xs font-medium text-muted-foreground select-none">
                             {t("common.pinned")}
                         </div>
                         {pinnedNotes.map((note: NoteData) => (
@@ -153,7 +153,7 @@ const WorkspaceSidebar = ({ isOpen, onClose }: WorkspaceSidebarProps) => {
                                 key={note.id}
                                 to={`${notesBase}/${note.id}`}
                                 onClick={onClose}
-                                className="flex items-center gap-2 py-2.5 px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 group text-gray-600 dark:text-gray-400 hover:bg-neutral-200 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-gray-100"
+                                className="flex items-center gap-2 py-2.5 px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 group text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-900 dark:hover:text-gray-100"
                             >
                                 <Pin className="shrink-0 opacity-50 size-4 lg:size-3.5" />
                                 <span className="truncate leading-snug">

@@ -80,7 +80,7 @@ const SignIn: React.FC = () => {
                         <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
                             {t('actions.signin')}
                         </h2>
-                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                        <p className="text-sm text-muted-foreground">
                             {t("pages.signin.noAccount")}{' '}
                             <a href="/signup" className="font-semibold text-primary hover:text-primary-hover transition-colors">
                                 {t("actions.signup")}
@@ -118,7 +118,7 @@ const SignIn: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
                                 >
                                     {showPassword ? <EyeOff className="!w-4 !h-4" /> : <Eye className="!w-4 !h-4" />}
                                 </button>
@@ -139,7 +139,7 @@ const SignIn: React.FC = () => {
                     <div className="text-center">
                         <a
                             href="/explore"
-                            className="text-sm text-neutral-400 dark:text-neutral-500 hover:text-primary transition-colors"
+                            className="text-sm text-muted-foreground hover:text-primary transition-colors"
                         >
                             {t("pages.signin.continueAsGuest")} →
                         </a>

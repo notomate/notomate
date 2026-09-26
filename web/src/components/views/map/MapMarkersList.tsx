@@ -73,7 +73,7 @@ const MapMarkersList = ({
                                         if (onCreateClick) onCreateClick()
                                         if (setIsCreating) setIsCreating(true)
                                     }}
-                                    className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                     title={t('views.createMarker')}
                                 >
                                     <Plus size={20} />
@@ -82,7 +82,7 @@ const MapMarkersList = ({
                         </div>
 
                         <div className="relative mb-4">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
                             <input
                                 type="text"
                                 placeholder={t('views.searchMarkers')}
@@ -93,7 +93,7 @@ const MapMarkersList = ({
                         </div>
 
                         {sortedMarkers.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
+                            <div className="text-center py-8 text-muted-foreground">
                                 {searchQuery.trim() ? t('views.noMarkersFound') : t('views.noMarkers')}
                             </div>
                         ) : (
@@ -120,10 +120,10 @@ const MapMarkersList = ({
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div className="flex items-start gap-2 flex-1 min-w-0">
-                                                    <MapPin size={16} className="text-gray-500 flex-shrink-0 mt-0.5" />
+                                                    <MapPin size={16} className="text-muted-foreground flex-shrink-0 mt-0.5" />
                                                     <div className="flex-1 min-w-0">
                                                         <div className="font-medium truncate">{marker.name}</div>
-                                                        <div className="text-xs text-gray-500 mt-1">
+                                                        <div className="text-xs text-muted-foreground mt-1">
                                                             {markerData.lat?.toFixed(4)}, {markerData.lng?.toFixed(4)}
                                                         </div>
                                                     </div>
@@ -132,7 +132,7 @@ const MapMarkersList = ({
                                                     <DropdownMenu.Root>
                                                         <DropdownMenu.Trigger asChild>
                                                             <button
-                                                                className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                                                                className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800"
                                                             >
                                                                 <MoreVertical size={16} />
                                                             </button>
@@ -176,7 +176,7 @@ const MapMarkersList = ({
                                     if (handleCloseModal) handleCloseModal()
                                     if (setIsCreating) setIsCreating(false)
                                 }}
-                                className="p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded"
+                                className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                             >
                                 <X size={20} />
                             </button>

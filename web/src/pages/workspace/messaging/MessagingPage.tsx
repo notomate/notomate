@@ -105,10 +105,10 @@ const MessagingPage: FC = () => {
   const channelListContent = (
     <>
       <div className="shrink-0 flex items-center justify-between px-3 py-3">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t("messaging.channels")}</span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("messaging.channels")}</span>
         <button
           aria-label={t("messaging.newChannel") as string}
-          className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+          className="p-1 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200"
           onClick={() => setDialogMode("create")}
         >
           <Plus size={16} />
@@ -123,8 +123,8 @@ const MessagingPage: FC = () => {
             className={[
               "flex items-center gap-1.5 px-2 py-1.5 rounded-md text-sm truncate",
               channel.id === channelId
-                ? "bg-neutral-200 dark:bg-neutral-800 text-gray-900 dark:text-gray-100 font-medium"
-                : "text-gray-500 dark:text-gray-400 hover:bg-neutral-100 dark:hover:bg-neutral-800/60",
+                ? "bg-neutral-100 dark:bg-neutral-800 text-gray-900 dark:text-gray-100 font-medium"
+                : "text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800/60",
             ].join(" ")}
           >
             <Hash size={14} className="shrink-0 opacity-60" />
@@ -153,11 +153,11 @@ const MessagingPage: FC = () => {
             onOpenChannelList={() => setIsChannelSheetOpen(true)}
           />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-sm text-gray-400 text-center px-4">
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground text-center px-4">
             <span>{channels.length === 0 ? t("messaging.noChannels") : t("messaging.selectChannel")}</span>
             {channels.length > 0 && (
               <button
-                className="lg:hidden text-xs px-3 py-1.5 border dark:border-neutral-600 rounded-md text-gray-600 dark:text-gray-300"
+                className="lg:hidden text-xs px-3 py-1.5 border dark:border-neutral-600 rounded-md text-muted-foreground dark:text-gray-300"
                 onClick={() => setIsChannelSheetOpen(true)}
               >
                 {t("messaging.channels")}
@@ -219,11 +219,11 @@ const MessagingPage: FC = () => {
             onKeyDown={e => { if (e.key === "Enter") handleSubmitDialog() }}
           />
           <div className="flex justify-end gap-2 mt-1">
-            <button className="text-xs px-3 py-1.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onClick={closeDialog}>
+            <button className="text-xs px-3 py-1.5 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300" onClick={closeDialog}>
               {t("actions.cancel")}
             </button>
             <button
-              className="text-xs px-3 py-1.5 bg-primary text-white rounded disabled:opacity-50"
+              className="text-xs px-3 py-1.5 bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active rounded disabled:opacity-50"
               disabled={!formName.trim()}
               onClick={handleSubmitDialog}
             >

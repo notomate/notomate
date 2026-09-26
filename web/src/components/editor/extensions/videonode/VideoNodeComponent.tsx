@@ -76,7 +76,7 @@ const VideoNodeComponent: React.FC<NodeViewProps> = ({ node, extension, updateAt
             <NodeViewWrapper className="video-node select-none border dark:border-neutral-700 rounded p-2 bg-gray-100 dark:bg-neutral-800">
                 <div className="flex gap-2 w-full h-32">
                     <button
-                        className="flex-1 rounded flex flex-col gap-2 items-center justify-center hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors text-gray-700 dark:text-gray-300"
+                        className="flex-1 rounded flex flex-col gap-2 items-center justify-center hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-gray-700 dark:text-gray-300"
                         onClick={() => setIsPickerOpen(true)}
                         disabled={!extension.options?.workspaceId}
                     >

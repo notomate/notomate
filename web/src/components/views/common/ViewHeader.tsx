@@ -57,7 +57,7 @@ const ViewHeader = ({ viewId, workspaceId, viewName, viewType, rightActions, ico
                 <button
                     onClick={() => navigate(-1)}
                     title={t("actions.back")}
-                    className="shrink-0 p-1 rounded-md text-gray-400 dark:text-gray-500 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    className="shrink-0 p-1 rounded-md text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                 >
                     <ArrowLeft size={16} />
                 </button>

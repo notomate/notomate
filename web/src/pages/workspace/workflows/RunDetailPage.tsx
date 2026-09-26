@@ -128,14 +128,14 @@ const RunDetailPage = () => {
                 <div className="bg-white dark:bg-neutral-800 rounded shadow-sm w-full max-w-4xl p-5 flex flex-col gap-4">
                     <div className="flex items-center gap-4 flex-wrap">
                         {run && <StatusBadge status={run.status} />}
-                        <span className="text-sm text-gray-400 dark:text-gray-500">
+                        <span className="text-sm text-muted-foreground">
                             {run?.event} · {run && new Date(run.created_at).toLocaleString()}
                         </span>
                         {isOwnerOrAdmin && run && (run.status === 'queued' || run.status === 'running') && (
                             <button
                                 onClick={() => cancelMutation.mutate()}
                                 disabled={cancelMutation.isPending}
-                                className="ml-auto px-3 py-1.5 flex gap-2 items-center text-sm text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded disabled:opacity-50"
+                                className="ml-auto px-3 py-1.5 flex gap-2 items-center text-sm text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                             >
                                 <CircleSlash size={15} />
                                 {t("actions.cancel")}
@@ -152,7 +152,7 @@ const RunDetailPage = () => {
                                     onClick={() => setSelectedJobId(job.id)}
                                     className={`px-3 py-1.5 rounded text-sm flex items-center gap-2 border ${selectedJob?.id === job.id
                                         ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
-                                        : "border-neutral-200 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-700"}`}
+                                        : "border-neutral-200 dark:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-800"}`}
                                 >
                                     {job.name}
                                     <StatusBadge status={job.status} />

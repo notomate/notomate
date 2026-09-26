@@ -155,18 +155,18 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
               className="flex items-center gap-1.5 min-w-0 lg:pointer-events-none"
               onClick={onOpenChannelList}
             >
-              <Hash size={16} className="text-gray-400 shrink-0" />
+              <Hash size={16} className="text-muted-foreground shrink-0" />
               <span className="font-medium text-sm text-gray-800 dark:text-gray-100 truncate">{channel.name}</span>
-              <ChevronDown size={14} className="text-gray-400 shrink-0 lg:hidden" />
+              <ChevronDown size={14} className="text-muted-foreground shrink-0 lg:hidden" />
             </button>
           ) : (
             <>
-              <Hash size={16} className="text-gray-400 shrink-0" />
+              <Hash size={16} className="text-muted-foreground shrink-0" />
               <span className="font-medium text-sm text-gray-800 dark:text-gray-100 truncate">{channel.name}</span>
             </>
           )}
           {channel.description && (
-            <span className="text-xs text-gray-400 truncate hidden sm:inline">— {channel.description}</span>
+            <span className="text-xs text-muted-foreground truncate hidden sm:inline">— {channel.description}</span>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -184,7 +184,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
               {onlineMembers.length > 5 && (
                 <div
                   style={{ width: 24, height: 24, fontSize: 10 }}
-                  className="rounded-full bg-gray-200 dark:bg-neutral-700 text-gray-600 dark:text-gray-300 font-medium flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-neutral-900"
+                  className="rounded-full bg-gray-200 dark:bg-neutral-700 text-muted-foreground dark:text-gray-300 font-medium flex items-center justify-center shrink-0 ring-2 ring-white dark:ring-neutral-900"
                 >
                   +{onlineMembers.length - 5}
                 </div>
@@ -194,7 +194,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
           {canManageChannel && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0">
+                <button className="p-1 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200 shrink-0">
                   <MoreVertical size={16} />
                 </button>
               </DropdownMenu.Trigger>
@@ -227,14 +227,14 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
 
       <div className="flex-1 overflow-y-auto px-4 py-3 bg-gray-100 dark:bg-neutral-950">
         {messages.length === 0 && (
-          <div className="text-center text-sm text-gray-400 py-8">{t("messaging.noMessages")}</div>
+          <div className="text-center text-sm text-muted-foreground py-8">{t("messaging.noMessages")}</div>
         )}
         <div className="flex flex-col gap-4">
           {timeline.map(item => {
             if (item.kind === "notice") {
               const memberName = members.find(m => m.user_id === item.notice.userId)?.user_name ?? item.notice.userId
               return (
-                <div key={item.notice.id} className="text-center text-xs text-gray-400">
+                <div key={item.notice.id} className="text-center text-xs text-muted-foreground">
                   {t(item.notice.type === "join" ? "messaging.userJoinedChannel" : "messaging.userLeftChannel", { name: memberName })}
                 </div>
               )
@@ -264,10 +264,10 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
                       focusRing={false}
                     />
                     <div className="flex justify-end gap-2 mt-1">
-                      <button className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onClick={() => setEditingId(null)}>
+                      <button className="text-xs px-2 py-1 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300" onClick={() => setEditingId(null)}>
                         {t("actions.cancel")}
                       </button>
-                      <button className="text-xs px-3 py-1 bg-primary text-white rounded disabled:opacity-50" disabled={!editingBody.trim()} onClick={handleSubmitEdit}>
+                      <button className="text-xs px-3 py-1 bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active rounded disabled:opacity-50" disabled={!editingBody.trim()} onClick={handleSubmitEdit}>
                         {t("actions.save")}
                       </button>
                     </div>
@@ -282,12 +282,12 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
                       dangerouslySetInnerHTML={{ __html: renderCommentBody(message.body) }}
                     />
                     <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-xs text-gray-400 whitespace-nowrap">{formatRelativeTime(t, message.created_at)}</span>
-                      {message.edited && <span className="text-xs text-gray-400 whitespace-nowrap">{t("messaging.edited")}</span>}
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{formatRelativeTime(t, message.created_at)}</span>
+                      {message.edited && <span className="text-xs text-muted-foreground whitespace-nowrap">{t("messaging.edited")}</span>}
                       {isOwn && (
                         <DropdownMenu.Root>
                           <DropdownMenu.Trigger asChild>
-                            <button className="p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0">
+                            <button className="p-0.5 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200 shrink-0">
                               <MoreVertical size={14} />
                             </button>
                           </DropdownMenu.Trigger>
@@ -340,7 +340,7 @@ const ChannelView: FC<ChannelViewProps> = ({ workspaceId, channel, members, canM
             focusRing={false}
           />
           <button
-            className="flex items-center justify-center w-14 shrink-0 bg-primary text-white disabled:opacity-40"
+            className="flex items-center justify-center w-14 shrink-0 bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active disabled:opacity-40"
             disabled={!composerBody.trim() || !isConnected}
             onClick={handleSubmitComposer}
           >

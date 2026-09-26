@@ -79,11 +79,11 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                                     <>
                                         <button
                                             onClick={() => navigate(`../${parentNote.id}`)}
-                                            className="text-base text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0 max-w-[160px] truncate text-left"
+                                            className="text-base text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300 transition-colors shrink-0 max-w-[160px] truncate text-left"
                                         >
                                             {parentNote.title || t("notes.untitled")}
                                         </button>
-                                        <span className="text-gray-300 dark:text-gray-600 select-none">/</span>
+                                        <span className="text-gray-300 dark:text-muted-foreground select-none">/</span>
                                     </>
                                 )}
                                 <EditableDiv

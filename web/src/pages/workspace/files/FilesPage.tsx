@@ -193,7 +193,7 @@ const FilesPage = () => {
                     {
                         isSearchVisible ? <div className="block sm:hidden py-1">
                             <div className="w-full flex items-center gap-2 py-2 rounded-lg bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-100">
-                                <Search size={16} className="text-gray-400" />
+                                <Search size={16} className="text-muted-foreground" />
                                 <input
                                     type="text"
                                     value={searchQuery}
@@ -202,7 +202,7 @@ const FilesPage = () => {
                                     placeholder={t("placeholder.search")}
                                 />
                                 <button title="toggle search" onClick={() => setIsSearchVisible(false)}>
-                                    <X size={16} className="text-gray-400" />
+                                    <X size={16} className="text-muted-foreground" />
                                 </button>
                             </div>
                         </div>
@@ -213,10 +213,10 @@ const FilesPage = () => {
                                         {t("menu.files")}
                                     </div>
                                 </div>
-                                <div className="flex items-center text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center text-muted-foreground">
                                     <div className="hidden sm:block px-1.5">
                                         <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-100">
-                                            <Search size={16} className="text-gray-400" />
+                                            <Search size={16} className="text-muted-foreground" />
                                             <input
                                                 type="text"
                                                 value={searchQuery}
@@ -228,7 +228,7 @@ const FilesPage = () => {
                                     </div>
                                     <div className="hidden sm:block px-1.5">
                                         <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-neutral-50 dark:bg-neutral-950 dark:text-neutral-100">
-                                            <Filter size={16} className="text-gray-400" />
+                                            <Filter size={16} className="text-muted-foreground" />
                                             <select
                                                 value={extFilter}
                                                 onChange={(e) => setExtFilter(e.target.value)}
@@ -321,7 +321,7 @@ const FilesPage = () => {
                                                 ) : isTextFile(file.ext) ? (
                                                     <FileText className="h-16 w-16 text-green-500" />
                                                 ) : (
-                                                    <FileIcon className="h-16 w-16 text-neutral-400" />
+                                                    <FileIcon className="h-16 w-16 text-muted-foreground" />
                                                 )}
 
                                                 {/* Hover Actions Overlay */}
@@ -374,7 +374,7 @@ const FilesPage = () => {
                                                             </button>
                                                             <button
                                                                 onClick={cancelEdit}
-                                                                className="p-1 text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+                                                                className="p-1 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                                                                 title={t('common.cancel')}
                                                             >
                                                                 <X size={16} />
@@ -386,7 +386,7 @@ const FilesPage = () => {
                                                         <div className="font-medium text-sm text-neutral-900 dark:text-neutral-100 truncate mb-1" title={file.original_name}>
                                                             {file.original_name}
                                                         </div>
-                                                        <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+                                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                             <span>{formatFileSize(file.size)}</span>
                                                             <span className="px-1.5 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded text-xs">
                                                                 {file.ext}
@@ -401,7 +401,7 @@ const FilesPage = () => {
                                                 <div className="px-3 pb-3 flex gap-1">
                                                     <button
                                                         onClick={() => startEdit(file)}
-                                                        className="flex-1 p-1.5 text-xs text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded transition-colors flex items-center justify-center gap-1"
+                                                        className="flex-1 p-1.5 text-xs text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors flex items-center justify-center gap-1"
                                                         title={t('files.rename')}
                                                     >
                                                         <Edit2 size={14} />
@@ -434,10 +434,10 @@ const FilesPage = () => {
                         <div ref={loadMoreRef} className="h-8"></div>
                         {isFetchingNextPage && <FilesGridSkeleton count={4} />}
                         {!isLoading && !hasNextPage && files.length > 0 && (
-                            <div className="text-center py-4 text-gray-400">{t("messages.noMore")}</div>
+                            <div className="text-center py-4 text-muted-foreground">{t("messages.noMore")}</div>
                         )}
                         {!isLoading && files.length === 0 && (
-                            <div className="text-center py-8 text-gray-400">{t('files.no_files')}</div>
+                            <div className="text-center py-8 text-muted-foreground">{t('files.no_files')}</div>
                         )}
                     </div>
                 </div>
@@ -467,7 +467,7 @@ const FilesPage = () => {
                                 <button
                                     onClick={() => setPreviewFile(null)}
                                     aria-label='cancel'
-                                    className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md"
+                                    className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
                                 >
                                     <X size={20} />
                                 </button>

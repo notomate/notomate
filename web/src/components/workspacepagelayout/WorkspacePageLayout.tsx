@@ -28,7 +28,7 @@ const WorkspacePageLayout = () => {
                         aria-label={t("actions.newNote")}
                         onClick={handleCreateNote}
                         disabled={isCreatingNote}
-                        className="p-2 -mr-2 rounded-md hover:bg-neutral-200 dark:hover:bg-neutral-700 text-gray-600 dark:text-gray-400 disabled:opacity-50"
+                        className="p-2 -mr-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-muted-foreground disabled:opacity-50"
                     >
                         <Edit size={16} />
                     </button>

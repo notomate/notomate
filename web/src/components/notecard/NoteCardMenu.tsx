@@ -121,7 +121,7 @@ const NoteCardMenu: FC<NoteCardMenuProps> = ({ note, workspaceId }) => {
             <div className="relative">
                 <button
                     ref={buttonRef}
-                    className="p-1 text-gray-500 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-md"
+                    className="p-1 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md"
                     onClick={handleOpenMenu}
                 >
                     <Ellipsis size={16} />

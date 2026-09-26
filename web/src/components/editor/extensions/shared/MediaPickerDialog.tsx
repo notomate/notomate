@@ -99,7 +99,7 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
 
                     <div className="mb-4 flex gap-2">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -113,7 +113,7 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
                                 type="button"
                                 onClick={() => inputRef.current?.click()}
                                 disabled={isUploading}
-                                className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-50 whitespace-nowrap"
+                                className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-50 whitespace-nowrap"
                             >
                                 {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                                 Upload

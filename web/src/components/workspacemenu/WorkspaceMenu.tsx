@@ -78,7 +78,7 @@ const WorkspaceMenu = () => {
                 {filteredWorkspaces && filteredWorkspaces.map(w => (
                     <button
                         key={w.id}
-                        className="px-3 py-2 rounded w-full hover:bg-neutral-200 dark:hover:bg-neutral-700 text-left text-sm truncate"
+                        className="px-3 py-2 rounded w-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-left text-sm truncate"
                         onClick={() => handleWorkspaceButtonClick(w.id)}
                     >
                         {w.name}
@@ -88,7 +88,7 @@ const WorkspaceMenu = () => {
                     <button
                         onClick={handleNewWorkspaceButtonClick}
                         title="new workspace"
-                        className="p-2 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center w-full gap-2 text-sm"
+                        className="p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center w-full gap-2 text-sm"
                     >
                         <Plus size={16} />
                         {keyword ? t("menu.createWithName", { name: keyword }) : t("menu.addNew")}

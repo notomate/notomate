@@ -119,7 +119,7 @@ const CalendarSlotDetail = () => {
     if (isLoading) {
         return (
             <div className="h-full flex items-center justify-center">
-                <div className="text-gray-500">{t('common.loading')}</div>
+                <div className="text-muted-foreground">{t('common.loading')}</div>
             </div>
         )
     }
@@ -127,7 +127,7 @@ const CalendarSlotDetail = () => {
     if (!slot) {
         return (
             <div className="h-full flex flex-col items-center justify-center">
-                <div className="text-gray-500 mb-4">{t('views.objectNotFound')}</div>
+                <div className="text-muted-foreground mb-4">{t('views.objectNotFound')}</div>
                 <button
                     onClick={handleBack}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -144,7 +144,7 @@ const CalendarSlotDetail = () => {
                 <div className="p-4 border-b dark:border-neutral-700">
                     <button
                         onClick={handleBack}
-                        className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-3"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200 mb-3"
                     >
                         <ArrowLeft size={16} />
                         {view.name}
@@ -153,12 +153,12 @@ const CalendarSlotDetail = () => {
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <div className="text-xl font-semibold">{slot.name}</div>
-                            <div className="text-sm text-gray-500 mt-1">
+                            <div className="text-sm text-muted-foreground mt-1">
                                 {t('views.calendarSlot')}
                             </div>
                             {slotData && (
                                 <div className="mt-3 space-y-2">
-                                    <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
                                         <Clock size={14} className="mt-0.5" />
                                         <div>
                                             {slotData.end_date ? (
@@ -189,7 +189,7 @@ const CalendarSlotDetail = () => {
                                         </div>
                                     )}
                                     {slotData.color && (
-                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <div
                                                 className="w-4 h-4 rounded border border-gray-300"
                                                 style={{ backgroundColor: slotData.color }}
@@ -217,7 +217,7 @@ const CalendarSlotDetail = () => {
                 <div className="p-4 border-b dark:border-neutral-700">
                     <button
                         onClick={handleBack}
-                        className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 mb-3"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200 mb-3"
                     >
                         <ArrowLeft size={16} />
                         {view.name}

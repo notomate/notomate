@@ -5,7 +5,7 @@ const NotFound = () => {
         <div className="w-screen h-screen flex justify-center place-items-center">
             <div className="flex gap-2">
                 404
-                <Link to="/" className=" text-gray-500" >Back to home</Link>
+                <Link to="/" className=" text-muted-foreground" >Back to home</Link>
             </div>
         </div>
     </>

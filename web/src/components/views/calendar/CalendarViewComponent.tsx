@@ -231,7 +231,7 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                         {weekDays.map((day) => (
                             <div
                                 key={day}
-                                className="text-center font-semibold text-sm py-2 text-gray-600 dark:text-gray-400"
+                                className="text-center font-semibold text-sm py-2 text-muted-foreground"
                             >
                                 {day}
                             </div>
@@ -261,7 +261,7 @@ const CalendarViewComponent = ({ viewObjects = [], focusedObjectId, isPublic = f
                                                 <div className={`
                                                     text-sm font-medium mb-1
                                                     ${isTodayCell ? 'text-blue-600 dark:text-blue-400' : ''}
-                                                    ${dayObj.isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600'}
+                                                    ${dayObj.isCurrentMonth ? 'text-gray-700 dark:text-gray-300' : 'text-muted-foreground'}
                                                 `}>
                                                     {dayObj.day}
                                                 </div>

@@ -54,7 +54,7 @@ const SearchPage = () => {
                     <div className="relative">
                         <Search
                             size={16}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
                         />
                         <input
                             type="text"
@@ -67,7 +67,7 @@ const SearchPage = () => {
                             <button
                                 onClick={() => setQuery("")}
                                 title={t("common.clear")}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                             >
                                 <Trash2 size={14} />
                             </button>
@@ -78,7 +78,7 @@ const SearchPage = () => {
                     {isLoading ? (
                         <NoteListSkeleton />
                     ) : notes.length === 0 ? (
-                        <div className="text-center text-gray-400 dark:text-neutral-500 py-16 text-sm">
+                        <div className="text-center text-muted-foreground py-16 text-sm">
                             {debouncedQuery ? t("common.noResults") : t("messages.noMoreNotes")}
                         </div>
                     ) : (

@@ -21,7 +21,7 @@ const AudioPickerDialog: FC<AudioPickerDialogProps> = (props) => {
             accept="audio/*"
             gridClassName="grid grid-cols-1 md:grid-cols-2 gap-4"
             emptyState={
-                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                     <Music size={48} className="mb-4" />
                     <p>No audio files found</p>
                 </div>
