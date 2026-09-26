@@ -50,6 +50,12 @@ type Runner struct {
 func New(cfg config.Config, c *client.Client) *Runner {
 	r := &Runner{cfg: cfg, client: c}
 
+	// Created up front so a cache miss on the first job is the only reason a
+	// `uses:` fetch can fail, rather than a missing parent directory.
+	if err := os.MkdirAll(cfg.ActionCacheDir, 0o755); err != nil {
+		log.Printf("Action cache dir %s unusable: %v", cfg.ActionCacheDir, err)
+	}
+
 	externalURL := fmt.Sprintf("http://127.0.0.1:%d", cfg.CachePort)
 	handler, err := artifactcache.StartHandler(cfg.CacheDir, externalURL, "0.0.0.0", cfg.CachePort, logrus.StandardLogger())
 	if err != nil {
@@ -183,6 +189,17 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 		LogOutput:             true,
 		AutoRemove:            true,
 		GitHubInstance:        "github.com",
+		ActionCacheDir:        r.cfg.ActionCacheDir,
+		// act's newer action cache, in its offline-tolerant flavour: when the
+		// forge cannot be reached it resolves `uses:` from the sha already in
+		// the cache instead of failing the job. The legacy clone path always
+		// hits the network, so a transient TCP failure there kills a job whose
+		// actions are all sitting on disk already.
+		ActionCache: retryingActionCache{
+			inner: runner.GoGitActionCacheOfflineMode{
+				Parent: runner.GoGitActionCache{Path: r.cfg.ActionCacheDir},
+			},
+		},
 	}
 
 	actRunner, err := runner.New(actConfig)

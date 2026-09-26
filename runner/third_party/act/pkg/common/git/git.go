@@ -264,7 +264,16 @@ func CloneIfRequired(ctx context.Context, refName plumbing.ReferenceName, input 
 			}
 		}
 
-		r, err = git.PlainCloneContext(ctx, input.Dir, false, &cloneOptions)
+		err = common.RetryTransientNetwork(ctx, fmt.Sprintf("git clone %s", input.URL), func() error {
+			var cloneErr error
+			r, cloneErr = git.PlainCloneContext(ctx, input.Dir, false, &cloneOptions)
+			if cloneErr != nil {
+				// A partially written directory would make the next attempt
+				// take the "already cloned" branch over a broken repo.
+				_ = os.RemoveAll(input.Dir)
+			}
+			return cloneErr
+		})
 		if err != nil {
 			logger.Errorf("Unable to clone %v %s: %v", input.URL, refName, err)
 			return nil, err
@@ -318,8 +327,17 @@ func NewGitCloneExecutor(input NewGitCloneExecutorInput) common.Executor {
 		fetchOptions, pullOptions := gitOptions(input.Token)
 
 		if !isOfflineMode {
-			err = r.Fetch(&fetchOptions)
-			if err != nil && !errors.Is(err, git.NoErrAlreadyUpToDate) {
+			// FetchContext (not Fetch) so a cancelled job stops waiting on the
+			// network, and retried so one transient failure does not fail the
+			// job when the repo is already cloned locally.
+			err = common.RetryTransientNetwork(ctx, fmt.Sprintf("git fetch %s", input.URL), func() error {
+				fetchErr := r.FetchContext(ctx, &fetchOptions)
+				if errors.Is(fetchErr, git.NoErrAlreadyUpToDate) {
+					return nil
+				}
+				return fetchErr
+			})
+			if err != nil {
 				return err
 			}
 		}
