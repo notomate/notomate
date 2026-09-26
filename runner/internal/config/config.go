@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -35,6 +36,11 @@ type Config struct {
 	// server via the host's loopback address, not the runner container's
 	// own network namespace.
 	CachePort uint16
+	// ActionCacheDir holds the bare git repos act fetches `uses:` actions
+	// into. Distinct from CacheDir, which backs actions/cache. Point it at a
+	// volume: what is cached here is what lets a job still run when the forge
+	// is briefly unreachable.
+	ActionCacheDir string
 }
 
 const (
@@ -50,6 +56,7 @@ func Load() (Config, error) {
 		StateFile:         envOr("NM_RUNNER_STATE_FILE", ".runner"),
 		DaemonSocket:      os.Getenv("NM_RUNNER_DAEMON_SOCKET"),
 		CacheDir:          os.Getenv("NM_RUNNER_CACHE_DIR"),
+		ActionCacheDir:    envOr("NM_RUNNER_ACTION_CACHE_DIR", defaultActionCacheDir()),
 	}
 
 	if cfg.Name == "" {
@@ -124,6 +131,20 @@ func Platforms(labels []Label) map[string]string {
 		platforms[l.Name] = l.Image
 	}
 	return platforms
+}
+
+// defaultActionCacheDir mirrors how act resolves its own action cache
+// directory, so an unset NM_RUNNER_ACTION_CACHE_DIR keeps act's default
+// location. Unlike act we always resolve it eagerly: the path has to be known
+// here to build the offline-capable ActionCache in the run package.
+func defaultActionCacheDir() string {
+	if xdg := os.Getenv("XDG_CACHE_HOME"); xdg != "" {
+		return filepath.Join(xdg, "act")
+	}
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		return filepath.Join(home, ".cache", "act")
+	}
+	return filepath.Join(os.TempDir(), "act")
 }
 
 func envOr(key, fallback string) string {

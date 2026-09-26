@@ -26,8 +26,15 @@ COPY --from=builder /out/notomate-runner ./notomate-runner
 
 # Registration state lives in /data (mount a volume to survive restarts).
 RUN mkdir -p /data
+# Docker sets no HOME, which would send anything resolving a home-relative
+# cache path to the working directory instead.
+ENV HOME=/root
 ENV NM_RUNNER_STATE_FILE=/data/.runner
 ENV NM_RUNNER_CACHE_DIR=/data/actcache
+# Bare git repos for `uses:` actions. On the volume so they survive a
+# container rebuild -- that cache is what keeps jobs running when github.com
+# is briefly unreachable.
+ENV NM_RUNNER_ACTION_CACHE_DIR=/data/actions
 VOLUME /data
 
 ENTRYPOINT ["./notomate-runner"]
