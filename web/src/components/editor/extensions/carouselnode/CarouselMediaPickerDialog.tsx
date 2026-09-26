@@ -93,17 +93,8 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
         if (!uploadedFiles.length || !onUpload) return
         setIsUploading(true)
         try {
-            const results = await Promise.all(uploadedFiles.map(f => onUpload(f)))
-            const items: CarouselItem[] = results.map((r, i) => {
-                const ext = '.' + (uploadedFiles[i].name.split('.').pop()?.toLowerCase() ?? '')
-                return {
-                    src: r.src,
-                    name: r.name,
-                    type: IMAGE_EXTS.has(ext) ? 'image' : 'video',
-                }
-            })
-            onAdd(items)
-            onOpenChange(false)
+            await Promise.all(uploadedFiles.map(f => onUpload(f)))
+            await loadFiles()
         } finally {
             setIsUploading(false)
             if (inputRef.current) inputRef.current.value = ''
