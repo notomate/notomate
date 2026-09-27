@@ -25,7 +25,7 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
     const { t } = useTranslation()
     const commentsWorkspaceId = workspaceId || note.workspace_id
     return (
-        <div className="relative bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-none rounded-lg overflow-auto flex flex-col gap-3 p-4">
+        <div className="relative bg-white dark:bg-neutral-800 border sm:shadow-sm dark:border-none rounded-lg flex flex-col gap-3 p-4">
             <>
                 {(showLink || (showActions && workspaceId && note.id)) && (
                     <div className="absolute top-4 right-4 flex items-center gap-1.5 p-1">
@@ -64,7 +64,7 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
                         </div>
                     </div>
                 </div>
-                <div className="break-all w-full flex flex-col m-auto">
+                <div className="break-all w-full flex flex-col m-auto overflow-auto">
                     {note.title && (
                         <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
                             {note.title}
