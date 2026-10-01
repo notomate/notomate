@@ -1,6 +1,9 @@
 package server
 
 import (
+	"context"
+	"time"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -41,6 +44,9 @@ func New(db db.DB, storage storage.Storage, engine *workflow.Engine) (*echo.Echo
 	route.RegisterWorkspace(api, *handler, *auth, *workspace)
 	route.RegisterWorkflow(api, *handler, *auth, *workspace)
 	route.RegisterMessaging(api, *handler, *auth, *workspace)
+	route.RegisterGoogleMaps(api, *handler, *auth, *workspace)
+
+	handler.GoogleMaps().StartJanitor(context.Background(), time.Hour)
 
 	return e, nil
 }

@@ -592,6 +592,9 @@ export default {
     "TiktokEmbed":"تيك توك",
     "CalendarNode":"حدث التقويم",
     "LocationNode":"موقع",
+    "GoogleMapNode":"خريطة Google",
+    "GooglePlacesNode":"أماكن Google",
+    "GoogleDirectionsNode":"اتجاهات Google",
     "TagsNode":"وسوم",
     "RatingNode":"تقييم",
     "Video":"فيديو",
@@ -623,7 +626,8 @@ export default {
         "media": "وسائط",
         "embed": "تضمين",
         "advanced": "متقدم",
-        "views": "العروض"
+        "views": "العروض",
+        "googleMaps": "Google Maps"
     },
     "carousel": {
         "addMediaToCarousel": "إضافة وسائط إلى العرض الدوار",

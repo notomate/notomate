@@ -26,6 +26,8 @@ type DB interface {
 	WorkflowFileRepository
 	RunnerRepository
 	SettingRepository
+	WorkspaceIntegrationRepository
+	GoogleMapsCacheRepository
 }
 type Uow interface {
 	Begin(ctx context.Context) (DB, error)
@@ -167,4 +169,17 @@ type RunnerRepository interface {
 type SettingRepository interface {
 	FindSetting(key string) (model.Setting, error)
 	UpsertSetting(s model.Setting) error
+}
+type WorkspaceIntegrationRepository interface {
+	FindWorkspaceIntegration(workspaceID, provider string) (model.WorkspaceIntegration, error)
+	UpsertWorkspaceIntegration(i model.WorkspaceIntegration) error
+	DeleteWorkspaceIntegration(workspaceID, provider string) error
+}
+type GoogleMapsCacheRepository interface {
+	// FindGoogleMapsCache returns the entry only if it has not expired at now.
+	FindGoogleMapsCache(cacheKey, now string) (model.GoogleMapsCache, error)
+	UpsertGoogleMapsCache(c model.GoogleMapsCache) error
+	HasGoogleMapsCacheRef(workspaceID, kind, ref string) (bool, error)
+	FindGoogleMapsCacheEntries(f model.GoogleMapsCacheFilter) ([]model.GoogleMapsCache, error)
+	DeleteGoogleMapsCacheEntries(f model.GoogleMapsCacheFilter) error
 }

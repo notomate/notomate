@@ -592,6 +592,9 @@ export default {
     "TiktokEmbed":"TikTok",
     "CalendarNode":"Evento de Calendario",
     "LocationNode":"Ubicación",
+    "GoogleMapNode":"Mapa de Google",
+    "GooglePlacesNode":"Lugares de Google",
+    "GoogleDirectionsNode":"Rutas de Google",
     "TagsNode":"Etiquetas",
     "RatingNode":"Calificación",
     "Video":"Video",
@@ -623,7 +626,8 @@ export default {
         "media": "Medios",
         "embed": "Insertar",
         "advanced": "Avanzado",
-        "views": "Vistas"
+        "views": "Vistas",
+        "googleMaps": "Google Maps"
     },
     "carousel": {
         "addMediaToCarousel": "Agregar medios al carrusel",

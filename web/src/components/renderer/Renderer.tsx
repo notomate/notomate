@@ -21,6 +21,11 @@ const rendererMarkerIcon = new Icon({
 })
 import WhiteboardViewComponent from '@/components/views/whiteboard/WhiteboardViewComponent'
 import { MapInlinePreview, CalendarInlinePreview, KanbanInlinePreview } from '@/components/editor/extensions/viewnode/ViewNodeInlinePreview'
+import { StaticRouteMap, RouteSummary } from '@/components/editor/extensions/googlemaps/shared/MapParts'
+import { PlacesList } from '@/components/editor/extensions/googlemaps/shared/PlacesList'
+import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/shared/GoogleMapSnapshot'
+import { MapMarker, MapRoute, StoredRoute, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
+import type { PlaceDetails } from '@/api/googleMaps'
 
 const InstagramRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
     const containerRef = useRef<HTMLDivElement>(null)
@@ -293,6 +298,36 @@ const LocationRenderer: React.FC<{ lat: number; lng: number; name?: string; zoom
                     </MapContainer>
                 </div>
             )}
+        </div>
+    )
+}
+
+// ── Google Maps renderers ─────────────────────────────────────────────────────
+// Read-only pages draw stored snapshots on Leaflet so the workspace's Google
+// key is never needed (or exposed) here.
+const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route: MapRoute | null; workspaceId?: string }> = ({ workspaceId: workspaceIdProp, ...props }) => {
+    const { workspaceId: workspaceIdParam } = useParams<{ workspaceId?: string }>()
+    return <GoogleMapSnapshot {...props} workspaceId={workspaceIdProp || workspaceIdParam} />
+}
+
+// Places keep their stored details; photos come through the workspace's
+// cached photo proxy, so a workspace ID is needed even off workspace routes.
+const GooglePlacesRenderer: React.FC<{ places: PlaceDetails[]; workspaceId?: string }> = ({ places, workspaceId: workspaceIdProp }) => {
+    const { workspaceId: workspaceIdParam } = useParams<{ workspaceId?: string }>()
+    return <PlacesList places={places} workspaceId={workspaceIdProp || workspaceIdParam} detailed />
+}
+
+const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; result: StoredRoute | null }> = ({ waypoints, result }) => {
+    if (!waypoints.length) return null
+    return (
+        <div className="flex flex-col gap-2 py-1">
+            <StaticRouteMap
+                points={waypoints.map((w, i) => ({ lat: w.lat, lng: w.lng, label: waypointLabel(i), color: waypointColor(i, waypoints.length), title: w.name }))}
+                encodedPolyline={result?.encodedPolyline}
+            />
+            {result
+                ? <RouteSummary route={result} stopNames={waypoints.map(w => w.name)} />
+                : <div className="text-sm">{waypoints.map(w => w.name).join(' → ')}</div>}
         </div>
     )
 }
@@ -640,6 +675,15 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 if (lat == null || lng == null) return null
                 return <LocationRenderer key={key} lat={lat} lng={lng} name={node.attrs?.name} zoom={node.attrs?.zoom ?? 15} />
             }
+            case 'googleMapNode':
+                return <div key={key} className="py-1"><GoogleMapRenderer title={node.attrs?.title} markers={node.attrs?.markers ?? []} route={node.attrs?.route ?? null} workspaceId={workspaceIdProp} /></div>
+            case 'googlePlacesNode': {
+                const places: PlaceDetails[] = node.attrs?.places ?? []
+                if (!places.length) return null
+                return <div key={key} className="py-1"><GooglePlacesRenderer places={places} workspaceId={workspaceIdProp} /></div>
+            }
+            case 'googleDirectionsNode':
+                return <GoogleDirectionsRenderer key={key} waypoints={node.attrs?.waypoints ?? []} result={node.attrs?.result ?? null} />
             case 'ratingNode': {
                 const { rating = 0, maxRating = 5, label } = node.attrs ?? {}
                 return <RatingRenderer key={key} rating={rating} maxRating={maxRating} label={label} />

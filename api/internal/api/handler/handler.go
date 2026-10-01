@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/googlemaps"
 	"github.com/notomate/notomate/internal/model"
 	"github.com/notomate/notomate/internal/storage"
 )
@@ -10,6 +11,7 @@ type Handler struct {
 	db             db.DB
 	storage        storage.Storage
 	workflowEngine WorkflowEngine
+	googleMaps     *googlemaps.Service
 }
 
 // WorkflowEngine is the part of the workflow trigger engine handlers need:
@@ -28,9 +30,16 @@ type WorkflowEngine interface {
 
 func NewHandler(r db.DB, s storage.Storage) *Handler {
 	return &Handler{
-		db:      r,
-		storage: s,
+		db:         r,
+		storage:    s,
+		googleMaps: googlemaps.NewService(r, s, googlemaps.NewClient(), encryptionKey),
 	}
+}
+
+// GoogleMaps exposes the Google Maps service so the server can start its
+// cache janitor.
+func (h *Handler) GoogleMaps() *googlemaps.Service {
+	return h.googleMaps
 }
 
 // SetWorkflowEngine attaches the trigger engine. The handler works without
