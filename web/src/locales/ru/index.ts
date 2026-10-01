@@ -592,6 +592,9 @@ export default {
     "TiktokEmbed":"TikTok",
     "CalendarNode":"Событие календаря",
     "LocationNode":"Местоположение",
+    "GoogleMapNode":"Карта Google",
+    "GooglePlacesNode":"Места Google",
+    "GoogleDirectionsNode":"Маршруты Google",
     "TagsNode":"Теги",
     "RatingNode":"Рейтинг",
     "Video":"Видео",
@@ -623,7 +626,8 @@ export default {
         "media": "Медиа",
         "embed": "Вставка",
         "advanced": "Расширенные",
-        "views": "Представления"
+        "views": "Представления",
+        "googleMaps": "Google Maps"
     },
     "carousel": {
         "addMediaToCarousel": "Добавить медиа в карусель",

@@ -592,6 +592,9 @@ export default {
     "TiktokEmbed":"TikTok",
     "CalendarNode":"캘린더 이벤트",
     "LocationNode":"위치",
+    "GoogleMapNode":"Google 지도",
+    "GooglePlacesNode":"Google 장소",
+    "GoogleDirectionsNode":"Google 길찾기",
     "TagsNode":"태그",
     "RatingNode":"평점",
     "Video":"동영상",
@@ -623,7 +626,8 @@ export default {
         "media": "미디어",
         "embed": "임베드",
         "advanced": "고급",
-        "views": "뷰"
+        "views": "뷰",
+        "googleMaps": "Google Maps"
     },
     "carousel": {
         "addMediaToCarousel": "캐러셀에 미디어 추가",

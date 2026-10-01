@@ -9,7 +9,7 @@ import { Mention } from "@tiptap/extension-mention"
 import { FC, useMemo, useRef, useEffect, useState, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
-import { GripVertical, ChevronUp, ChevronDown, Trash2, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, Image, Images, List, ListTodo, FileText, Paperclip, Quote, Table, Type, Video, Music, Youtube, CalendarDays, MapPin, Tag, Star, Map, Kanban, PenTool, Sheet } from 'lucide-react'
+import { GripVertical, ChevronUp, ChevronDown, Trash2, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, Image, Images, List, ListTodo, FileText, Paperclip, Quote, Table, Type, Video, Music, Youtube, CalendarDays, MapPin, Tag, Star, Map, Kanban, PenTool, Sheet, Store, Navigation } from 'lucide-react'
 import { CommandItem, SlashCommand } from './extensions/slashcommand/SlashCommand'
 import { createMentionSuggestion } from './extensions/mention/suggestion'
 import { Attachment } from './extensions/attachment/Attachment'
@@ -30,6 +30,10 @@ import { LocationNode } from './extensions/locationnode/LocationNode'
 import { TagsNode } from './extensions/tagsnode/TagsNode'
 import { RatingNode } from './extensions/ratingnode/RatingNode'
 import { CarouselNode } from './extensions/carouselnode/CarouselNode'
+import { GoogleMapNode } from './extensions/googlemaps/GoogleMapNode'
+import { GooglePlacesNode } from './extensions/googlemaps/GooglePlacesNode'
+import { GoogleDirectionsNode } from './extensions/googlemaps/GoogleDirectionsNode'
+import { useGoogleMapsStatus } from '@/hooks/use-google-maps'
 import { uploadFile, listFiles } from '@/api/file'
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id'
 import { createNote, NoteData } from '@/api/note'
@@ -100,6 +104,13 @@ const Editor: FC<Props> = ({
   useEffect(() => {
     workspaceMembersRef.current = workspaceMembers
   }, [workspaceMembers])
+  // Slash items are built inside useEditor's one-time config, so the
+  // Google Maps availability is read through a ref.
+  const { data: googleMapsStatus } = useGoogleMapsStatus(currentWorkspaceId)
+  const googleMapsEnabledRef = useRef(false)
+  useEffect(() => {
+    googleMapsEnabledRef.current = !!googleMapsStatus?.configured
+  }, [googleMapsStatus])
   const { parsed: initialContent, error: contentError } = useMemo(() => safeParse(note.content), [note.content])
   const lastContentRef = useRef<string>(note.content)
   const isApplyingYjsUpdate = useRef(false)
@@ -193,6 +204,9 @@ const Editor: FC<Props> = ({
         workspaceId: currentWorkspaceId,
         listFiles: listFiles
       }),
+      GoogleMapNode.configure({ workspaceId: currentWorkspaceId }),
+      GooglePlacesNode.configure({ workspaceId: currentWorkspaceId }),
+      GoogleDirectionsNode.configure({ workspaceId: currentWorkspaceId }),
       TableKit,
       SubPageNode.configure({
         workspaceId: currentWorkspaceId,
@@ -465,6 +479,33 @@ const Editor: FC<Props> = ({
                 command: ({ editor }: any) =>
                   editor?.chain().focus().setViewNode({ viewId: null, viewType: 'spreadsheet', name: '' }).run(),
               },
+              // Google Maps (only when the workspace has an API key)
+              ...(googleMapsEnabledRef.current ? [
+                {
+                  icon: <Map size={16} />,
+                  label: t("editor.GoogleMapNode"),
+                  category: 'googleMaps',
+                  keywords: ["google", "map", "maps", "place", "marker", "location"],
+                  command: ({ editor }: any) =>
+                    editor?.chain().focus().setGoogleMapNode().run(),
+                },
+                {
+                  icon: <Store size={16} />,
+                  label: t("editor.GooglePlacesNode"),
+                  category: 'googleMaps',
+                  keywords: ["google", "places", "place", "review", "photo", "restaurant", "shop"],
+                  command: ({ editor }: any) =>
+                    editor?.chain().focus().setGooglePlacesNode().run(),
+                },
+                {
+                  icon: <Navigation size={16} />,
+                  label: t("editor.GoogleDirectionsNode"),
+                  category: 'googleMaps',
+                  keywords: ["google", "directions", "route", "navigation", "trip"],
+                  command: ({ editor }: any) =>
+                    editor?.chain().focus().setGoogleDirectionsNode().run(),
+                },
+              ] : []),
             ].filter((item) =>
               item.label.toLowerCase().includes(query.toLowerCase()) ||
               item.keywords?.some(k => k.toLowerCase().includes(query.toLowerCase()))

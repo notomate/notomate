@@ -592,6 +592,9 @@ export default {
     "TiktokEmbed":"TikTok",
     "CalendarNode":"カレンダーイベント",
     "LocationNode":"場所",
+    "GoogleMapNode":"Google マップ",
+    "GooglePlacesNode":"Google プレイス",
+    "GoogleDirectionsNode":"Google ルート",
     "TagsNode":"タグ",
     "RatingNode":"評価",
     "Video":"動画",
@@ -623,7 +626,8 @@ export default {
         "media": "メディア",
         "embed": "埋め込み",
         "advanced": "詳細",
-        "views": "ビュー"
+        "views": "ビュー",
+        "googleMaps": "Google Maps"
     },
     "carousel": {
         "addMediaToCarousel": "カルーセルにメディアを追加",
