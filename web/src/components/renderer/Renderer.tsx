@@ -22,7 +22,6 @@ const rendererMarkerIcon = new Icon({
 import WhiteboardViewComponent from '@/components/views/whiteboard/WhiteboardViewComponent'
 import { MapInlinePreview, CalendarInlinePreview, KanbanInlinePreview } from '@/components/editor/extensions/viewnode/ViewNodeInlinePreview'
 import { StaticRouteMap, RouteSummary } from '@/components/editor/extensions/googlemaps/shared/MapParts'
-import { PlacesList } from '@/components/editor/extensions/googlemaps/shared/PlacesList'
 import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/shared/GoogleMapSnapshot'
 import { MapMarker, MapRoute, StoredRoute, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
 import type { PlaceDetails } from '@/api/googleMaps'
@@ -310,11 +309,24 @@ const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route:
     return <GoogleMapSnapshot {...props} workspaceId={workspaceIdProp || workspaceIdParam} />
 }
 
-// Places keep their stored details; photos come through the workspace's
-// cached photo proxy, so a workspace ID is needed even off workspace routes.
+// Places are drawn on the same map snapshot as the Google Map node, minus the
+// marker list; photos come through the workspace's cached photo proxy, so a
+// workspace ID is needed even off workspace routes.
 const GooglePlacesRenderer: React.FC<{ places: PlaceDetails[]; workspaceId?: string }> = ({ places, workspaceId: workspaceIdProp }) => {
+    const { t } = useTranslation()
     const { workspaceId: workspaceIdParam } = useParams<{ workspaceId?: string }>()
-    return <PlacesList places={places} workspaceId={workspaceIdProp || workspaceIdParam} detailed />
+    const markers: MapMarker[] = places
+        .filter(p => p.location)
+        .map(p => ({
+            id: p.id,
+            placeId: p.id,
+            lat: p.location!.latitude,
+            lng: p.location!.longitude,
+            name: p.displayName?.text ?? '',
+            address: p.formattedAddress,
+            details: p,
+        }))
+    return <GoogleMapSnapshot title={t('editor.GooglePlacesNode')} markers={markers} route={null} workspaceId={workspaceIdProp || workspaceIdParam} hideList />
 }
 
 const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; result: StoredRoute | null }> = ({ waypoints, result }) => {

@@ -40,7 +40,6 @@ export const PlacesList = ({ places, workspaceId, detailed }: Props) => {
               workspaceId={workspaceId}
               compact={!detailed}
               openHours={detailed}
-              openReviews={detailed}
               photoHeight={detailed ? 140 : undefined}
             />
           </div>
