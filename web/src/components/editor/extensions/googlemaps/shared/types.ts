@@ -53,17 +53,17 @@ export const TRAVEL_MODES: TravelMode[] = ['DRIVE', 'WALK', 'BICYCLE', 'TWO_WHEE
 
 export const DEFAULT_CENTER = { lat: 25.033, lng: 121.5654 }
 
-export const MAX_REVIEWS = 5
 export const MAX_PHOTOS = 10
 
 export const newId = () => Math.random().toString(36).slice(2, 10)
 
 // Keeps the parts of place details a note needs, bounding the node size.
-export const trimPlace = (p: PlaceDetails): PlaceDetails => ({
-  ...p,
-  reviews: p.reviews?.slice(0, MAX_REVIEWS),
-  photos: p.photos?.slice(0, MAX_PHOTOS),
-})
+// Cached details fetched before reviews were dropped may still carry them.
+export const trimPlace = (p: PlaceDetails): PlaceDetails => {
+  const { reviews, ...rest } = p as PlaceDetails & { reviews?: unknown }
+  void reviews
+  return { ...rest, photos: p.photos?.slice(0, MAX_PHOTOS) }
+}
 
 export const toStoredRoute = (route: Route, withSteps: boolean): StoredRoute => ({
   distanceMeters: route.distanceMeters,

@@ -31,16 +31,6 @@ export interface PlacePhoto {
   authorAttributions?: AuthorAttribution[];
 }
 
-export interface PlaceReview {
-  name?: string;
-  relativePublishTimeDescription?: string;
-  rating?: number;
-  text?: LocalizedText;
-  originalText?: LocalizedText;
-  authorAttribution?: AuthorAttribution;
-  publishTime?: string;
-}
-
 export interface PlaceSummary {
   id: string;
   displayName?: LocalizedText;
@@ -59,7 +49,6 @@ export interface PlaceDetails extends PlaceSummary {
   internationalPhoneNumber?: string;
   regularOpeningHours?: { openNow?: boolean; weekdayDescriptions?: string[] };
   priceLevel?: string;
-  reviews?: PlaceReview[];
   photos?: PlacePhoto[];
   editorialSummary?: LocalizedText;
   businessStatus?: string;

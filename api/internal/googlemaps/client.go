@@ -30,7 +30,7 @@ const searchFieldMask = "places.id,places.displayName,places.formattedAddress,pl
 
 const detailsFieldMask = "id,displayName,formattedAddress,location,rating,userRatingCount,types," +
 	"primaryTypeDisplayName,websiteUri,nationalPhoneNumber,internationalPhoneNumber,regularOpeningHours," +
-	"priceLevel,googleMapsUri,reviews,photos,editorialSummary,businessStatus,viewport"
+	"priceLevel,googleMapsUri,photos,editorialSummary,businessStatus,viewport"
 
 const routesFieldMask = "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline," +
 	"routes.viewport,routes.localizedValues,routes.warnings,routes.optimizedIntermediateWaypointIndex," +
