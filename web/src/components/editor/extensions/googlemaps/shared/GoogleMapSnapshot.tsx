@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ChevronDown, ChevronLeft, List, Map as MapIcon, Maximize2, Minimize2 } from "lucide-react"
 import { MapMarker, MapRoute, placeThumbnailUrl } from "./types"
-import { MarkerIcon, RouteSummary, StaticRouteMap } from "./MapParts"
+import { MarkerIcon, PanTarget, RouteSummary, StaticRouteMap } from "./MapParts"
 import { useRouteChoice } from "./useRouteChoice"
 import { PlaceDetailView, RatingStars } from "./PlaceDetailView"
 
@@ -15,6 +15,8 @@ interface Props {
   embedded?: boolean
   // No marker list: markers only open their own details (Google Places node).
   hideList?: boolean
+  // Start with the first marker's details open, the map fitted beside them.
+  defaultOpen?: boolean
 }
 
 type Panel = { kind: "list" } | { kind: "marker"; id: string } | null
@@ -61,11 +63,11 @@ const overlayButton = "p-1.5 rounded bg-white/95 dark:bg-neutral-800/95 shadow t
 // Read-only Google Map node: the stored markers and route drawn on Leaflet
 // (no Google key needed). The map always keeps its full size; place details
 // and the marker list open in a panel floating over it.
-export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded, hideList }: Props) => {
+export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded, hideList, defaultOpen }: Props) => {
   const { t } = useTranslation()
   const { ref, isFullscreen, overlay, toggle } = useFullscreen()
-  const [panel, setPanel] = useState<Panel>(null)
-  const [panTarget, setPanTarget] = useState<{ lat: number; lng: number } | null>(null)
+  const [panel, setPanel] = useState<Panel>(() => (defaultOpen && markers.length ? { kind: "marker", id: markers[0].id } : null))
+  const [panTarget, setPanTarget] = useState<PanTarget | null>(null)
   const [panTrigger, setPanTrigger] = useState(0)
   const choice = useRouteChoice(route?.result ?? null, route?.alternatives)
 
@@ -75,9 +77,10 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
   const selectedIndex = panel?.kind === "marker" ? markers.findIndex(m => m.id === panel.id) : -1
   const selected = selectedIndex >= 0 ? markers[selectedIndex] : null
 
-  const selectFromList = (m: MapMarker) => {
+  // Opens the marker's details and centres it beside the panel.
+  const selectMarker = (m: MapMarker, zoomIn: boolean) => {
     setPanel({ kind: "marker", id: m.id })
-    setPanTarget({ lat: m.lat, lng: m.lng })
+    setPanTarget({ lat: m.lat, lng: m.lng, zoomIn })
     setPanTrigger(n => n + 1)
   }
 
@@ -107,10 +110,11 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
           height="100%"
           framed={false}
           activeIndex={selectedIndex >= 0 ? selectedIndex : null}
-          onPointClick={i => setPanel({ kind: "marker", id: markers[i].id })}
+          onPointClick={i => selectMarker(markers[i], false)}
           panTarget={panTarget}
           panTrigger={panTrigger}
           zoomPosition="bottomright"
+          aroundPanel={!!panel}
         />
 
         <div className="absolute right-2 top-2 z-[1001] flex gap-1.5">
@@ -190,7 +194,7 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
                           <button
                             type="button"
                             className="w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-neutral-800 border-b last:border-b-0 dark:border-neutral-800"
-                            onClick={() => selectFromList(m)}
+                            onClick={() => selectMarker(m, true)}
                           >
                             <MarkerIcon label={String(i + 1)} color={m.color} imageUrl={placeThumbnailUrl(workspaceId, m.details)} size={20} imageSize={40} />
                             <span className="flex-1 min-w-0">

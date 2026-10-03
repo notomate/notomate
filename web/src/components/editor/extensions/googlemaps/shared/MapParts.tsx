@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps"
 import { MapContainer, TileLayer, Marker, Polyline as LeafletPolyline, Tooltip, ZoomControl, useMap as useLeafletMap } from "react-leaflet"
-import { DivIcon, LatLngBounds } from "leaflet"
+import { DivIcon, LatLngBounds, LatLngExpression, Map as LeafletMap } from "leaflet"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { LatLng } from "@/api/googleMaps"
 import { StoredRoute, StoredStep, StoredTransit, decodePolyline, formatDistance, formatDuration } from "./types"
@@ -263,10 +263,26 @@ const badgeIcon = (label = "", color = "#ea4335", active = false, imageUrl?: str
   })
 }
 
-const LeafletFit = ({ bounds }: { bounds: LatLngBounds | null }) => {
+// Room taken by the floating details panel of GoogleMapSnapshot: a 320px
+// side panel from the md breakpoint, otherwise a bottom sheet of up to 65%.
+const panelInset = (map: LeafletMap) => {
+  const { x: width, y: height } = map.getSize()
+  return window.matchMedia("(min-width: 768px)").matches
+    ? { left: Math.min(336, width * 0.6), bottom: 0 }
+    : { left: 0, bottom: height * 0.65 }
+}
+
+// Fits to `bounds` when they change; with `aroundPanel` the points land in
+// the part of the map the panel leaves uncovered. Opening or closing the
+// panel later doesn't refit, so the user's own panning and zoom are kept.
+const LeafletFit = ({ bounds, aroundPanel }: { bounds: LatLngBounds | null; aroundPanel?: boolean }) => {
   const map = useLeafletMap()
+  const aroundPanelRef = useRef(aroundPanel)
+  aroundPanelRef.current = aroundPanel
   useEffect(() => {
-    if (bounds?.isValid()) map.fitBounds(bounds, { padding: [24, 24], maxZoom: 16 })
+    if (!bounds?.isValid()) return
+    const { left, bottom } = aroundPanelRef.current ? panelInset(map) : { left: 0, bottom: 0 }
+    map.fitBounds(bounds, { paddingTopLeft: [left + 24, 24], paddingBottomRight: [24, bottom + 24], maxZoom: 16 })
   }, [map, bounds])
   return null
 }
@@ -283,15 +299,27 @@ const LeafletAutoResize = () => {
   return null
 }
 
-// Pans to `target` each time `trigger` changes.
-const LeafletPanTo = ({ target, trigger }: { target: LatLng | null; trigger: number }) => {
+export interface PanTarget extends LatLng {
+  // Zoom in to at least street level; otherwise keep the current zoom.
+  zoomIn?: boolean
+}
+
+// Pans to `target` each time `trigger` changes, centring it in the part of
+// the map left uncovered by the panel when `aroundPanel` is set.
+const LeafletPanTo = ({ target, trigger, aroundPanel }: { target: PanTarget | null; trigger: number; aroundPanel?: boolean }) => {
   const map = useLeafletMap()
   const lastTrigger = useRef(trigger)
   useEffect(() => {
     if (!target || trigger === lastTrigger.current) return
     lastTrigger.current = trigger
-    map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), 15), { duration: 0.6 })
-  }, [map, target, trigger])
+    const zoom = target.zoomIn ? Math.max(map.getZoom(), 15) : map.getZoom()
+    let center: LatLngExpression = [target.lat, target.lng]
+    if (aroundPanel) {
+      const { left, bottom } = panelInset(map)
+      center = map.unproject(map.project(center, zoom).subtract([left / 2, -bottom / 2]), zoom)
+    }
+    map.flyTo(center, zoom, { duration: 0.6 })
+  }, [map, target, trigger, aroundPanel])
   return null
 }
 
@@ -304,19 +332,25 @@ interface StaticRouteMapProps {
   framed?: boolean
   activeIndex?: number | null
   onPointClick?: (index: number) => void
-  panTarget?: LatLng | null
+  panTarget?: PanTarget | null
   panTrigger?: number
   zoomPosition?: "topleft" | "topright" | "bottomleft" | "bottomright"
+  // GoogleMapSnapshot's floating panel is open: fit and pan around it.
+  aroundPanel?: boolean
 }
 
 export const StaticRouteMap = ({
-  points, encodedPolyline, height = 260, framed = true, activeIndex, onPointClick, panTarget = null, panTrigger = 0, zoomPosition = "topleft",
+  points, encodedPolyline, height = 260, framed = true, activeIndex, onPointClick, panTarget = null, panTrigger = 0, zoomPosition = "topleft", aroundPanel,
 }: StaticRouteMapProps) => {
   const path = useMemo(() => (encodedPolyline ? decodePolyline(encodedPolyline) : []), [encodedPolyline])
+  // Callers pass a fresh points array each render; only refit when the
+  // coordinates actually change.
+  const pointsKey = points.map(p => `${p.lat},${p.lng}`).join(";")
   const bounds = useMemo(() => {
     const all: [number, number][] = [...points.map(p => [p.lat, p.lng] as [number, number]), ...path]
     return all.length ? new LatLngBounds(all) : null
-  }, [points, path])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pointsKey, path])
 
   if (!bounds) return null
   return (
@@ -324,9 +358,9 @@ export const StaticRouteMap = ({
       <MapContainer center={bounds.getCenter()} zoom={13} className="h-full w-full" scrollWheelZoom={false} attributionControl={false} zoomControl={false}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <ZoomControl position={zoomPosition} />
-        <LeafletFit bounds={bounds} />
+        <LeafletFit bounds={bounds} aroundPanel={aroundPanel} />
         <LeafletAutoResize />
-        <LeafletPanTo target={panTarget} trigger={panTrigger} />
+        <LeafletPanTo target={panTarget} trigger={panTrigger} aroundPanel={aroundPanel} />
         {path.length > 0 && <LeafletPolyline positions={path} pathOptions={{ color: "#4285f4", weight: 5, opacity: 0.85 }} />}
         {points.map((p, i) => (
           <Marker
