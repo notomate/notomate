@@ -1,6 +1,6 @@
 module github.com/notomate/notomate
 
-go 1.25.12
+go 1.26.0
 
 require (
 	github.com/go-playground/validator/v10 v10.30.3
@@ -13,7 +13,7 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/viper v1.21.0
 	github.com/yuin/goldmark v1.8.2
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/sync v0.22.0
 	golang.org/x/term v0.45.0
 	google.golang.org/grpc v1.83.2

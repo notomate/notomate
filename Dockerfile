@@ -27,7 +27,7 @@ COPY messaging/package*.json ./
 RUN npm install --omit=dev
 
 # ---------- Stage 3: build Go backend ----------
-FROM golang:1.25-alpine AS backend
+FROM golang:1.26-alpine AS backend
 WORKDIR /app/api
 
 # Accept version as build argument
