@@ -825,6 +825,8 @@ export default {
     openingHours: "營業時間",
     openInGoogleMaps: "在 Google 地圖中開啟",
     attribution: "資料 © Google",
+    transitStops: "{{count}} 站",
+    transitTowards: "往 {{headsign}}",
     droppedPin: "已標記的位置",
     addMarker: "加入標註",
     removeMarker: "移除標註",

@@ -22,6 +22,7 @@ const rendererMarkerIcon = new Icon({
 import WhiteboardViewComponent from '@/components/views/whiteboard/WhiteboardViewComponent'
 import { MapInlinePreview, CalendarInlinePreview, KanbanInlinePreview } from '@/components/editor/extensions/viewnode/ViewNodeInlinePreview'
 import { StaticRouteMap, RouteSummary } from '@/components/editor/extensions/googlemaps/shared/MapParts'
+import { useRouteChoice } from '@/components/editor/extensions/googlemaps/shared/useRouteChoice'
 import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/shared/GoogleMapSnapshot'
 import { MapMarker, MapRoute, StoredRoute, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
 import type { PlaceDetails } from '@/api/googleMaps'
@@ -329,7 +330,8 @@ const GooglePlacesRenderer: React.FC<{ places: PlaceDetails[]; workspaceId?: str
     return <GoogleMapSnapshot title={t('editor.GooglePlacesNode')} markers={markers} route={null} workspaceId={workspaceIdProp || workspaceIdParam} hideList />
 }
 
-const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; result: StoredRoute | null }> = ({ waypoints, result }) => {
+const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; result: StoredRoute | null; alternatives: StoredRoute[] | null }> = ({ waypoints, result: storedResult, alternatives: storedAlternatives }) => {
+    const { result, alternatives, select } = useRouteChoice(storedResult, storedAlternatives)
     if (!waypoints.length) return null
     return (
         <div className="flex flex-col gap-2 py-1">
@@ -338,7 +340,7 @@ const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; result: Stored
                 encodedPolyline={result?.encodedPolyline}
             />
             {result
-                ? <RouteSummary route={result} stopNames={waypoints.map(w => w.name)} />
+                ? <RouteSummary route={result} stopNames={waypoints.map(w => w.name)} alternatives={alternatives} onSelect={select} />
                 : <div className="text-sm">{waypoints.map(w => w.name).join(' → ')}</div>}
         </div>
     )
@@ -695,7 +697,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 return <div key={key} className="py-1"><GooglePlacesRenderer places={places} workspaceId={workspaceIdProp} /></div>
             }
             case 'googleDirectionsNode':
-                return <GoogleDirectionsRenderer key={key} waypoints={node.attrs?.waypoints ?? []} result={node.attrs?.result ?? null} />
+                return <GoogleDirectionsRenderer key={key} waypoints={node.attrs?.waypoints ?? []} result={node.attrs?.result ?? null} alternatives={node.attrs?.alternatives ?? null} />
             case 'ratingNode': {
                 const { rating = 0, maxRating = 5, label } = node.attrs ?? {}
                 return <RatingRenderer key={key} rating={rating} maxRating={maxRating} label={label} />

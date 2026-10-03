@@ -4,12 +4,12 @@ import { useTranslation } from "react-i18next"
 import { Map as GoogleMap, Polyline } from "@vis.gl/react-google-maps"
 import { ChevronDown, ChevronUp, Loader2, Navigation, Route as RouteIcon, Trash2, X } from "lucide-react"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
-import { PlaceSummary, TravelMode, computeGoogleRoute, googleMapsErrorMessage, toLatLng } from "@/api/googleMaps"
+import { PlaceSummary, TravelMode, computeGoogleRoutes, googleMapsErrorMessage, toLatLng } from "@/api/googleMaps"
 import { GoogleMapGate } from "./shared/GoogleMapGate"
 import { PlaceSearchBox } from "./shared/PlaceSearchBox"
 import { FitBounds, LabeledMarker, RouteSummary, StaticRouteMap } from "./shared/MapParts"
 import { useNodeMove } from "./shared/useNodeMove"
-import { DEFAULT_CENTER, StoredRoute, TRAVEL_MODES, Waypoint, newId, toStoredRoute, waypointColor, waypointLabel } from "./shared/types"
+import { DEFAULT_CENTER, StoredRoute, TRAVEL_MODES, Waypoint, chooseRoute, newId, toStoredRoutes, waypointColor, waypointLabel } from "./shared/types"
 
 const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos, extension }) => {
   const { t, i18n } = useTranslation()
@@ -18,6 +18,7 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
   const travelMode: TravelMode = node.attrs.travelMode ?? "DRIVE"
   const optimize: boolean = !!node.attrs.optimize
   const result: StoredRoute | null = node.attrs.result ?? null
+  const alternatives: StoredRoute[] | null = node.attrs.alternatives ?? null
   const editable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
   const { moveUp, moveDown } = useNodeMove({ editor, node, getPos })
@@ -27,7 +28,7 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
 
   // Any change to the stops or options makes the stored route stale.
   const update = (patch: Record<string, unknown>) => {
-    updateAttributes({ ...patch, result: null })
+    updateAttributes({ ...patch, result: null, alternatives: null })
     setError("")
   }
 
@@ -51,19 +52,19 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
     setBusy(true)
     setError("")
     try {
-      const route = await computeGoogleRoute(workspaceId, {
+      const routes = await computeGoogleRoutes(workspaceId, {
         waypoints: waypoints.map(w => (w.placeId ? { placeId: w.placeId } : { lat: w.lat, lng: w.lng })),
         travelMode,
         optimize,
         languageCode: i18n.language,
       })
       let ordered = waypoints
-      const order = route.optimizedIntermediateWaypointIndex
+      const order = routes[0].optimizedIntermediateWaypointIndex
       if (optimize && order?.length && order[0] !== -1) {
         const middle = waypoints.slice(1, -1)
         ordered = [waypoints[0], ...order.map(i => middle[i]), waypoints[waypoints.length - 1]]
       }
-      updateAttributes({ waypoints: ordered, result: toStoredRoute(route, true) })
+      updateAttributes({ waypoints: ordered, ...toStoredRoutes(routes) })
     } catch (e) {
       setError(googleMapsErrorMessage(e))
     } finally {
@@ -200,7 +201,12 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
 
       {result && (
         <div className="p-3 border-t dark:border-neutral-700">
-          <RouteSummary route={result} stopNames={waypoints.map(w => w.name)} />
+          <RouteSummary
+            route={result}
+            stopNames={waypoints.map(w => w.name)}
+            alternatives={alternatives}
+            onSelect={chosen => updateAttributes(chooseRoute(result, alternatives ?? [], chosen))}
+          />
         </div>
       )}
       {isTouchDevice && editable && <NodeTouchMenu visible={selected} actions={nodeActions} />}

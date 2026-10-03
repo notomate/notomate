@@ -166,7 +166,14 @@ func (s *Service) ComputeRoutes(ctx context.Context, workspaceID string, req Rou
 	if err := req.Validate(); err != nil {
 		return nil, &APIError{StatusCode: 400, Message: err.Error()}
 	}
-	return s.cachedJSON(ctx, workspaceID, KindRoutes, "", req, RoutesTTL, func(key string) ([]byte, error) {
+	// Keying on the field mask and alternatives keeps responses cached under
+	// an older request shape (e.g. without transit details) from being served.
+	keyReq := struct {
+		RouteRequest
+		FieldMask    string `json:"fieldMask"`
+		Alternatives bool   `json:"alternatives"`
+	}{req, routesFieldMask, req.TravelMode == "TRANSIT"}
+	return s.cachedJSON(ctx, workspaceID, KindRoutes, "", keyReq, RoutesTTL, func(key string) ([]byte, error) {
 		return s.client.ComputeRoutes(ctx, key, req)
 	})
 }

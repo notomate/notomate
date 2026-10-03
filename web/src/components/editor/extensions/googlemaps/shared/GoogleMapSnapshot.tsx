@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { ChevronDown, ChevronLeft, List, Map as MapIcon, Maximize2, Minimize2 } from "lucide-react"
 import { MapMarker, MapRoute, placeThumbnailUrl } from "./types"
 import { MarkerIcon, RouteSummary, StaticRouteMap } from "./MapParts"
+import { useRouteChoice } from "./useRouteChoice"
 import { PlaceDetailView, RatingStars } from "./PlaceDetailView"
 
 interface Props {
@@ -66,6 +67,7 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
   const [panel, setPanel] = useState<Panel>(null)
   const [panTarget, setPanTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [panTrigger, setPanTrigger] = useState(0)
+  const choice = useRouteChoice(route?.result ?? null, route?.alternatives)
 
   if (!markers.length) return null
 
@@ -101,7 +103,7 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
             lat: m.lat, lng: m.lng, label: String(i + 1), color: m.color, title: m.name,
             imageUrl: placeThumbnailUrl(workspaceId, m.details),
           }))}
-          encodedPolyline={route?.result?.encodedPolyline}
+          encodedPolyline={choice.result?.encodedPolyline}
           height="100%"
           framed={false}
           activeIndex={selectedIndex >= 0 ? selectedIndex : null}
@@ -177,9 +179,9 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
                   </div>
                 ) : (
                   <>
-                    {route?.result && (
+                    {choice.result && (
                       <div className="p-3 border-b dark:border-neutral-700">
-                        <RouteSummary route={route.result} stopNames={stops.map(m => m.name)} />
+                        <RouteSummary route={choice.result} stopNames={stops.map(m => m.name)} alternatives={choice.alternatives} onSelect={choice.select} />
                       </div>
                     )}
                     <ol className="list-none">

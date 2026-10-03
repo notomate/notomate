@@ -1,4 +1,4 @@
-import { getGooglePhotoUrl, type LocalizedValues, type PlaceDetails, type Route, type TravelMode } from '@/api/googleMaps'
+import { getGooglePhotoUrl, type LocalizedValues, type PlaceDetails, type Route, type RouteStep, type TravelMode } from '@/api/googleMaps'
 
 export interface MapMarker {
   id: string
@@ -13,15 +13,45 @@ export interface MapMarker {
   details?: PlaceDetails
 }
 
+// The ride part of a transit step: which bus or train, and where to get on/off.
+export interface StoredTransit {
+  line?: string
+  lineShort?: string
+  color?: string
+  textColor?: string
+  vehicle?: string
+  vehicleType?: string
+  vehicleIcon?: string
+  agency?: string
+  headsign?: string
+  departureStop?: string
+  arrivalStop?: string
+  departureTime?: string
+  arrivalTime?: string
+  stopCount?: number
+  trip?: string
+}
+
+export interface StoredStep {
+  instructions?: string
+  distance?: string
+  duration?: string
+  maneuver?: string
+  travelMode?: string
+  transit?: StoredTransit
+}
+
 export interface StoredLeg {
   distanceMeters?: number
   duration?: string
   localizedValues?: LocalizedValues
-  steps?: { instructions?: string; distance?: string; maneuver?: string }[]
+  steps?: StoredStep[]
 }
 
 // A trimmed copy of a Routes API route, small enough to keep in node attrs.
 export interface StoredRoute {
+  // Position in Google's response, so alternatives keep their order.
+  index?: number
   distanceMeters?: number
   duration?: string
   localizedValues?: LocalizedValues
@@ -35,7 +65,9 @@ export interface MapRoute {
   markerIds: string[]
   travelMode: TravelMode
   optimize: boolean
+  // The chosen route; the others Google offered are kept in alternatives.
   result: StoredRoute | null
+  alternatives?: StoredRoute[] | null
 }
 
 export interface Waypoint {
@@ -65,6 +97,19 @@ export const trimPlace = (p: PlaceDetails): PlaceDetails => {
   return { ...rest, photos: p.photos?.slice(0, MAX_PHOTOS) }
 }
 
+// Stores Google's best route as the chosen one and the rest as alternatives.
+export const toStoredRoutes = (routes: Route[]) => {
+  const [result, ...alternatives] = routes.map((r, i) => ({ ...toStoredRoute(r, true), index: i }))
+  return { result, alternatives: alternatives.length ? alternatives : null }
+}
+
+// Makes `chosen` the selected route, moving the previous one back into the
+// alternatives.
+export const chooseRoute = (result: StoredRoute, alternatives: StoredRoute[], chosen: StoredRoute) => ({
+  result: chosen,
+  alternatives: [result, ...alternatives.filter(r => r !== chosen)].sort((a, b) => (a.index ?? 0) - (b.index ?? 0)),
+})
+
 export const toStoredRoute = (route: Route, withSteps: boolean): StoredRoute => ({
   distanceMeters: route.distanceMeters,
   duration: route.duration,
@@ -78,15 +123,44 @@ export const toStoredRoute = (route: Route, withSteps: boolean): StoredRoute => 
     localizedValues: leg.localizedValues,
     steps: withSteps
       ? (leg.steps ?? [])
-          .filter(s => s.navigationInstruction?.instructions)
+          .filter(s => s.navigationInstruction?.instructions || s.transitDetails)
           .map(s => ({
             instructions: s.navigationInstruction?.instructions,
             maneuver: s.navigationInstruction?.maneuver,
             distance: s.localizedValues?.distance?.text,
+            duration: s.transitDetails ? s.localizedValues?.staticDuration?.text ?? formatDuration(s.staticDuration) : undefined,
+            travelMode: s.travelMode,
+            transit: toStoredTransit(s),
           }))
       : undefined,
   })),
 })
+
+// Google returns protocol-relative icon URLs ("//maps.gstatic.com/...").
+const absoluteUrl = (uri?: string) => (uri?.startsWith('//') ? `https:${uri}` : uri)
+
+const toStoredTransit = (step: RouteStep): StoredTransit | undefined => {
+  const d = step.transitDetails
+  if (!d) return undefined
+  const line = d.transitLine
+  return {
+    line: line?.name,
+    lineShort: line?.nameShort,
+    color: line?.color,
+    textColor: line?.textColor,
+    vehicle: line?.vehicle?.name?.text,
+    vehicleType: line?.vehicle?.type,
+    vehicleIcon: absoluteUrl(line?.vehicle?.localIconUri ?? line?.vehicle?.iconUri),
+    agency: line?.agencies?.[0]?.name,
+    headsign: d.headsign,
+    departureStop: d.stopDetails?.departureStop?.name,
+    arrivalStop: d.stopDetails?.arrivalStop?.name,
+    departureTime: d.localizedValues?.departureTime?.time?.text,
+    arrivalTime: d.localizedValues?.arrivalTime?.time?.text,
+    stopCount: d.stopCount,
+    trip: d.tripShortText,
+  }
+}
 
 // "1234s" -> "20 min"
 export const formatDuration = (duration?: string): string => {

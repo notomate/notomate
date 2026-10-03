@@ -68,12 +68,46 @@ export interface LocalizedValues {
   staticDuration?: LocalizedText;
 }
 
+export interface TransitStop {
+  name?: string;
+  location?: { latLng: GoogleLatLng };
+}
+
+export interface TransitLine {
+  name?: string;
+  nameShort?: string;
+  color?: string;
+  textColor?: string;
+  iconUri?: string;
+  agencies?: { name?: string; uri?: string }[];
+  // type is e.g. BUS, SUBWAY, HEAVY_RAIL, HIGH_SPEED_TRAIN, TRAM, FERRY.
+  vehicle?: { name?: LocalizedText; type?: string; iconUri?: string; localIconUri?: string };
+}
+
+export interface TransitDetails {
+  stopDetails?: {
+    departureStop?: TransitStop;
+    arrivalStop?: TransitStop;
+    departureTime?: string;
+    arrivalTime?: string;
+  };
+  localizedValues?: {
+    departureTime?: { time?: LocalizedText };
+    arrivalTime?: { time?: LocalizedText };
+  };
+  headsign?: string;
+  transitLine?: TransitLine;
+  stopCount?: number;
+  tripShortText?: string;
+}
+
 export interface RouteStep {
   distanceMeters?: number;
   staticDuration?: string;
   navigationInstruction?: { maneuver?: string; instructions?: string };
   localizedValues?: LocalizedValues;
   travelMode?: string;
+  transitDetails?: TransitDetails;
 }
 
 export interface RouteLeg {
@@ -141,14 +175,16 @@ export const getGooglePlace = async (workspaceId: string, placeId: string, lang?
   return response.data as PlaceDetails;
 };
 
-export const computeGoogleRoute = async (
+// Returns Google's routes best-first; transit requests may include
+// alternatives.
+export const computeGoogleRoutes = async (
   workspaceId: string,
   data: { waypoints: RouteWaypoint[]; travelMode: TravelMode; optimize: boolean; languageCode?: string }
 ) => {
   const response = await axios.post(`${base(workspaceId)}/google-maps/routes`, data, { withCredentials: true });
-  const route = (response.data?.routes ?? [])[0] as Route | undefined;
-  if (!route) throw new Error('No route found');
-  return route;
+  const routes = (response.data?.routes ?? []) as Route[];
+  if (!routes.length) throw new Error('No route found');
+  return routes;
 };
 
 export const getGooglePhotoUrl = (workspaceId: string, photoName: string, width = 400) =>

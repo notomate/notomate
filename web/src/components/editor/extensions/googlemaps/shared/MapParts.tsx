@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Polyline as LeafletPolyline, Tooltip, 
 import { DivIcon, LatLngBounds } from "leaflet"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { LatLng } from "@/api/googleMaps"
-import { StoredRoute, decodePolyline, formatDistance, formatDuration } from "./types"
+import { StoredRoute, StoredStep, StoredTransit, decodePolyline, formatDistance, formatDuration } from "./types"
 
 // ── Live (Google) map parts ─────────────────────────────────────────────────
 
@@ -87,20 +87,115 @@ export const PanTo = ({ target, trigger }: { target: LatLng | null; trigger: num
 
 // ── Route summary (shared by live and read-only views) ──────────────────────
 
-export const RouteSummary = ({ route, stopNames }: { route: StoredRoute; stopNames: string[] }) => {
+// A bus/train line badge in the line's own colours, like Google Maps.
+const TransitChip = ({ transit }: { transit: StoredTransit }) => {
+  const label = transit.lineShort ?? transit.line ?? transit.vehicle
+  return (
+    <span className="inline-flex items-center gap-1 shrink-0 max-w-full">
+      {transit.vehicleIcon && <img src={transit.vehicleIcon} alt={transit.vehicle ?? ""} title={transit.vehicle} className="w-3.5 h-3.5 dark:invert" />}
+      <span
+        className="rounded px-1 py-px font-medium truncate"
+        style={{ background: transit.color ?? "#5f6368", color: transit.textColor ?? "#ffffff" }}
+        title={[transit.vehicle, transit.line].filter(Boolean).join(" · ")}
+      >
+        {label}{transit.trip && transit.trip !== label ? ` ${transit.trip}` : ""}
+      </span>
+    </span>
+  )
+}
+
+const TransitStepItem = ({ step }: { step: StoredStep }) => {
+  const { t } = useTranslation()
+  const transit = step.transit!
+  const meta = [
+    transit.stopCount != null ? t("googleMaps.transitStops", { count: transit.stopCount }) : null,
+    step.duration,
+    transit.agency,
+  ].filter(Boolean)
+  return (
+    <li className="flex flex-col gap-0.5 py-0.5">
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <TransitChip transit={transit} />
+        {transit.vehicle && transit.lineShort && <span>{transit.vehicle}</span>}
+        {transit.headsign && <span className="text-muted-foreground">{t("googleMaps.transitTowards", { headsign: transit.headsign })}</span>}
+      </div>
+      <div className="border-l-2 pl-2 ml-1 flex flex-col" style={{ borderColor: transit.color ?? "#5f6368" }}>
+        <span>{transit.departureTime && <span className="font-medium">{transit.departureTime} </span>}{transit.departureStop}</span>
+        {meta.length > 0 && <span className="text-muted-foreground">{meta.join(" · ")}</span>}
+        <span>{transit.arrivalTime && <span className="font-medium">{transit.arrivalTime} </span>}{transit.arrivalStop}</span>
+      </div>
+    </li>
+  )
+}
+
+const routeTransits = (route: StoredRoute) =>
+  route.legs.flatMap(leg => (leg.steps ?? []).flatMap(s => (s.transit ? [s.transit] : [])))
+
+const TransitChain = ({ transits }: { transits: StoredTransit[] }) => (
+  <div className="flex items-center gap-1 flex-wrap">
+    {transits.map((tr, j) => (
+      <span key={j} className="inline-flex items-center gap-1">
+        {j > 0 && <ChevronRight size={10} className="text-muted-foreground" />}
+        <TransitChip transit={tr} />
+      </span>
+    ))}
+  </div>
+)
+
+// One of the routes Google offered: total time, ride times and the lines taken.
+const RouteOption = ({ route, selected, onClick }: { route: StoredRoute; selected: boolean; onClick?: () => void }) => {
+  const transits = routeTransits(route)
+  const first = transits[0]
+  const last = transits[transits.length - 1]
+  const times = first?.departureTime && last?.arrivalTime ? `${first.departureTime} – ${last.arrivalTime}` : null
+  return (
+    <button
+      type="button"
+      disabled={!onClick}
+      onClick={onClick}
+      className={`w-full text-left rounded-md border px-2 py-1.5 flex flex-col gap-1 disabled:cursor-default ${selected ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "dark:border-neutral-700 enabled:hover:bg-gray-50 dark:enabled:hover:bg-neutral-800"}`}
+    >
+      <span className="flex items-baseline gap-2">
+        <span className="font-semibold text-gray-900 dark:text-gray-100">{route.localizedValues?.duration?.text ?? formatDuration(route.duration)}</span>
+        {times && <span className="text-muted-foreground">{times}</span>}
+        <span className="ml-auto text-muted-foreground">{route.localizedValues?.distance?.text ?? formatDistance(route.distanceMeters)}</span>
+      </span>
+      {transits.length > 0 && <TransitChain transits={transits} />}
+    </button>
+  )
+}
+
+interface RouteSummaryProps {
+  route: StoredRoute
+  stopNames: string[]
+  // Other routes Google offered; picking one calls onSelect.
+  alternatives?: StoredRoute[] | null
+  onSelect?: (route: StoredRoute) => void
+}
+
+export const RouteSummary = ({ route, stopNames, alternatives, onSelect }: RouteSummaryProps) => {
   const { t } = useTranslation()
   const [openLeg, setOpenLeg] = useState<number | null>(null)
   const total = route.localizedValues?.distance?.text ?? formatDistance(route.distanceMeters)
   const duration = route.localizedValues?.duration?.text ?? formatDuration(route.duration)
+  const options = alternatives?.length ? [route, ...alternatives].sort((a, b) => (a.index ?? 0) - (b.index ?? 0)) : []
 
   return (
     <div className="flex flex-col gap-1.5 text-xs">
+      {options.length > 0 && (
+        <div className="flex flex-col gap-1">
+          {options.map((o, i) => (
+            <RouteOption key={o.index ?? i} route={o} selected={o === route} onClick={onSelect && o !== route ? () => onSelect(o) : undefined} />
+          ))}
+        </div>
+      )}
       <div className="flex items-baseline gap-2">
         <span className="text-base font-semibold text-gray-900 dark:text-gray-100">{duration}</span>
         <span className="text-muted-foreground">{total}</span>
       </div>
       {route.legs.map((leg, i) => {
         const hasSteps = !!leg.steps?.length
+        const transits = (leg.steps ?? []).flatMap(s => (s.transit ? [s.transit] : []))
         const open = openLeg === i
         return (
           <div key={i} className="border-t dark:border-neutral-700 pt-1.5">
@@ -118,9 +213,14 @@ export const RouteSummary = ({ route, stopNames }: { route: StoredRoute; stopNam
                 {leg.localizedValues?.duration?.text ?? formatDuration(leg.duration)} · {leg.localizedValues?.distance?.text ?? formatDistance(leg.distanceMeters)}
               </span>
             </button>
+            {transits.length > 0 && (
+              <div className="ml-4 mt-1">
+                <TransitChain transits={transits} />
+              </div>
+            )}
             {open && (
               <ol className="list-none mt-1 ml-4 flex flex-col gap-1 text-gray-700 dark:text-gray-300">
-                {leg.steps!.map((s, j) => (
+                {leg.steps!.map((s, j) => s.transit ? <TransitStepItem key={j} step={s} /> : (
                   <li key={j}>
                     {s.instructions}
                     {s.distance && <span className="text-muted-foreground"> · {s.distance}</span>}
