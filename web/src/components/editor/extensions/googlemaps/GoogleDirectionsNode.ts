@@ -21,6 +21,7 @@ export const GoogleDirectionsNode = Node.create({
       travelMode: { default: 'DRIVE' },
       optimize: { default: false },
       result: jsonAttribute('result', null),
+      alternatives: jsonAttribute('alternatives', null),
     }
   },
 

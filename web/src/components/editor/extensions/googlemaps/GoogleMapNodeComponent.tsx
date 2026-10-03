@@ -4,13 +4,13 @@ import { useTranslation } from "react-i18next"
 import { Map as GoogleMap, MapMouseEvent, MapCameraChangedEvent, Polyline } from "@vis.gl/react-google-maps"
 import { ChevronDown, ChevronUp, Loader2, Map as MapIcon, MapPinPlus, MapPinX, Palette, Route as RouteIcon, Trash2, X } from "lucide-react"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
-import { PlaceDetails, PlaceSummary, TravelMode, computeGoogleRoute, googleMapsErrorMessage, toLatLng } from "@/api/googleMaps"
+import { PlaceDetails, PlaceSummary, TravelMode, computeGoogleRoutes, googleMapsErrorMessage, toLatLng } from "@/api/googleMaps"
 import { GoogleMapGate, GoogleMapEnv } from "./shared/GoogleMapGate"
 import { PlaceSearchBox } from "./shared/PlaceSearchBox"
 import { PlaceDetailPanel } from "./shared/PlaceDetailView"
 import { LabeledMarker, MarkerIcon, PanTo, RouteSummary } from "./shared/MapParts"
 import { useNodeMove } from "./shared/useNodeMove"
-import { DEFAULT_CENTER, MARKER_COLORS, MapMarker, MapRoute, TRAVEL_MODES, newId, placeThumbnailUrl, toStoredRoute, trimPlace } from "./shared/types"
+import { DEFAULT_CENTER, MARKER_COLORS, MapMarker, MapRoute, TRAVEL_MODES, chooseRoute, newId, placeThumbnailUrl, toStoredRoutes, trimPlace } from "./shared/types"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
 
 type Tab = "markers" | "route"
@@ -132,7 +132,7 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
 
   const removeMarker = (id: string) => {
     const nextRoute = r.markerIds.includes(id)
-      ? { ...r, markerIds: r.markerIds.filter(m => m !== id), result: null }
+      ? { ...r, markerIds: r.markerIds.filter(m => m !== id), result: null, alternatives: null }
       : route
     updateAttributes({ markers: markers.filter(m => m.id !== id), route: nextRoute })
     if (selectedMarkerId === id) setSelectedMarkerId(null)
@@ -143,7 +143,7 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
   }
 
   const updateRoute = (patch: Partial<MapRoute>) => {
-    updateAttributes({ route: { ...r, ...patch, result: null } })
+    updateAttributes({ route: { ...r, ...patch, result: null, alternatives: null } })
     setRouteError("")
   }
 
@@ -154,7 +154,7 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
     // One update for both, so the new marker and the route stop land together.
     updateAttributes({
       markers: existing ? markers : [...markers, marker],
-      route: r.markerIds.includes(marker.id) ? r : { ...r, markerIds: [...r.markerIds, marker.id], result: null },
+      route: r.markerIds.includes(marker.id) ? r : { ...r, markerIds: [...r.markerIds, marker.id], result: null, alternatives: null },
     })
     setTab("route")
     setSelectedPlaceId(null)
@@ -174,19 +174,19 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
     setRouteBusy(true)
     setRouteError("")
     try {
-      const result = await computeGoogleRoute(workspaceId, {
+      const routes = await computeGoogleRoutes(workspaceId, {
         waypoints: stops.map(m => (m.placeId ? { placeId: m.placeId } : { lat: m.lat, lng: m.lng })),
         travelMode: r.travelMode,
         optimize: r.optimize,
         languageCode: i18n.language,
       })
       let markerIds = stops.map(m => m.id)
-      const order = result.optimizedIntermediateWaypointIndex
+      const order = routes[0].optimizedIntermediateWaypointIndex
       if (r.optimize && order?.length && order[0] !== -1) {
         const middle = markerIds.slice(1, -1)
         markerIds = [markerIds[0], ...order.map(i => middle[i]), markerIds[markerIds.length - 1]]
       }
-      updateAttributes({ route: { ...r, markerIds, result: toStoredRoute(result, true) } })
+      updateAttributes({ route: { ...r, markerIds, ...toStoredRoutes(routes) } })
     } catch (e) {
       setRouteError(googleMapsErrorMessage(e))
     } finally {
@@ -410,7 +410,14 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
                     </button>
                   )}
                   {routeError && <p className="text-xs text-red-500">{routeError}</p>}
-                  {r.result && <RouteSummary route={r.result} stopNames={routeStops.map(m => m.name)} />}
+                  {r.result && (
+                    <RouteSummary
+                      route={r.result}
+                      stopNames={routeStops.map(m => m.name)}
+                      alternatives={r.alternatives}
+                      onSelect={chosen => updateAttributes({ route: { ...r, ...chooseRoute(r.result!, r.alternatives ?? [], chosen) } })}
+                    />
+                  )}
                 </div>
               )}
             </>

@@ -754,6 +754,8 @@ export default {
     openingHours: "营业时间",
     openInGoogleMaps: "在 Google 地图中打开",
     attribution: "数据 © Google",
+    transitStops: "{{count}} 站",
+    transitTowards: "往 {{headsign}}",
     droppedPin: "已标记的位置",
     addMarker: "添加标注",
     removeMarker: "移除标注",

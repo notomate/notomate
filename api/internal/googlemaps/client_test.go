@@ -81,6 +81,32 @@ func TestComputeRoutesBuildsWaypoints(t *testing.T) {
 	}
 }
 
+func TestComputeRoutesAsksForAlternativesOnlyForTransit(t *testing.T) {
+	for mode, want := range map[string]bool{"TRANSIT": true, "DRIVE": false} {
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var body struct {
+				ComputeAlternativeRoutes bool `json:"computeAlternativeRoutes"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			if body.ComputeAlternativeRoutes != want {
+				t.Errorf("%s: computeAlternativeRoutes = %v, want %v", mode, body.ComputeAlternativeRoutes, want)
+			}
+			if !strings.Contains(r.Header.Get("X-Goog-FieldMask"), "transitDetails") {
+				t.Errorf("%s: field mask = %q", mode, r.Header.Get("X-Goog-FieldMask"))
+			}
+			w.Write([]byte(`{"routes":[]}`))
+		}))
+		_, err := newTestClient(srv).ComputeRoutes(context.Background(), "k", RouteRequest{
+			Waypoints:  []Waypoint{{PlaceID: "A"}, {PlaceID: "B"}},
+			TravelMode: mode,
+		})
+		srv.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
 func TestRouteRequestValidate(t *testing.T) {
 	many := make([]Waypoint, MaxIntermediates+3)
 	for i := range many {

@@ -825,6 +825,8 @@ export default {
     openingHours: "Opening hours",
     openInGoogleMaps: "Open in Google Maps",
     attribution: "Data © Google",
+    transitStops: "{{count}} stops",
+    transitTowards: "towards {{headsign}}",
     droppedPin: "Dropped pin",
     addMarker: "Add marker",
     removeMarker: "Remove marker",

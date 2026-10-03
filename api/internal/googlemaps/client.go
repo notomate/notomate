@@ -37,7 +37,8 @@ const routesFieldMask = "routes.distanceMeters,routes.duration,routes.polyline.e
 	"routes.legs.distanceMeters,routes.legs.duration,routes.legs.localizedValues," +
 	"routes.legs.startLocation,routes.legs.endLocation," +
 	"routes.legs.steps.distanceMeters,routes.legs.steps.staticDuration," +
-	"routes.legs.steps.navigationInstruction,routes.legs.steps.localizedValues,routes.legs.steps.travelMode"
+	"routes.legs.steps.navigationInstruction,routes.legs.steps.localizedValues,routes.legs.steps.travelMode," +
+	"routes.legs.steps.transitDetails"
 
 // APIError is a non-2xx response from Google.
 type APIError struct {
@@ -236,6 +237,11 @@ func (c *Client) ComputeRoutes(ctx context.Context, apiKey string, req RouteRequ
 		if req.Optimize {
 			body["optimizeWaypointOrder"] = true
 		}
+	}
+	// Transit has several reasonable line combinations, so let the user pick;
+	// other modes keep the single best route.
+	if req.TravelMode == "TRANSIT" {
+		body["computeAlternativeRoutes"] = true
 	}
 	if req.LanguageCode != "" {
 		body["languageCode"] = req.LanguageCode
