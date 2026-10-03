@@ -91,7 +91,21 @@ export const newId = () => Math.random().toString(36).slice(2, 10)
 
 // Keeps the parts of place details a note needs, bounding the node size.
 // Cached details fetched before reviews were dropped may still carry them.
-export const trimPlace = (p: PlaceDetails): PlaceDetails => {
+// Google Places node: each place with a location becomes a map marker.
+export const placesToMarkers = (places: PlaceDetails[]): MapMarker[] =>
+  places
+    .filter(p => p.location)
+    .map(p => ({
+      id: p.id,
+      placeId: p.id,
+      lat: p.location!.latitude,
+      lng: p.location!.longitude,
+      name: p.displayName?.text ?? '',
+      address: p.formattedAddress,
+      details: p,
+    }))
+
+export const trimPlace =(p: PlaceDetails): PlaceDetails => {
   const { reviews, ...rest } = p as PlaceDetails & { reviews?: unknown }
   void reviews
   return { ...rest, photos: p.photos?.slice(0, MAX_PHOTOS) }
