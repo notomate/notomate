@@ -327,7 +327,7 @@ const GooglePlacesRenderer: React.FC<{ places: PlaceDetails[]; workspaceId?: str
             address: p.formattedAddress,
             details: p,
         }))
-    return <GoogleMapSnapshot title={t('editor.GooglePlacesNode')} markers={markers} route={null} workspaceId={workspaceIdProp || workspaceIdParam} hideList />
+    return <GoogleMapSnapshot title={t('editor.GooglePlacesNode')} markers={markers} route={null} workspaceId={workspaceIdProp || workspaceIdParam} hideList defaultOpen />
 }
 
 const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; result: StoredRoute | null; alternatives: StoredRoute[] | null }> = ({ waypoints, result: storedResult, alternatives: storedAlternatives }) => {
