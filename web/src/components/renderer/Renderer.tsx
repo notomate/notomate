@@ -24,7 +24,7 @@ import { MapInlinePreview, CalendarInlinePreview, KanbanInlinePreview } from '@/
 import { StaticRouteMap, RouteSummary } from '@/components/editor/extensions/googlemaps/shared/MapParts'
 import { useRouteChoice } from '@/components/editor/extensions/googlemaps/shared/useRouteChoice'
 import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/shared/GoogleMapSnapshot'
-import { MapMarker, MapRoute, StoredRoute, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
+import { MapMarker, MapRoute, StoredRoute, placesToMarkers, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
 import type { PlaceDetails } from '@/api/googleMaps'
 
 const InstagramRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
@@ -316,18 +316,7 @@ const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route:
 const GooglePlacesRenderer: React.FC<{ places: PlaceDetails[]; workspaceId?: string }> = ({ places, workspaceId: workspaceIdProp }) => {
     const { t } = useTranslation()
     const { workspaceId: workspaceIdParam } = useParams<{ workspaceId?: string }>()
-    const markers: MapMarker[] = places
-        .filter(p => p.location)
-        .map(p => ({
-            id: p.id,
-            placeId: p.id,
-            lat: p.location!.latitude,
-            lng: p.location!.longitude,
-            name: p.displayName?.text ?? '',
-            address: p.formattedAddress,
-            details: p,
-        }))
-    return <GoogleMapSnapshot title={t('editor.GooglePlacesNode')} markers={markers} route={null} workspaceId={workspaceIdProp || workspaceIdParam} hideList defaultOpen />
+    return <GoogleMapSnapshot title={t('editor.GooglePlacesNode')} markers={placesToMarkers(places)} route={null} workspaceId={workspaceIdProp || workspaceIdParam} hideList defaultOpen />
 }
 
 const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; result: StoredRoute | null; alternatives: StoredRoute[] | null }> = ({ waypoints, result: storedResult, alternatives: storedAlternatives }) => {
