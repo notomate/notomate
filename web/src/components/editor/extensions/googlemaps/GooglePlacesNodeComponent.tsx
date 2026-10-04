@@ -6,6 +6,7 @@ import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 import { PlaceDetails, PlaceSummary, getGooglePlace, googleMapsErrorMessage, searchGooglePlaces } from "@/api/googleMaps"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
 import { useNodeMove } from "./shared/useNodeMove"
+import { CompactBody, ExpandToggle, MarkersSummary } from "./shared/CompactSummary"
 import { placesToMarkers, trimPlace } from "./shared/types"
 
 const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos, extension }) => {
@@ -16,7 +17,13 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
   const { moveUp, moveDown } = useNodeMove({ editor, node, getPos })
 
-  const [isEditing, setIsEditing] = useState(places.length === 0)
+  const [isEditing, setIsEditingState] = useState(places.length === 0)
+  const [expanded, setExpanded] = useState(places.length === 0)
+  // Editing always shows the full view, and leaves it open afterwards.
+  const setIsEditing = (value: boolean) => {
+    setIsEditingState(value)
+    if (value) setExpanded(true)
+  }
   const [query, setQuery] = useState<string>(node.attrs.query ?? "")
   const [results, setResults] = useState<PlaceSummary[]>([])
   const [checked, setChecked] = useState<Set<string>>(() => new Set(places.map(p => p.id)))
@@ -114,6 +121,7 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
             </button>
           </>
         )}
+        {!isEditing && <ExpandToggle expanded={expanded} onToggle={() => setExpanded(v => !v)} />}
       </div>
 
       {editable && isEditing ? (
@@ -171,6 +179,11 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
             </button>
           </div>
         </div>
+      ) : !expanded ? (
+        <CompactBody onExpand={() => setExpanded(true)}>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          <MarkersSummary markers={markers} workspaceId={workspaceId} emptyText={t("googleMaps.noPlaces")} />
+        </CompactBody>
       ) : (
         <>
           {error && <p className="px-3 pt-2 text-xs text-red-500">{error}</p>}
