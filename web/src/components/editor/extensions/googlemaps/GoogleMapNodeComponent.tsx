@@ -12,6 +12,7 @@ import { LabeledMarker, MarkerIcon, PanTo, RouteSummary } from "./shared/MapPart
 import { useNodeMove } from "./shared/useNodeMove"
 import { DEFAULT_CENTER, MARKER_COLORS, MapMarker, MapRoute, TRAVEL_MODES, chooseRoute, newId, placeThumbnailUrl, toStoredRoutes, trimPlace } from "./shared/types"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
+import { CompactBody, ExpandToggle, MarkersSummary } from "./shared/CompactSummary"
 
 type Tab = "markers" | "route"
 
@@ -436,13 +437,20 @@ const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttribute
   const editable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
   const { moveUp, moveDown } = useNodeMove({ editor, node, getPos })
+  // A new, empty map opens straight into editing.
+  const [expanded, setExpanded] = useState(markers.length === 0)
 
-  // Stable for the node's lifetime: the Google map is uncontrolled and only
-  // reads its initial camera.
-  const [initialCamera] = useState(() => ({
+  // The Google map is uncontrolled and only reads its initial camera, so this
+  // is fixed while the map is shown and re-read each time it is expanded.
+  const currentCamera = () => ({
     center: node.attrs.center ?? (markers[0] ? { lat: markers[0].lat, lng: markers[0].lng } : DEFAULT_CENTER),
     zoom: node.attrs.zoom ?? 13,
-  }))
+  })
+  const [initialCamera, setInitialCamera] = useState(currentCamera)
+  const toggleExpanded = () => {
+    if (!expanded) setInitialCamera(currentCamera())
+    setExpanded(!expanded)
+  }
 
   const nodeActions = [
     { label: t("editor.moveUp"), icon: <ChevronUp size={14} />, onClick: moveUp },
@@ -465,26 +473,33 @@ const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttribute
         ) : (
           <span className="flex-1 text-sm font-medium">{node.attrs.title || t("editor.GoogleMapNode")}</span>
         )}
+        <ExpandToggle expanded={expanded} onToggle={toggleExpanded} />
       </div>
-      <GoogleMapGate
-        workspaceId={workspaceId}
-        fallback={
-          <GoogleMapSnapshot title={node.attrs.title} markers={markers} route={route} workspaceId={workspaceId} embedded />
-        }
-      >
-        {env => (
-          <GoogleMapEditor
-            env={env}
-            workspaceId={workspaceId}
-            editable={editable}
-            markers={markers}
-            route={route}
-            center={initialCamera.center}
-            zoom={initialCamera.zoom}
-            updateAttributes={updateAttributes}
-          />
-        )}
-      </GoogleMapGate>
+      {!expanded ? (
+        <CompactBody onExpand={toggleExpanded}>
+          <MarkersSummary markers={markers} workspaceId={workspaceId} route={route?.result} travelMode={route?.travelMode} emptyText={t("googleMaps.noMarkers")} />
+        </CompactBody>
+      ) : (
+        <GoogleMapGate
+          workspaceId={workspaceId}
+          fallback={
+            <GoogleMapSnapshot title={node.attrs.title} markers={markers} route={route} workspaceId={workspaceId} embedded />
+          }
+        >
+          {env => (
+            <GoogleMapEditor
+              env={env}
+              workspaceId={workspaceId}
+              editable={editable}
+              markers={markers}
+              route={route}
+              center={initialCamera.center}
+              zoom={initialCamera.zoom}
+              updateAttributes={updateAttributes}
+            />
+          )}
+        </GoogleMapGate>
+      )}
       {isTouchDevice && editable && <NodeTouchMenu visible={selected} actions={nodeActions} />}
     </NodeViewWrapper>
   )

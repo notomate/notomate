@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useId, useCallback } from 'react'
 import { PhotoView, PhotoProvider } from 'react-photo-view'
 import ShikiHighlighter from "react-shiki"
 import { useTranslation } from 'react-i18next'
-import { FileText, ChevronDown, LoaderCircle, CalendarDays, ExternalLink, Star, Map, MapPin, Kanban, PenTool, Sheet } from 'lucide-react'
+import { FileText, ChevronDown, LoaderCircle, CalendarDays, ExternalLink, Star, Map, MapPin, Navigation, Store, Kanban, PenTool, Sheet } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { getNote, NoteData } from '@/api/note'
 import { ViewType } from '@/types/view'
@@ -25,7 +25,8 @@ import { StaticRouteMap, RouteSummary } from '@/components/editor/extensions/goo
 import { useRouteChoice } from '@/components/editor/extensions/googlemaps/shared/useRouteChoice'
 import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/shared/GoogleMapSnapshot'
 import { MapMarker, MapRoute, StoredRoute, placesToMarkers, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
-import type { PlaceDetails } from '@/api/googleMaps'
+import { CompactBody, CompactFrame, DirectionsSummary, MarkersSummary } from '@/components/editor/extensions/googlemaps/shared/CompactSummary'
+import type { PlaceDetails, TravelMode } from '@/api/googleMaps'
 
 const InstagramRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
     const containerRef = useRef<HTMLDivElement>(null)
@@ -305,33 +306,75 @@ const LocationRenderer: React.FC<{ lat: number; lng: number; name?: string; zoom
 // ── Google Maps renderers ─────────────────────────────────────────────────────
 // Read-only pages draw stored snapshots on Leaflet so the workspace's Google
 // key is never needed (or exposed) here.
-const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route: MapRoute | null; workspaceId?: string }> = ({ workspaceId: workspaceIdProp, ...props }) => {
+const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route: MapRoute | null; workspaceId?: string }> = ({ title, markers, route, workspaceId: workspaceIdProp }) => {
+    const { t } = useTranslation()
     const { workspaceId: workspaceIdParam } = useParams<{ workspaceId?: string }>()
-    return <GoogleMapSnapshot {...props} workspaceId={workspaceIdProp || workspaceIdParam} />
+    const workspaceId = workspaceIdProp || workspaceIdParam
+    const [expanded, setExpanded] = useState(false)
+    if (!markers.length) return null
+    return (
+        <CompactFrame icon={<Map size={15} />} title={title || t('editor.GoogleMapNode')} expanded={expanded} onToggle={() => setExpanded(v => !v)}>
+            {expanded
+                ? <GoogleMapSnapshot title={title} markers={markers} route={route} workspaceId={workspaceId} embedded />
+                : (
+                    <CompactBody onExpand={() => setExpanded(true)}>
+                        <MarkersSummary markers={markers} workspaceId={workspaceId} route={route?.result} travelMode={route?.travelMode} emptyText={t('googleMaps.noMarkers')} />
+                    </CompactBody>
+                )}
+        </CompactFrame>
+    )
 }
 
 // Places are drawn on the same map snapshot as the Google Map node, minus the
 // marker list; photos come through the workspace's cached photo proxy, so a
 // workspace ID is needed even off workspace routes.
-const GooglePlacesRenderer: React.FC<{ places: PlaceDetails[]; workspaceId?: string }> = ({ places, workspaceId: workspaceIdProp }) => {
+const GooglePlacesRenderer: React.FC<{ query?: string; places: PlaceDetails[]; workspaceId?: string }> = ({ query, places, workspaceId: workspaceIdProp }) => {
     const { t } = useTranslation()
     const { workspaceId: workspaceIdParam } = useParams<{ workspaceId?: string }>()
-    return <GoogleMapSnapshot title={t('editor.GooglePlacesNode')} markers={placesToMarkers(places)} route={null} workspaceId={workspaceIdProp || workspaceIdParam} hideList defaultOpen />
+    const workspaceId = workspaceIdProp || workspaceIdParam
+    const [expanded, setExpanded] = useState(false)
+    const markers = placesToMarkers(places)
+    const title = query || t('editor.GooglePlacesNode')
+    return (
+        <CompactFrame icon={<Store size={15} />} title={title} expanded={expanded} onToggle={() => setExpanded(v => !v)}>
+            {expanded
+                ? <GoogleMapSnapshot title={title} markers={markers} route={null} workspaceId={workspaceId} embedded hideList defaultOpen />
+                : (
+                    <CompactBody onExpand={() => setExpanded(true)}>
+                        <MarkersSummary markers={markers} workspaceId={workspaceId} emptyText={t('googleMaps.noPlaces')} />
+                    </CompactBody>
+                )}
+        </CompactFrame>
+    )
 }
 
-const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; result: StoredRoute | null; alternatives: StoredRoute[] | null }> = ({ waypoints, result: storedResult, alternatives: storedAlternatives }) => {
+const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; travelMode?: TravelMode; result: StoredRoute | null; alternatives: StoredRoute[] | null }> = ({ waypoints, travelMode, result: storedResult, alternatives: storedAlternatives }) => {
+    const { t } = useTranslation()
     const { result, alternatives, select } = useRouteChoice(storedResult, storedAlternatives)
+    const [expanded, setExpanded] = useState(false)
     if (!waypoints.length) return null
+    const title = waypoints.length >= 2 ? `${waypoints[0].name} → ${waypoints[waypoints.length - 1].name}` : t('editor.GoogleDirectionsNode')
     return (
-        <div className="flex flex-col gap-2 py-1">
-            <StaticRouteMap
-                points={waypoints.map((w, i) => ({ lat: w.lat, lng: w.lng, label: waypointLabel(i), color: waypointColor(i, waypoints.length), title: w.name }))}
-                encodedPolyline={result?.encodedPolyline}
-            />
-            {result
-                ? <RouteSummary route={result} stopNames={waypoints.map(w => w.name)} alternatives={alternatives} onSelect={select} />
-                : <div className="text-sm">{waypoints.map(w => w.name).join(' → ')}</div>}
-        </div>
+        <CompactFrame icon={<Navigation size={15} />} title={title} expanded={expanded} onToggle={() => setExpanded(v => !v)}>
+            {expanded ? (
+                <div className="flex flex-col">
+                    <StaticRouteMap
+                        points={waypoints.map((w, i) => ({ lat: w.lat, lng: w.lng, label: waypointLabel(i), color: waypointColor(i, waypoints.length), title: w.name }))}
+                        encodedPolyline={result?.encodedPolyline}
+                        framed={false}
+                    />
+                    <div className="p-3 border-t dark:border-neutral-700">
+                        {result
+                            ? <RouteSummary route={result} stopNames={waypoints.map(w => w.name)} alternatives={alternatives} onSelect={select} />
+                            : <div className="text-sm">{waypoints.map(w => w.name).join(' → ')}</div>}
+                    </div>
+                </div>
+            ) : (
+                <CompactBody onExpand={() => setExpanded(true)}>
+                    <DirectionsSummary waypoints={waypoints} result={result} travelMode={travelMode} emptyText={t('googleMaps.directionsEmpty')} />
+                </CompactBody>
+            )}
+        </CompactFrame>
     )
 }
 
@@ -683,10 +726,10 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
             case 'googlePlacesNode': {
                 const places: PlaceDetails[] = node.attrs?.places ?? []
                 if (!places.length) return null
-                return <div key={key} className="py-1"><GooglePlacesRenderer places={places} workspaceId={workspaceIdProp} /></div>
+                return <div key={key} className="py-1"><GooglePlacesRenderer query={node.attrs?.query} places={places} workspaceId={workspaceIdProp} /></div>
             }
             case 'googleDirectionsNode':
-                return <GoogleDirectionsRenderer key={key} waypoints={node.attrs?.waypoints ?? []} result={node.attrs?.result ?? null} alternatives={node.attrs?.alternatives ?? null} />
+                return <div key={key} className="py-1"><GoogleDirectionsRenderer waypoints={node.attrs?.waypoints ?? []} travelMode={node.attrs?.travelMode} result={node.attrs?.result ?? null} alternatives={node.attrs?.alternatives ?? null} /></div>
             case 'ratingNode': {
                 const { rating = 0, maxRating = 5, label } = node.attrs ?? {}
                 return <RatingRenderer key={key} rating={rating} maxRating={maxRating} label={label} />
