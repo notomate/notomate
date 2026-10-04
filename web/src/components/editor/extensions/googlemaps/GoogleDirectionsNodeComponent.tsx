@@ -9,7 +9,7 @@ import { GoogleMapGate } from "./shared/GoogleMapGate"
 import { PlaceSearchBox } from "./shared/PlaceSearchBox"
 import { FitBounds, LabeledMarker, RouteSummary, StaticRouteMap } from "./shared/MapParts"
 import { useNodeMove } from "./shared/useNodeMove"
-import { CompactBody, DirectionsSummary, ExpandToggle } from "./shared/CompactSummary"
+import { CompactBody, DirectionsSummary, ExpandToggle, frameClass } from "./shared/CompactSummary"
 import { DEFAULT_CENTER, StoredRoute, TRAVEL_MODES, Waypoint, chooseRoute, newId, toStoredRoutes, waypointColor, waypointLabel } from "./shared/types"
 
 const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos, extension }) => {
@@ -94,15 +94,17 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
   )
 
   return (
-    <NodeViewWrapper className="google-directions-node my-2 border dark:border-neutral-700 rounded-lg overflow-hidden bg-white dark:bg-neutral-900">
-      <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
-        <Navigation size={15} className="text-muted-foreground shrink-0" />
-        <span className="flex-1 text-sm font-medium truncate">
-          {waypoints.length >= 2 ? `${waypoints[0].name} → ${waypoints[waypoints.length - 1].name}` : t("editor.GoogleDirectionsNode")}
-        </span>
-        {!editable && <span className="text-xs text-muted-foreground">{t(`googleMaps.travelMode.${travelMode}`)}</span>}
-        <ExpandToggle expanded={expanded} onToggle={() => setExpanded(v => !v)} />
-      </div>
+    <NodeViewWrapper className={`google-directions-node my-2 ${frameClass(expanded)}`}>
+      {expanded && (
+        <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
+          <Navigation size={15} className="text-muted-foreground shrink-0" />
+          <span className="flex-1 text-sm font-medium truncate">
+            {waypoints.length >= 2 ? `${waypoints[0].name} → ${waypoints[waypoints.length - 1].name}` : t("editor.GoogleDirectionsNode")}
+          </span>
+          {!editable && <span className="text-xs text-muted-foreground">{t(`googleMaps.travelMode.${travelMode}`)}</span>}
+          <ExpandToggle expanded={expanded} onToggle={() => setExpanded(v => !v)} />
+        </div>
+      )}
 
       {!expanded ? (
         <CompactBody onExpand={() => setExpanded(true)}>

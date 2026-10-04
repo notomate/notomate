@@ -12,7 +12,7 @@ import { LabeledMarker, MarkerIcon, PanTo, RouteSummary } from "./shared/MapPart
 import { useNodeMove } from "./shared/useNodeMove"
 import { DEFAULT_CENTER, MARKER_COLORS, MapMarker, MapRoute, TRAVEL_MODES, chooseRoute, newId, placeThumbnailUrl, toStoredRoutes, trimPlace } from "./shared/types"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
-import { CompactBody, ExpandToggle, MarkersSummary } from "./shared/CompactSummary"
+import { CompactBody, ExpandToggle, MarkersSummary, frameClass } from "./shared/CompactSummary"
 
 type Tab = "markers" | "route"
 
@@ -460,21 +460,23 @@ const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttribute
   useDragMenu(getPos, () => nodeActions)
 
   return (
-    <NodeViewWrapper className="google-map-node my-2 border dark:border-neutral-700 rounded-lg overflow-hidden bg-white dark:bg-neutral-900">
-      <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
-        <MapIcon size={15} className="text-muted-foreground shrink-0" />
-        {editable ? (
-          <input
-            className="flex-1 bg-transparent text-sm font-medium focus:outline-none"
-            defaultValue={node.attrs.title}
-            placeholder={t("editor.GoogleMapNode")}
-            onBlur={e => e.target.value !== node.attrs.title && updateAttributes({ title: e.target.value })}
-          />
-        ) : (
-          <span className="flex-1 text-sm font-medium">{node.attrs.title || t("editor.GoogleMapNode")}</span>
-        )}
-        <ExpandToggle expanded={expanded} onToggle={toggleExpanded} />
-      </div>
+    <NodeViewWrapper className={`google-map-node my-2 ${frameClass(expanded)}`}>
+      {expanded && (
+        <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
+          <MapIcon size={15} className="text-muted-foreground shrink-0" />
+          {editable ? (
+            <input
+              className="flex-1 bg-transparent text-sm font-medium focus:outline-none"
+              defaultValue={node.attrs.title}
+              placeholder={t("editor.GoogleMapNode")}
+              onBlur={e => e.target.value !== node.attrs.title && updateAttributes({ title: e.target.value })}
+            />
+          ) : (
+            <span className="flex-1 text-sm font-medium">{node.attrs.title || t("editor.GoogleMapNode")}</span>
+          )}
+          <ExpandToggle expanded={expanded} onToggle={toggleExpanded} />
+        </div>
+      )}
       {!expanded ? (
         <CompactBody onExpand={toggleExpanded}>
           <MarkersSummary markers={markers} workspaceId={workspaceId} route={route?.result} travelMode={route?.travelMode} emptyText={t("googleMaps.noMarkers")} />
