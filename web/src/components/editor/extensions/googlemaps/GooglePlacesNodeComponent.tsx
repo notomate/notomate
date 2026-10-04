@@ -6,7 +6,7 @@ import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 import { PlaceDetails, PlaceSummary, getGooglePlace, googleMapsErrorMessage, searchGooglePlaces } from "@/api/googleMaps"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
 import { useNodeMove } from "./shared/useNodeMove"
-import { CompactBody, ExpandToggle, MarkersSummary } from "./shared/CompactSummary"
+import { CompactBody, ExpandToggle, MarkersSummary, frameClass } from "./shared/CompactSummary"
 import { placesToMarkers, trimPlace } from "./shared/types"
 
 const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos, extension }) => {
@@ -98,31 +98,35 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
 
   const markers = placesToMarkers(places)
 
+  const framed = expanded || (editable && isEditing)
+
   // Candidates shown while editing: places already in the node plus new results.
   const candidates: PlaceSummary[] = [...places, ...results.filter(r => !places.some(p => p.id === r.id))]
 
   return (
-    <NodeViewWrapper className="google-places-node my-2 border dark:border-neutral-700 rounded-lg overflow-hidden bg-white dark:bg-neutral-900">
-      <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
-        <Store size={15} className="text-muted-foreground shrink-0" />
-        <span className="flex-1 text-sm font-medium truncate">{node.attrs.query || t("editor.GooglePlacesNode")}</span>
-        {node.attrs.fetchedAt && (
-          <span className="text-[11px] text-muted-foreground shrink-0">
-            {t("googleMaps.fetchedAt", { date: new Date(node.attrs.fetchedAt).toLocaleString() })}
-          </span>
-        )}
-        {editable && !isEditing && (
-          <>
-            <button type="button" className="p-1 rounded text-muted-foreground hover:bg-gray-200 dark:hover:bg-neutral-700 disabled:opacity-50" disabled={!!busy} onClick={refresh} title={t("googleMaps.refresh")}>
-              <RefreshCw size={13} className={busy === "fetch" ? "animate-spin" : ""} />
-            </button>
-            <button type="button" className="p-1 rounded text-muted-foreground hover:bg-gray-200 dark:hover:bg-neutral-700" onClick={() => setIsEditing(true)} title={t("googleMaps.editPlaces")}>
-              <Edit3 size={13} />
-            </button>
-          </>
-        )}
-        {!isEditing && <ExpandToggle expanded={expanded} onToggle={() => setExpanded(v => !v)} />}
-      </div>
+    <NodeViewWrapper className={`google-places-node my-2 ${frameClass(framed)}`}>
+      {framed && (
+        <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
+          <Store size={15} className="text-muted-foreground shrink-0" />
+          <span className="flex-1 text-sm font-medium truncate">{node.attrs.query || t("editor.GooglePlacesNode")}</span>
+          {node.attrs.fetchedAt && (
+            <span className="text-[11px] text-muted-foreground shrink-0">
+              {t("googleMaps.fetchedAt", { date: new Date(node.attrs.fetchedAt).toLocaleString() })}
+            </span>
+          )}
+          {editable && !isEditing && (
+            <>
+              <button type="button" className="p-1 rounded text-muted-foreground hover:bg-gray-200 dark:hover:bg-neutral-700 disabled:opacity-50" disabled={!!busy} onClick={refresh} title={t("googleMaps.refresh")}>
+                <RefreshCw size={13} className={busy === "fetch" ? "animate-spin" : ""} />
+              </button>
+              <button type="button" className="p-1 rounded text-muted-foreground hover:bg-gray-200 dark:hover:bg-neutral-700" onClick={() => setIsEditing(true)} title={t("googleMaps.editPlaces")}>
+                <Edit3 size={13} />
+              </button>
+            </>
+          )}
+          {!isEditing && <ExpandToggle expanded={expanded} onToggle={() => setExpanded(v => !v)} />}
+        </div>
+      )}
 
       {editable && isEditing ? (
         <div className="p-3 flex flex-col gap-2">

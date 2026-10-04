@@ -313,7 +313,7 @@ const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route:
     const [expanded, setExpanded] = useState(false)
     if (!markers.length) return null
     return (
-        <CompactFrame icon={<Map size={15} />} title={title || t('editor.GoogleMapNode')} expanded={expanded} onToggle={() => setExpanded(v => !v)}>
+        <CompactFrame icon={<Map size={15} />} title={title || t('editor.GoogleMapNode')} expanded={expanded} onToggle={() => setExpanded(v => !v)} framed={expanded}>
             {expanded
                 ? <GoogleMapSnapshot title={title} markers={markers} route={route} workspaceId={workspaceId} embedded />
                 : (
@@ -336,7 +336,7 @@ const GooglePlacesRenderer: React.FC<{ query?: string; places: PlaceDetails[]; w
     const markers = placesToMarkers(places)
     const title = query || t('editor.GooglePlacesNode')
     return (
-        <CompactFrame icon={<Store size={15} />} title={title} expanded={expanded} onToggle={() => setExpanded(v => !v)}>
+        <CompactFrame icon={<Store size={15} />} title={title} expanded={expanded} onToggle={() => setExpanded(v => !v)} framed={expanded}>
             {expanded
                 ? <GoogleMapSnapshot title={title} markers={markers} route={null} workspaceId={workspaceId} embedded hideList defaultOpen />
                 : (
@@ -355,7 +355,7 @@ const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; travelMode?: T
     if (!waypoints.length) return null
     const title = waypoints.length >= 2 ? `${waypoints[0].name} → ${waypoints[waypoints.length - 1].name}` : t('editor.GoogleDirectionsNode')
     return (
-        <CompactFrame icon={<Navigation size={15} />} title={title} expanded={expanded} onToggle={() => setExpanded(v => !v)}>
+        <CompactFrame icon={<Navigation size={15} />} title={title} expanded={expanded} onToggle={() => setExpanded(v => !v)} framed={expanded}>
             {expanded ? (
                 <div className="flex flex-col">
                     <StaticRouteMap

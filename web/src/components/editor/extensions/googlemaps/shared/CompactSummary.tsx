@@ -35,7 +35,7 @@ export const CompactBody = ({ onExpand, children }: { onExpand: () => void; chil
     <div
       role="button"
       tabIndex={0}
-      className="flex flex-col gap-2 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800/60"
+      className="flex flex-col gap-2 px-3 py-2 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800/60"
       onClick={onExpand}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onExpand() } }}
       title={t("actions.expand")}
@@ -45,20 +45,28 @@ export const CompactBody = ({ onExpand, children }: { onExpand: () => void; chil
   )
 }
 
+// Unframed (collapsed) nodes show just the summary,
+// with no outer box or header.
+export const frameClass = (framed: boolean) =>
+  framed ? "border dark:border-neutral-700 rounded-lg overflow-hidden bg-white dark:bg-neutral-900" : ""
+
 // The read-only frame (rendered pages): header plus summary or full view.
-export const CompactFrame = ({ icon, title, expanded, onToggle, children }: {
+export const CompactFrame = ({ icon, title, expanded, onToggle, framed = true, children }: {
   icon: ReactNode
   title: string
   expanded: boolean
   onToggle: () => void
+  framed?: boolean
   children: ReactNode
 }) => (
-  <div className="border dark:border-neutral-700 rounded-lg overflow-hidden bg-white dark:bg-neutral-900">
-    <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
-      <span className="text-muted-foreground shrink-0">{icon}</span>
-      <span className="flex-1 text-sm font-medium truncate">{title}</span>
-      <ExpandToggle expanded={expanded} onToggle={onToggle} />
-    </div>
+  <div className={frameClass(framed)}>
+    {framed && (
+      <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
+        <span className="text-muted-foreground shrink-0">{icon}</span>
+        <span className="flex-1 text-sm font-medium truncate">{title}</span>
+        <ExpandToggle expanded={expanded} onToggle={onToggle} />
+      </div>
+    )}
     {children}
   </div>
 )
@@ -68,11 +76,13 @@ const RouteLine = ({ route, travelMode }: { route: StoredRoute; travelMode?: Tra
   const duration = route.localizedValues?.duration?.text ?? formatDuration(route.duration)
   const distance = route.localizedValues?.distance?.text ?? formatDistance(route.distanceMeters)
   return (
-    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <div className="flex items-center gap-1.5 min-w-0 text-xs text-muted-foreground">
       <Navigation size={12} className="shrink-0" />
-      <span className="font-semibold text-gray-900 dark:text-gray-100">{duration}</span>
-      {distance && <span>· {distance}</span>}
-      {travelMode && <span>· {t(`googleMaps.travelMode.${travelMode}`)}</span>}
+      <span className="min-w-0 truncate">
+        <span className="font-semibold text-gray-900 dark:text-gray-100">{duration}</span>
+        {distance && <> · {distance}</>}
+        {travelMode && <> · {t(`googleMaps.travelMode.${travelMode}`)}</>}
+      </span>
     </div>
   )
 }
@@ -97,8 +107,12 @@ export const MarkersSummary = ({ markers, workspaceId, route, travelMode, emptyT
             <MarkerIcon label={String(i + 1)} color={m.color} imageUrl={placeThumbnailUrl(workspaceId, m.details)} size={20} imageSize={32} />
             <span className="flex-1 min-w-0">
               <span className="flex items-center gap-2 min-w-0">
-                <span className="text-sm font-medium truncate">{m.details?.displayName?.text ?? m.name}</span>
-                {m.details?.rating != null && <RatingStars rating={m.details.rating} count={m.details.userRatingCount} />}
+                <span className="min-w-0 text-sm font-medium truncate">{m.details?.displayName?.text ?? m.name}</span>
+                {m.details?.rating != null && (
+                  <span className="shrink-0 whitespace-nowrap">
+                    <RatingStars rating={m.details.rating} count={m.details.userRatingCount} />
+                  </span>
+                )}
               </span>
               {(m.details?.formattedAddress ?? m.address) && (
                 <span className="block text-xs text-muted-foreground truncate">{m.details?.formattedAddress ?? m.address}</span>
@@ -125,15 +139,15 @@ export const DirectionsSummary = ({ waypoints, result, travelMode, emptyText }: 
     <>
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm min-w-0">
         {waypoints.map((w, i) => (
-          <span key={w.id} className="inline-flex items-center gap-1 min-w-0">
-            {i > 0 && <span className="text-muted-foreground">→</span>}
+          <span key={w.id} className="inline-flex items-center gap-1 min-w-0 max-w-full">
+            {i > 0 && <span className="shrink-0 text-muted-foreground">→</span>}
             <span
               className="shrink-0 w-4 h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center"
               style={{ background: waypointColor(i, waypoints.length) }}
             >
               {waypointLabel(i)}
             </span>
-            <span className="truncate max-w-[12rem]">{w.name}</span>
+            <span className="min-w-0 truncate max-w-[12rem]">{w.name}</span>
           </span>
         ))}
       </div>
