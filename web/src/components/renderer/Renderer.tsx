@@ -318,7 +318,7 @@ const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route:
                 ? <GoogleMapSnapshot title={title} markers={markers} route={route} workspaceId={workspaceId} embedded />
                 : (
                     <CompactBody onExpand={() => setExpanded(true)}>
-                        <MarkersSummary markers={markers} workspaceId={workspaceId} route={route?.result} travelMode={route?.travelMode} emptyText={t('googleMaps.noMarkers')} />
+                        <MarkersSummary markers={markers} emptyText={t('googleMaps.noMarkers')} />
                     </CompactBody>
                 )}
         </CompactFrame>
@@ -341,14 +341,14 @@ const GooglePlacesRenderer: React.FC<{ query?: string; places: PlaceDetails[]; w
                 ? <GoogleMapSnapshot title={title} markers={markers} route={null} workspaceId={workspaceId} embedded hideList defaultOpen />
                 : (
                     <CompactBody onExpand={() => setExpanded(true)}>
-                        <MarkersSummary markers={markers} workspaceId={workspaceId} emptyText={t('googleMaps.noPlaces')} />
+                        <MarkersSummary markers={markers} emptyText={t('googleMaps.noPlaces')} />
                     </CompactBody>
                 )}
         </CompactFrame>
     )
 }
 
-const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; travelMode?: TravelMode; result: StoredRoute | null; alternatives: StoredRoute[] | null }> = ({ waypoints, travelMode, result: storedResult, alternatives: storedAlternatives }) => {
+const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; travelMode?: TravelMode; result: StoredRoute | null; alternatives: StoredRoute[] | null }> = ({ waypoints, result: storedResult, alternatives: storedAlternatives }) => {
     const { t } = useTranslation()
     const { result, alternatives, select } = useRouteChoice(storedResult, storedAlternatives)
     const [expanded, setExpanded] = useState(false)
@@ -371,7 +371,7 @@ const GoogleDirectionsRenderer: React.FC<{ waypoints: Waypoint[]; travelMode?: T
                 </div>
             ) : (
                 <CompactBody onExpand={() => setExpanded(true)}>
-                    <DirectionsSummary waypoints={waypoints} result={result} travelMode={travelMode} emptyText={t('googleMaps.directionsEmpty')} />
+                    <DirectionsSummary waypoints={waypoints} emptyText={t('googleMaps.directionsEmpty')} />
                 </CompactBody>
             )}
         </CompactFrame>

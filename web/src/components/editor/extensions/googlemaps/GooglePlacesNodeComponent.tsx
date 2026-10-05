@@ -186,7 +186,7 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
       ) : !expanded ? (
         <CompactBody onExpand={() => setExpanded(true)}>
           {error && <p className="text-xs text-red-500">{error}</p>}
-          <MarkersSummary markers={markers} workspaceId={workspaceId} emptyText={t("googleMaps.noPlaces")} />
+          <MarkersSummary markers={markers} emptyText={t("googleMaps.noPlaces")} />
         </CompactBody>
       ) : (
         <>

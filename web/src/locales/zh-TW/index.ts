@@ -812,6 +812,8 @@ export default {
     }
   },
   googleMaps: {
+    summarySeparator: "、",
+    summaryMore: "{{names}}和{{count}}個地方",
     allMarkers: "所有標註",
     closePanel: "關閉面板",
     fullscreen: "全螢幕",

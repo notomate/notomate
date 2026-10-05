@@ -479,7 +479,7 @@ const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttribute
       )}
       {!expanded ? (
         <CompactBody onExpand={toggleExpanded}>
-          <MarkersSummary markers={markers} workspaceId={workspaceId} route={route?.result} travelMode={route?.travelMode} emptyText={t("googleMaps.noMarkers")} />
+          <MarkersSummary markers={markers} emptyText={t("googleMaps.noMarkers")} />
         </CompactBody>
       ) : (
         <GoogleMapGate
