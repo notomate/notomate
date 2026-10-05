@@ -741,6 +741,8 @@ export default {
     }
   },
   googleMaps: {
+    summarySeparator: "、",
+    summaryMore: "{{names}}和{{count}}个地方",
     allMarkers: "所有标注",
     closePanel: "关闭面板",
     fullscreen: "全屏",

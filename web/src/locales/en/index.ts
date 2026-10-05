@@ -812,6 +812,9 @@ export default {
     }
   },
   googleMaps: {
+    summarySeparator: ", ",
+    summaryMore_one: "{{names}} and {{count}} more place",
+    summaryMore_other: "{{names}} and {{count}} more places",
     allMarkers: "All markers",
     closePanel: "Close panel",
     fullscreen: "Fullscreen",

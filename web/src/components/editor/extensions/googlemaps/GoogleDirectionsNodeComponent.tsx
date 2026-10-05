@@ -108,7 +108,7 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
 
       {!expanded ? (
         <CompactBody onExpand={() => setExpanded(true)}>
-          <DirectionsSummary waypoints={waypoints} result={result} travelMode={travelMode} emptyText={t("googleMaps.directionsEmpty")} />
+          <DirectionsSummary waypoints={waypoints} emptyText={t("googleMaps.directionsEmpty")} />
         </CompactBody>
       ) : (
         <>
