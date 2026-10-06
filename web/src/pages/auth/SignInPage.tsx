@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { signIn } from '@/api/auth';
 import logo from '@/assets/app.svg'
 import BrandIcons from '@/components/illustrations/BrandIcons';
+import ProjectInfo from '@/components/ProjectInfo';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/stores/toast';
 import { useCurrentUserStore } from '@/stores/current-user';
@@ -144,6 +145,7 @@ const SignIn: React.FC = () => {
                             {t("pages.signin.continueAsGuest")} →
                         </a>
                     </div>
+                    <ProjectInfo showVersion />
                 </div>
             </div>
         </div>
