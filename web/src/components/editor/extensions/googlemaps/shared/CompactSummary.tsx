@@ -78,7 +78,7 @@ const PlaceNames = ({ places, emptyText }: {
     ? t("googleMaps.summaryMore", { names, count: places.length - 2 })
     : names
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <div className="flex items-center gap-1 min-w-0">
       <MapPin size={16} className="shrink-0 text-muted-foreground" aria-hidden="true" />
       <span className="min-w-0 text-sm font-semibold text-muted-foreground truncate">{summary}</span>
     </div>
