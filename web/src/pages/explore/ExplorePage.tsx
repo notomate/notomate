@@ -5,8 +5,9 @@ import { createPortal } from 'react-dom';
 import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
 import NoteListSkeleton from '@/components/notecard/NoteListSkeleton';
+import AboutModal from '@/components/user/AboutModal';
 import logo from '@/assets/app.svg';
-import { LogIn, ArrowLeft, Search, X, Trash2 } from 'lucide-react';
+import { LogIn, ArrowLeft, Search, X, Trash2, Info } from 'lucide-react';
 import { useCurrentUserStore } from '@/stores/current-user';
 import { useTranslation } from 'react-i18next';
 
@@ -49,6 +50,7 @@ const ExplorePage: React.FC = () => {
     const { user, fetchUser } = useCurrentUserStore();
     const [authChecked, setAuthChecked] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isAboutOpen, setIsAboutOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const mobileButtonRef = useRef<HTMLButtonElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -84,6 +86,17 @@ const ExplorePage: React.FC = () => {
                     {t("actions.signin")}
                 </Link>
             )}
+            <button
+                type="button"
+                onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsAboutOpen(true);
+                }}
+                className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+                <Info size={16} strokeWidth={2.5} />
+                {t("menu.about")}
+            </button>
         </div>
     );
 
@@ -94,28 +107,37 @@ const ExplorePage: React.FC = () => {
                 <div className="flex items-center gap-3 select-none px-2">
                     <img src={logo} className="w-9" alt="logo" />
                 </div>
-                <div className="mt-auto flex flex-col">
+                <div className="mt-auto flex items-center gap-3">
                     {authChecked && (
                         user ? (
                             <Link
                                 to="/"
-                                className="flex gap-3 px-2 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                className="flex px-2 py-2.5 items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                                 title={t("pages.explore.backToWorkspace")}
+                                aria-label={t("pages.explore.backToWorkspace")}
                             >
                                 <ArrowLeft size={16} strokeWidth={2.5} />
-                                {t("pages.explore.backToWorkspace")}
                             </Link>
                         ) : (
                             <Link
                                 to="/signin"
-                                className="flex gap-3 px-2 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                className="flex px-2 py-2.5 items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
                                 title={t("actions.signin")}
+                                aria-label={t("actions.signin")}
                             >
                                 <LogIn size={16} strokeWidth={2.5} />
-                                {t("actions.signin")}
                             </Link>
                         )
                     )}
+                    <button
+                        type="button"
+                        onClick={() => setIsAboutOpen(true)}
+                        className="flex px-2 py-2.5 items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                        title={t("menu.about")}
+                        aria-label={t("menu.about")}
+                    >
+                        <Info size={16} strokeWidth={2.5} />
+                    </button>
                 </div>
             </aside>
 
@@ -190,6 +212,8 @@ const ExplorePage: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} />
 
             {isMenuOpen && createPortal(
                 <>

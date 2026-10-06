@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { signUp } from '@/api/auth';
 import logo from '@/assets/app.svg'
 import BrandIcons from '@/components/illustrations/BrandIcons';
+import ProjectInfo from '@/components/ProjectInfo';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/stores/toast';
 import { Button } from '@/components/ui/button';
@@ -176,6 +177,7 @@ const SignUp: React.FC = () => {
               {t("actions.signup")}
             </Button>
           </form>
+          <ProjectInfo showVersion />
         </div>
       </div>
     </div>

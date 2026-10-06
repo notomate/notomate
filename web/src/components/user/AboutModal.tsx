@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next"
 import logo from "@/assets/app.svg"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
+import ProjectInfo from "@/components/ProjectInfo"
 
 interface AboutModalProps {
     open: boolean
@@ -36,6 +37,7 @@ const AboutModal = ({ open, onOpenChange }: AboutModalProps) => {
                     <span className="text-sm text-muted-foreground font-mono">
                         {appVersion}
                     </span>
+                    <ProjectInfo />
                 </div>
                 {/* Close Button */}
                 <div className="flex justify-end pt-2">
