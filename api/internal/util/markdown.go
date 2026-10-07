@@ -7,6 +7,8 @@ import (
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/extension"
+	extast "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/text"
 )
 
@@ -28,7 +30,7 @@ type TipTapMark struct {
 // MarkdownToTipTap converts markdown text to TipTap JSON format
 func MarkdownToTipTap(markdown string) (string, error) {
 	// Parse markdown using goldmark
-	md := goldmark.New()
+	md := goldmark.New(goldmark.WithExtensions(extension.Table))
 	reader := text.NewReader([]byte(markdown))
 	doc := md.Parser().Parse(reader)
 
@@ -64,6 +66,8 @@ func MarkdownToTipTap(markdown string) (string, error) {
 // convertNode converts a goldmark AST node to a TipTap node
 func convertNode(n ast.Node, source []byte) *TipTapNode {
 	switch n.Kind() {
+	case extast.KindTable:
+		return convertTable(n, source)
 	case ast.KindParagraph:
 		return convertParagraph(n, source)
 	case ast.KindHeading:
@@ -87,6 +91,26 @@ func convertNode(n ast.Node, source []byte) *TipTapNode {
 		// For other block-level nodes, try to process children
 		return convertParagraph(n, source)
 	}
+}
+
+func convertTable(n ast.Node, source []byte) *TipTapNode {
+	table := &TipTapNode{Type: "table"}
+	for row := n.FirstChild(); row != nil; row = row.NextSibling() {
+		tableRow := TipTapNode{Type: "tableRow"}
+		cellType := "tableCell"
+		if row.Kind() == extast.KindTableHeader {
+			cellType = "tableHeader"
+		}
+		for cell := row.FirstChild(); cell != nil; cell = cell.NextSibling() {
+			// TipTap cells require block content, even when the cell is empty.
+			tableRow.Content = append(tableRow.Content, TipTapNode{
+				Type:    cellType,
+				Content: []TipTapNode{*convertParagraph(cell, source)},
+			})
+		}
+		table.Content = append(table.Content, tableRow)
+	}
+	return table
 }
 
 func convertParagraph(n ast.Node, source []byte) *TipTapNode {
