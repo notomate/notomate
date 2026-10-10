@@ -108,30 +108,30 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
                 <Dialog.Content
-                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[800px] z-50 max-h-[85vh] flex flex-col"
+                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-4 sm:p-6 w-[90vw] max-w-[800px] z-50 max-h-[85vh] flex flex-col"
                     onPointerDownOutside={(e) => e.preventDefault()}
                 >
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex shrink-0 items-center justify-between gap-2 mb-4">
                         <Dialog.Title className="text-xl font-semibold">{t('editor.carousel.addMediaToCarousel')}</Dialog.Title>
-                        <Dialog.Close className="p-1 rounded hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                        <Dialog.Close className="shrink-0 p-1 rounded hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
                             <X size={16} />
                         </Dialog.Close>
                     </div>
 
-                    <div className="flex gap-2 mb-4">
-                        <div className="flex rounded-lg border dark:border-neutral-600 overflow-hidden text-sm">
+                    <div className="flex shrink-0 flex-wrap gap-2 mb-4">
+                        <div className="flex w-full shrink-0 rounded-lg border dark:border-neutral-600 overflow-hidden text-sm sm:w-auto">
                             {(['all', 'image', 'video'] as const).map(f => (
                                 <button
                                     key={f}
                                     type="button"
                                     onClick={() => setFilter(f)}
-                                    className={`px-3 py-1.5 transition-colors ${filter === f ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300'}`}
+                                    className={`flex-1 whitespace-nowrap px-3 py-1.5 transition-colors sm:flex-none ${filter === f ? 'bg-blue-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-neutral-800 text-gray-700 dark:text-gray-300'}`}
                                 >
                                     {t(`editor.carousel.filter.${f}`)}
                                 </button>
                             ))}
                         </div>
-                        <div className="relative flex-1">
+                        <div className="relative min-w-0 flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                             <input
                                 type="text"
@@ -146,7 +146,7 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
                                 type="button"
                                 onClick={() => inputRef.current?.click()}
                                 disabled={isUploading}
-                                className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-50"
+                                className="flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm rounded-lg border dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-50"
                             >
                                 {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                                 {t('editor.carousel.upload')}
@@ -207,13 +207,13 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
                         )}
                     </div>
 
-                    <div className="mt-4 flex items-center justify-between border-t dark:border-neutral-700 pt-4">
+                    <div className="mt-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t dark:border-neutral-700 pt-4">
                         <span className="text-sm text-muted-foreground">
                             {selected.size > 0 ? t('editor.carousel.selectedCount', { count: selected.size }) : t('editor.carousel.selectFilesToAdd')}
                         </span>
-                        <div className="flex gap-2">
+                        <div className="flex shrink-0 flex-wrap justify-end gap-2">
                             <Dialog.Close asChild>
-                                <button type="button" className="px-4 py-2 text-sm border dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
+                                <button type="button" className="shrink-0 whitespace-nowrap px-4 py-2 text-sm border dark:border-neutral-600 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors">
                                     {t('common.cancel')}
                                 </button>
                             </Dialog.Close>
@@ -221,7 +221,7 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
                                 type="button"
                                 onClick={handleAdd}
                                 disabled={selected.size === 0}
-                                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="shrink-0 whitespace-nowrap px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 {selected.size > 0 ? t('editor.carousel.addCount', { count: selected.size }) : t('editor.carousel.add')}
                             </button>
