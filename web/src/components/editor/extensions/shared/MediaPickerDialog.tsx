@@ -92,13 +92,13 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[800px] z-50 max-h-[85vh] overflow-y-auto">
+                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-4 sm:p-6 w-[90vw] max-w-[800px] z-50 max-h-[85vh] overflow-y-auto">
                     <Dialog.Title className="text-xl font-semibold mb-4">
                         {title}
                     </Dialog.Title>
 
                     <div className="mb-4 flex gap-2">
-                        <div className="relative flex-1">
+                        <div className="relative min-w-0 flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                             <input
                                 type="text"
@@ -113,7 +113,7 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
                                 type="button"
                                 onClick={() => inputRef.current?.click()}
                                 disabled={isUploading}
-                                className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-50 whitespace-nowrap"
+                                className="flex shrink-0 items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-lg border dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-50 whitespace-nowrap"
                             >
                                 {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                                 Upload
@@ -148,7 +148,7 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
 
                     <div className="mt-6 flex justify-end">
                         <Dialog.Close asChild>
-                            <button className="px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                            <button className="shrink-0 whitespace-nowrap px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
                                 Close
                             </button>
                         </Dialog.Close>
