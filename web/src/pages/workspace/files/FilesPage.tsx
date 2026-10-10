@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import useUploadComplete from '@/hooks/use-upload-complete';
 import { deleteFile, FileInfo, getFileDownloadUrl, listFiles, renameFile, uploadFile } from '../../../api/file';
 import { useToastStore } from '../../../stores/toast';
 import { Download, FileIcon, Trash2, Edit2, X, Check, Search, Filter, Eye, FileText, Copy, Upload } from 'lucide-react';
@@ -85,17 +86,10 @@ const FilesPage = () => {
         },
     });
 
-    const uploadMutation = useMutation({
-        mutationFn: (file: File) => uploadFile(currentWorkspaceId!, file),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
-            if (fileInputRef.current) {
-                fileInputRef.current.value = '';
-            }
-        },
-        onError: () => {
-            addToast({ type: 'error', title: t('files.upload_error') });
-        },
+    // Uploads run in the global upload store (with progress in the upload
+    // panel) and keep going if the user leaves this page.
+    useUploadComplete(currentWorkspaceId ?? '', !!currentWorkspaceId, () => {
+        queryClient.invalidateQueries({ queryKey: ['files', currentWorkspaceId] });
     });
 
     const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
@@ -148,10 +142,14 @@ const FilesPage = () => {
     };
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            uploadMutation.mutate(file);
-        }
+        const selected = Array.from(event.target.files ?? []);
+        event.target.value = '';
+        if (!currentWorkspaceId) return;
+        selected.forEach((file) => {
+            uploadFile(currentWorkspaceId, file).catch(() => {
+                addToast({ type: 'error', title: t('files.upload_error'), description: file.name });
+            });
+        });
     };
 
     const triggerFileInput = () => {
@@ -185,6 +183,7 @@ const FilesPage = () => {
                 <input
                     ref={fileInputRef}
                     type="file"
+                    multiple
                     onChange={handleFileUpload}
                     className="hidden"
                     aria-label="file upload input"
@@ -247,7 +246,6 @@ const FilesPage = () => {
                                             <Tooltip.Trigger asChild>
                                                 <button
                                                     onClick={triggerFileInput}
-                                                    disabled={uploadMutation.isPending}
                                                     className="p-2.5 rounded-xl dark:border-neutral-60 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     aria-label="upload file"
                                                 >
@@ -268,7 +266,6 @@ const FilesPage = () => {
                                     <div className="sm:hidden flex items-center">
                                         <button
                                             onClick={triggerFileInput}
-                                            disabled={uploadMutation.isPending}
                                             className="p-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                             aria-label="upload file"
                                         >

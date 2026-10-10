@@ -400,6 +400,23 @@ export default {
       6: "六"
     }
   },
+  uploads: {
+    title: "上传",
+    uploading: "上传中 {{done}}/{{total}}",
+    all_done: "已完成 {{count}} 个上传",
+    some_failed: "{{count}} 个上传失败",
+    done: "完成",
+    failed: "失败",
+    canceled: "已取消",
+    paused: "已暂停",
+    pause: "暂停",
+    resume: "继续",
+    retry: "重试",
+    cancel: "取消",
+    collapse: "收起",
+    expand: "展开",
+    close: "关闭"
+  },
   files: {
     drag_drop: "将文件拖到此处或点击选择",
     select_files: "选择文件",

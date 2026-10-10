@@ -385,6 +385,23 @@ export default {
       6: "Сб"
     }
   },
+  uploads: {
+    title: "Загрузки",
+    uploading: "Загрузка {{done}}/{{total}}",
+    all_done: "Загрузок завершено: {{count}}",
+    some_failed: "Загрузок с ошибкой: {{count}}",
+    done: "Готово",
+    failed: "Ошибка",
+    canceled: "Отменено",
+    paused: "Приостановлено",
+    pause: "Пауза",
+    resume: "Продолжить",
+    retry: "Повторить",
+    cancel: "Отмена",
+    collapse: "Свернуть",
+    expand: "Развернуть",
+    close: "Закрыть"
+  },
   files: {
     drag_drop: "Перетащите файлы сюда или нажмите для выбора",
     select_files: "Выбрать файлы",

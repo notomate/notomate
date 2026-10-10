@@ -385,6 +385,23 @@ export default {
       6: "Sáb"
     }
   },
+  uploads: {
+    title: "Envios",
+    uploading: "Enviando {{done}}/{{total}}",
+    all_done: "{{count}} envio(s) concluído(s)",
+    some_failed: "{{count}} envio(s) com falha",
+    done: "Concluído",
+    failed: "Falhou",
+    canceled: "Cancelado",
+    paused: "Pausado",
+    pause: "Pausar",
+    resume: "Retomar",
+    retry: "Tentar novamente",
+    cancel: "Cancelar",
+    collapse: "Recolher",
+    expand: "Expandir",
+    close: "Fechar"
+  },
   files: {
     drag_drop: "Arraste e solte arquivos aqui ou clique para selecionar",
     select_files: "Selecionar Arquivos",

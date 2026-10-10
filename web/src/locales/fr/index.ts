@@ -385,6 +385,23 @@ export default {
       6: "Sam"
     }
   },
+  uploads: {
+    title: "Téléversements",
+    uploading: "Téléversement {{done}}/{{total}}",
+    all_done: "{{count}} téléversement(s) terminé(s)",
+    some_failed: "{{count}} téléversement(s) échoué(s)",
+    done: "Terminé",
+    failed: "Échec",
+    canceled: "Annulé",
+    paused: "En pause",
+    pause: "Mettre en pause",
+    resume: "Reprendre",
+    retry: "Réessayer",
+    cancel: "Annuler",
+    collapse: "Réduire",
+    expand: "Développer",
+    close: "Fermer"
+  },
   files: {
     drag_drop: "Glissez-déposez les fichiers ici ou cliquez pour sélectionner",
     select_files: "Sélectionner les fichiers",

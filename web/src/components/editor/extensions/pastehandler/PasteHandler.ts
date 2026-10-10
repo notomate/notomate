@@ -1,6 +1,8 @@
 import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import MarkdownIt from 'markdown-it'
+import i18n from '@/i18n'
+import { toast } from '@/stores/toast'
 
 const md = new MarkdownIt({
   html: false,
@@ -99,6 +101,8 @@ export const PasteHandler = Extension.create<PasteHandlerOptions>({
                 imageFiles.forEach(file => {
                   upload(file).then(({ src, name }) => {
                     editor.commands.insertContent({ type: 'image', attrs: { src, name } })
+                  }).catch(() => {
+                    toast.error(i18n.t('files.upload_error'))
                   })
                 })
                 return true
@@ -121,7 +125,15 @@ export const PasteHandler = Extension.create<PasteHandlerOptions>({
                         if (!src) { img.remove(); return }
                         const file = await fetchImageAsFile(src)
                         if (!file) { img.remove(); return }
-                        const { src: uploadedSrc, name } = await upload(file)
+                        let uploaded: { src: string; name: string }
+                        try {
+                          uploaded = await upload(file)
+                        } catch {
+                          toast.error(i18n.t('files.upload_error'))
+                          img.remove()
+                          return
+                        }
+                        const { src: uploadedSrc, name } = uploaded
                         // Replace <img> with our custom image-node tag so TipTap picks it up
                         const node = parsed.createElement('image-node')
                         node.setAttribute('src', uploadedSrc)

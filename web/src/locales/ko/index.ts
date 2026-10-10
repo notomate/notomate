@@ -385,6 +385,23 @@ export default {
       6: "토"
     }
   },
+  uploads: {
+    title: "업로드",
+    uploading: "업로드 중 {{done}}/{{total}}",
+    all_done: "업로드 {{count}}개 완료",
+    some_failed: "업로드 {{count}}개 실패",
+    done: "완료",
+    failed: "실패",
+    canceled: "취소됨",
+    paused: "일시 정지됨",
+    pause: "일시 정지",
+    resume: "재개",
+    retry: "다시 시도",
+    cancel: "취소",
+    collapse: "접기",
+    expand: "펼치기",
+    close: "닫기"
+  },
   files: {
     drag_drop: "여기에 파일을 드래그 앤 드롭하거나 클릭하여 선택",
     select_files: "파일 선택",

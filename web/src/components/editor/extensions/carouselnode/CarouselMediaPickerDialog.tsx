@@ -3,6 +3,8 @@ import * as Dialog from "@radix-ui/react-dialog"
 import { Search, Loader2, Image as ImageIcon, Video as VideoIcon, Check, Upload, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { FileInfo } from "@/api/file"
+import { PendingUploads } from "@/components/upload/PendingUploads"
+import useUploadComplete from "@/hooks/use-upload-complete"
 import { CarouselItem } from "./CarouselNode"
 
 interface CarouselMediaPickerDialogProps {
@@ -34,7 +36,6 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
     const [debouncedQuery, setDebouncedQuery] = useState("")
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all')
-    const [isUploading, setIsUploading] = useState(false)
     const inputRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
@@ -88,18 +89,16 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
         onOpenChange(false)
     }
 
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Uploads run in the global upload store: they keep going (and stay
+    // visible in the upload panel) after this dialog closes.
+    const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const uploadedFiles = Array.from(e.target.files || [])
+        if (inputRef.current) inputRef.current.value = ''
         if (!uploadedFiles.length || !onUpload) return
-        setIsUploading(true)
-        try {
-            await Promise.all(uploadedFiles.map(f => onUpload(f)))
-            await loadFiles()
-        } finally {
-            setIsUploading(false)
-            if (inputRef.current) inputRef.current.value = ''
-        }
+        uploadedFiles.forEach(f => { onUpload(f).catch(() => {}) })
     }
+
+    useUploadComplete(workspaceId, open, loadFiles)
 
     const getFileUrl = (fileName: string) => `/api/v1/workspaces/${workspaceId}/files/${fileName}`
 
@@ -145,14 +144,15 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
                             <button
                                 type="button"
                                 onClick={() => inputRef.current?.click()}
-                                disabled={isUploading}
                                 className="flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm rounded-lg border dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors text-gray-700 dark:text-gray-300 disabled:opacity-50"
                             >
-                                {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                                <Upload size={14} />
                                 {t('editor.carousel.upload')}
                             </button>
                         )}
                     </div>
+
+                    <PendingUploads workspaceId={workspaceId} className="mb-4 divide-y divide-gray-100 dark:divide-neutral-700" />
 
                     <div className="flex-1 overflow-y-auto min-h-0">
                         {isLoading ? (

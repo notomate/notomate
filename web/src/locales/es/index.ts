@@ -385,6 +385,23 @@ export default {
       6: "Sáb"
     }
   },
+  uploads: {
+    title: "Subidas",
+    uploading: "Subiendo {{done}}/{{total}}",
+    all_done: "{{count}} subida(s) completada(s)",
+    some_failed: "{{count}} subida(s) fallida(s)",
+    done: "Listo",
+    failed: "Error",
+    canceled: "Cancelado",
+    paused: "En pausa",
+    pause: "Pausar",
+    resume: "Reanudar",
+    retry: "Reintentar",
+    cancel: "Cancelar",
+    collapse: "Contraer",
+    expand: "Expandir",
+    close: "Cerrar"
+  },
   files: {
     drag_drop: "Arrastra y suelta archivos aquí o haz clic para seleccionar",
     select_files: "Seleccionar Archivos",

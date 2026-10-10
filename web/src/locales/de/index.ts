@@ -385,6 +385,23 @@ export default {
       6: "Sa"
     }
   },
+  uploads: {
+    title: "Uploads",
+    uploading: "Wird hochgeladen {{done}}/{{total}}",
+    all_done: "{{count}} Upload(s) abgeschlossen",
+    some_failed: "{{count}} Upload(s) fehlgeschlagen",
+    done: "Fertig",
+    failed: "Fehlgeschlagen",
+    canceled: "Abgebrochen",
+    paused: "Pausiert",
+    pause: "Pausieren",
+    resume: "Fortsetzen",
+    retry: "Erneut versuchen",
+    cancel: "Abbrechen",
+    collapse: "Einklappen",
+    expand: "Ausklappen",
+    close: "Schließen"
+  },
   files: {
     drag_drop: "Dateien hier ablegen oder klicken zum Auswählen",
     select_files: "Dateien auswählen",

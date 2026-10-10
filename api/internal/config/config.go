@@ -60,6 +60,10 @@ const (
 	WORKFLOW_FILE_MAX_SIZE_BYTES  = "workflow_file_max_size_bytes"
 	WORKFLOW_FILE_MAX_COUNT       = "workflow_file_max_count"
 	WORKFLOW_FILE_MAX_TOTAL_BYTES = "workflow_file_max_total_bytes"
+
+	UPLOAD_TMP_DIR      = "upload_tmp_dir"
+	UPLOAD_MAX_SIZE     = "upload_max_size"
+	UPLOAD_EXPIRE_HOURS = "upload_expire_hours"
 )
 
 func Init() {
@@ -86,6 +90,9 @@ func Init() {
 	C.SetDefault(WORKFLOW_FILE_MAX_SIZE_BYTES, 5*1024*1024)
 	C.SetDefault(WORKFLOW_FILE_MAX_COUNT, 200)
 	C.SetDefault(WORKFLOW_FILE_MAX_TOTAL_BYTES, 20*1024*1024)
+	C.SetDefault(UPLOAD_TMP_DIR, "./bin/tus-tmp/")
+	C.SetDefault(UPLOAD_MAX_SIZE, 0)
+	C.SetDefault(UPLOAD_EXPIRE_HOURS, 24)
 
 	C.AutomaticEnv()
 }

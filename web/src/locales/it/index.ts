@@ -385,6 +385,23 @@ export default {
       6: "Sab"
     }
   },
+  uploads: {
+    title: "Caricamenti",
+    uploading: "Caricamento {{done}}/{{total}}",
+    all_done: "{{count}} caricamento/i completato/i",
+    some_failed: "{{count}} caricamento/i non riuscito/i",
+    done: "Completato",
+    failed: "Non riuscito",
+    canceled: "Annullato",
+    paused: "In pausa",
+    pause: "Pausa",
+    resume: "Riprendi",
+    retry: "Riprova",
+    cancel: "Annulla",
+    collapse: "Comprimi",
+    expand: "Espandi",
+    close: "Chiudi"
+  },
   files: {
     drag_drop: "Trascina e rilascia i file qui o fai clic per selezionare",
     select_files: "Seleziona file",

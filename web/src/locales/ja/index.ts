@@ -385,6 +385,23 @@ export default {
       6: "土"
     }
   },
+  uploads: {
+    title: "アップロード",
+    uploading: "アップロード中 {{done}}/{{total}}",
+    all_done: "{{count}} 件のアップロードが完了",
+    some_failed: "{{count}} 件のアップロードに失敗",
+    done: "完了",
+    failed: "失敗",
+    canceled: "キャンセル済み",
+    paused: "一時停止中",
+    pause: "一時停止",
+    resume: "再開",
+    retry: "再試行",
+    cancel: "キャンセル",
+    collapse: "折りたたむ",
+    expand: "展開",
+    close: "閉じる"
+  },
   files: {
     drag_drop: "ファイルをここにドラッグしてドロップするか、クリックして選択してください",
     select_files: "ファイルを選択",

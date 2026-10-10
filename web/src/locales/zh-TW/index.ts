@@ -401,6 +401,23 @@ export default {
       6: "六"
     }
   },
+  uploads: {
+    title: "上傳",
+    uploading: "上傳中 {{done}}/{{total}}",
+    all_done: "已完成 {{count}} 個上傳",
+    some_failed: "{{count}} 個上傳失敗",
+    done: "完成",
+    failed: "失敗",
+    canceled: "已取消",
+    paused: "已暫停",
+    pause: "暫停",
+    resume: "繼續",
+    retry: "重試",
+    cancel: "取消",
+    collapse: "收合",
+    expand: "展開",
+    close: "關閉"
+  },
   files: {
     drag_drop: "拖放檔案到這裡或點擊選擇檔案",
     select_files: "選擇檔案",
