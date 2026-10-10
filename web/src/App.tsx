@@ -18,6 +18,7 @@ import RunsPage from './pages/workspace/workflows/RunsPage';
 import RunDetailPage from './pages/workspace/workflows/RunDetailPage';
 import MessagingPage from './pages/workspace/messaging/MessagingPage';
 import { Toast } from './components/toast/Toast'
+import { UploadPanel } from './components/upload/UploadPanel'
 import { useToastStore } from './stores/toast';
 import WorkspaceLayout from './components/workspacelayout/WorkspaceLayout';
 import WorkspaceLoader from './components/workspaceloader/WorkspaceLoader';
@@ -103,6 +104,7 @@ function App() {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <UploadPanel />
       {
         toasts.map((t) => (
           <Toast key={t.id} toast={t} />

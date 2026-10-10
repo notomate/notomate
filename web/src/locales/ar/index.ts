@@ -385,6 +385,23 @@ export default {
       6: "السبت"
     }
   },
+  uploads: {
+    title: "عمليات الرفع",
+    uploading: "جارٍ الرفع {{done}}/{{total}}",
+    all_done: "اكتمل رفع {{count}}",
+    some_failed: "فشل رفع {{count}}",
+    done: "تم",
+    failed: "فشل",
+    canceled: "أُلغي",
+    paused: "متوقف مؤقتًا",
+    pause: "إيقاف مؤقت",
+    resume: "استئناف",
+    retry: "إعادة المحاولة",
+    cancel: "إلغاء",
+    collapse: "طي",
+    expand: "توسيع",
+    close: "إغلاق"
+  },
   files: {
     drag_drop: "اسحب الملفات هنا أو انقر للاختيار",
     select_files: "اختر الملفات",

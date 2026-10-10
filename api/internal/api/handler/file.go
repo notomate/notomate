@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"math/rand"
 	"net/http"
 	"path/filepath"
@@ -29,19 +30,33 @@ func (h Handler) Upload(c echo.Context) error {
 	}
 	defer f.Close()
 
-	segments := []string{workspaceId}
-
-	ext := filepath.Ext(file.Filename)
-	randomStr := randStringRunes(4)
-	newFileName := time.Now().Format("20060102150405") + "_" + randomStr + ext
-
-	segments = append(segments, newFileName)
-
-	err = h.storage.Save(segments, f)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "")
-	}
 	user := c.Get("user").(model.User)
+	fileModel, err := h.persistWorkspaceFile(workspaceId, user, file.Filename, file.Size, f)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "failed to save file")
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"id":            fileModel.ID,
+		"filename":      fileModel.Name,
+		"original_name": fileModel.OriginalFilename,
+		"size":          fileModel.Size,
+		"ext":           fileModel.Ext,
+		"created_at":    fileModel.CreatedAt,
+		"updated_at":    fileModel.UpdatedAt,
+	})
+}
+
+// persistWorkspaceFile writes r into workspace storage under a generated
+// name and records it in the files table. Shared by the multipart upload and
+// the resumable (tus) upload.
+func (h Handler) persistWorkspaceFile(workspaceId string, user model.User, originalName string, size int64, r io.Reader) (model.File, error) {
+	ext := filepath.Ext(originalName)
+	newFileName := time.Now().Format("20060102150405") + "_" + randStringRunes(4) + ext
+
+	if err := h.storage.Save([]string{workspaceId, newFileName}, r); err != nil {
+		return model.File{}, err
+	}
 
 	now := time.Now().Format(time.RFC3339)
 	fileModel := model.File{
@@ -49,26 +64,18 @@ func (h Handler) Upload(c echo.Context) error {
 		ID:               util.NewId(),
 		Name:             newFileName,
 		Ext:              ext,
-		Size:             file.Size,
-		OriginalFilename: file.Filename,
+		Size:             size,
+		OriginalFilename: originalName,
 		CreatedAt:        now,
 		CreatedBy:        user.ID,
 		UpdatedAt:        now,
 		UpdatedBy:        user.ID,
 	}
 	if err := h.db.CreateFile(fileModel); err != nil {
-		return c.String(http.StatusInternalServerError, "failed to save file record")
+		h.storage.Delete([]string{workspaceId, newFileName})
+		return model.File{}, err
 	}
-
-	return c.JSON(http.StatusOK, echo.Map{
-		"id":            fileModel.ID,
-		"filename":      newFileName,
-		"original_name": file.Filename,
-		"size":          file.Size,
-		"ext":           ext,
-		"created_at":    fileModel.CreatedAt,
-		"updated_at":    fileModel.UpdatedAt,
-	})
+	return fileModel, nil
 }
 
 func (h Handler) Download(c echo.Context) error {

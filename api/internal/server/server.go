@@ -46,6 +46,17 @@ func New(db db.DB, storage storage.Storage, engine *workflow.Engine) (*echo.Echo
 	route.RegisterMessaging(api, *handler, *auth, *workspace)
 	route.RegisterGoogleMaps(api, *handler, *auth, *workspace)
 
+	uploads, err := handler.NewResumableUploads(
+		apiRoot+"/uploads/",
+		config.C.GetString(config.UPLOAD_TMP_DIR),
+		config.C.GetInt64(config.UPLOAD_MAX_SIZE),
+	)
+	if err != nil {
+		return nil, err
+	}
+	route.RegisterUploads(api, uploads, *auth)
+	uploads.StartJanitor(context.Background(), time.Hour, time.Duration(config.C.GetInt(config.UPLOAD_EXPIRE_HOURS))*time.Hour)
+
 	handler.GoogleMaps().StartJanitor(context.Background(), time.Hour)
 
 	return e, nil

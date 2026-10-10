@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useUploadStore, type UploadResult } from "@/stores/upload";
 
 export interface FileInfo {
     id: string;
@@ -10,26 +11,17 @@ export interface FileInfo {
     updated_at: string;
 }
 
-export const uploadFile = async (
+/**
+ * Uploads a file to the workspace using the resumable (tus) endpoint. The
+ * upload lives in the global upload store, so it keeps going (and shows in
+ * the upload panel) even if the component that started it unmounts.
+ */
+export const uploadFile = (
     workspaceId: string,
     file: File,
     onUploadProgress?: (progressPercent: number) => void
-) => {
-    const formData = new FormData();
-    formData.append("file", file)
-    const response = await axios.post(`/api/v1/workspaces/${workspaceId}/files`, formData, {
-        withCredentials: true,
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-            if (onUploadProgress && progressEvent.total) {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                onUploadProgress(percentCompleted);
-            }
-        },
-    });
-    return response.data;
+): Promise<UploadResult> => {
+    return useUploadStore.getState().startUpload(workspaceId, file, onUploadProgress).promise;
 };
 
 export const listFiles = async (

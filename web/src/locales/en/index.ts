@@ -401,6 +401,23 @@ export default {
       6: "Sat"
     }
   },
+  uploads: {
+    title: "Uploads",
+    uploading: "Uploading {{done}}/{{total}}",
+    all_done: "{{count}} upload(s) complete",
+    some_failed: "{{count}} upload(s) failed",
+    done: "Done",
+    failed: "Failed",
+    canceled: "Canceled",
+    paused: "Paused",
+    pause: "Pause",
+    resume: "Resume",
+    retry: "Retry",
+    cancel: "Cancel",
+    collapse: "Collapse",
+    expand: "Expand",
+    close: "Close"
+  },
   files: {
     drag_drop: "Drag and drop files here or click to select",
     select_files: "Select Files",

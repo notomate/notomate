@@ -72,6 +72,7 @@
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^2.6.0",
     "tippy.js": "^6.3.7",
+    "tus-js-client": "^4.3.1",
     "y-indexeddb": "^9.0.12",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.29",
