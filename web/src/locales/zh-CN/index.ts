@@ -30,6 +30,17 @@ export default {
   },
   pages: {
     workflows: {
+      wrapLines: "自动换行",
+      cursorPosition: "第 {{line}} 行，第 {{column}} 列",
+      saveShortcut: "Ctrl / ⌘ + S 保存",
+      saveBeforeRun: "请先保存更改，再运行工作流。",
+      loadingEditor: "正在加载工作流…",
+      loadFailed: "无法加载此工作流。",
+      retry: "重试",
+      saving: "保存中…",
+      unsavedChanges: "尚未保存的更改",
+      allChangesSaved: "所有更改已保存",
+
       runCancelled: "已取消运行",
       title: "工作流",
       newWorkflow: "新建工作流",

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { isAxiosError } from "axios"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -10,6 +11,7 @@ import {
 } from "@/api/workflow"
 import { toast } from "@/stores/toast"
 import OneColumn from "@/components/onecolumn/OneColumn"
+import WorkflowDefinitionEditor from "./WorkflowDefinitionEditor"
 import DispatchDialog from "./DispatchDialog"
 
 const DEFAULT_DEFINITION = `name: My workflow
@@ -25,6 +27,12 @@ jobs:
 `
 
 const WorkflowEditPage = () => {
+    const { workflowId } = useParams()
+    const workspaceId = useCurrentWorkspaceId()
+    return <WorkflowEditForm key={`${workspaceId}:${workflowId ?? "new"}`} />
+}
+
+const WorkflowEditForm = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
     const { workflowId } = useParams()
     const isNew = !workflowId
@@ -37,35 +45,44 @@ const WorkflowEditPage = () => {
     const [validationErrors, setValidationErrors] = useState<WorkflowValidationError[]>([])
     const [showDispatch, setShowDispatch] = useState(false)
 
-    const { data: workflow } = useQuery({
+    const initialized = useRef(false)
+    const [saved, setSaved] = useState({ name: "", definition: DEFAULT_DEFINITION })
+    const dirty = name !== saved.name || definition !== saved.definition
+
+    const { data: workflow, isPending, isError, refetch } = useQuery({
         queryKey: ['workflow', currentWorkspaceId, workflowId],
         queryFn: () => getWorkflow(currentWorkspaceId, workflowId!),
         enabled: !!currentWorkspaceId && !isNew
     })
 
     useEffect(() => {
-        if (workflow) {
+        if (workflow && !initialized.current) {
+            initialized.current = true
+            setSaved({ name: workflow.name, definition: workflow.definition })
             setName(workflow.name)
             setDefinition(workflow.definition)
         }
     }, [workflow])
 
-    const handleError = (error: any) => {
-        const errors = error?.response?.data?.errors
+    const handleError = (error: unknown) => {
+        const response = isAxiosError<{ errors?: WorkflowValidationError[]; message?: string }>(error) ? error.response?.data : undefined
+        const errors = response?.errors
         if (Array.isArray(errors)) {
             setValidationErrors(errors)
             toast.error(t("pages.workflows.validationFailed"))
         } else {
-            toast.error(error?.response?.data?.message || error?.message || "Request failed")
+            toast.error(response?.message || (error instanceof Error ? error.message : "Request failed"))
         }
     }
 
     const saveMutation = useMutation({
-        mutationFn: () => isNew
-            ? createWorkflow(currentWorkspaceId, { name, definition })
-            : updateWorkflow(currentWorkspaceId, workflowId!, { name, definition }),
+        mutationFn: (draft: { name: string; definition: string }) => isNew
+            ? createWorkflow(currentWorkspaceId, draft)
+            : updateWorkflow(currentWorkspaceId, workflowId!, draft),
         onSuccess: (data) => {
             setValidationErrors([])
+            setSaved({ name: data.name, definition: data.definition })
+            queryClient.setQueryData(['workflow', currentWorkspaceId, data.id], data)
             toast.success(t("pages.workflows.workflowSaved"))
             queryClient.invalidateQueries({ queryKey: ['workflows', currentWorkspaceId] })
             if (isNew) {
@@ -95,9 +112,35 @@ const WorkflowEditPage = () => {
         onError: handleError
     })
 
+    const busy = saveMutation.isPending || deleteMutation.isPending || dispatchMutation.isPending
+    const ready = isNew || (initialized.current && !isPending && !isError)
+    const canSave = ready && !busy && !!name.trim() && !!definition.trim() && (isNew || dirty)
+    const save = () => { if (canSave) saveMutation.mutate({ name, definition }) }
+
+    useEffect(() => {
+        if (!dirty) return
+        const warn = (event: BeforeUnloadEvent) => {
+            event.preventDefault()
+            event.returnValue = ""
+        }
+        window.addEventListener("beforeunload", warn)
+        return () => window.removeEventListener("beforeunload", warn)
+    }, [dirty])
+
+    useEffect(() => {
+        const shortcut = (event: KeyboardEvent) => {
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+                event.preventDefault()
+                if (canSave) saveMutation.mutate({ name, definition })
+            }
+        }
+        window.addEventListener("keydown", shortcut)
+        return () => window.removeEventListener("keydown", shortcut)
+    }, [canSave, name, definition, saveMutation])
+
     return <OneColumn>
         <div className="w-full px-4 xl:px-4">
-            <div className="flex flex-col min-h-screen">
+            <div className="flex flex-col min-h-full pb-6">
                 <div className="py-2.5 flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex gap-3 items-center sm:text-xl font-semibold h-10 min-w-0">
                         <Link to=".." relative="path" className="hover:underline shrink-0">
@@ -106,7 +149,7 @@ const WorkflowEditPage = () => {
                         <span className="opacity-40 shrink-0">/</span>
                         <span className="truncate">{isNew ? t("pages.workflows.newWorkflow") : workflow?.name}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-wrap [&_button]:whitespace-nowrap [&_a]:whitespace-nowrap">
                         {!isNew && (
                             <>
                                 <Link
@@ -118,7 +161,8 @@ const WorkflowEditPage = () => {
                                 </Link>
                                 <button
                                     onClick={() => setShowDispatch(true)}
-                                    disabled={dispatchMutation.isPending}
+                                    disabled={!ready || busy || dirty}
+                                    title={dirty ? t("pages.workflows.saveBeforeRun") : undefined}
                                     className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                                 >
                                     <Play size={16} />
@@ -128,7 +172,8 @@ const WorkflowEditPage = () => {
                                     onClick={() => {
                                         if (confirm(t("pages.workflows.deleteConfirm"))) deleteMutation.mutate()
                                     }}
-                                    disabled={deleteMutation.isPending}
+                                    disabled={!ready || busy}
+                                    aria-label={t("actions.delete")}
                                     className="px-3 py-2 flex gap-2 items-center text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                                 >
                                     <Trash2 size={16} />
@@ -136,9 +181,9 @@ const WorkflowEditPage = () => {
                             </>
                         )}
                         <button
-                            onClick={() => saveMutation.mutate()}
-                            disabled={saveMutation.isPending || !name || !definition}
-                            className="px-4 py-2 flex gap-2 items-center bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onClick={save}
+                            disabled={!canSave}
+                            className="px-4 py-2 flex gap-2 items-center bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {saveMutation.isPending ? <Loader size={16} className="animate-spin" /> : <Save size={16} />}
                             {t("actions.save")}
@@ -146,36 +191,22 @@ const WorkflowEditPage = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-neutral-800 rounded shadow-sm w-full max-w-3xl p-5 flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold">{t("pages.workflows.name")}</label>
-                        <input
-                            className="px-3 py-2 border dark:border-none rounded-lg dark:bg-neutral-700"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            placeholder={t("pages.workflows.namePlaceholder")}
-                        />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold">{t("pages.workflows.definition")}</label>
-                        <textarea
-                            className="px-3 py-2 border dark:border-none rounded-lg dark:bg-neutral-700 font-mono text-sm min-h-[360px] whitespace-pre"
-                            spellCheck={false}
-                            value={definition}
-                            onChange={e => setDefinition(e.target.value)}
-                        />
-                    </div>
-                    {validationErrors.length > 0 && (
-                        <div className="p-3 rounded bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300 text-sm flex flex-col gap-1">
-                            {validationErrors.map((err, i) => (
-                                <div key={i}>
-                                    {err.line > 0 && <span className="font-mono">L{err.line}: </span>}
-                                    {err.message}
-                                </div>
-                            ))}
+                {!isNew && isPending ? <div role="status" className="flex items-center gap-2 py-12 text-muted-foreground"><Loader size={18} className="animate-spin" />{t("pages.workflows.loadingEditor")}</div>
+                    : !isNew && isError ? <div role="alert" className="py-12"><p>{t("pages.workflows.loadFailed")}</p><button onClick={() => refetch()} className="mt-3 underline">{t("pages.workflows.retry")}</button></div>
+                    : <div className="w-full min-w-0 flex flex-col gap-4">
+                        <div className="flex flex-wrap items-end justify-between gap-3 py-3">
+                            <div className="flex flex-col gap-2 w-full sm:max-w-md">
+                                <label htmlFor="workflow-name" className="text-sm font-semibold">{t("pages.workflows.name")}</label>
+                                <input id="workflow-name" className="w-full px-3 py-2 border dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800 focus-visible:outline-primary"
+                                    value={name} disabled={busy} onChange={event => setName(event.target.value)} placeholder={t("pages.workflows.namePlaceholder")} />
+                            </div>
+                            <span role="status" className="text-xs text-muted-foreground">{t(saveMutation.isPending ? "pages.workflows.saving" : dirty || isNew ? "pages.workflows.unsavedChanges" : "pages.workflows.allChangesSaved")}</span>
                         </div>
-                    )}
-                </div>
+                        <WorkflowDefinitionEditor value={definition} disabled={busy} errors={validationErrors}
+                            onChange={value => { setDefinition(value); setValidationErrors([]) }} />
+                        {!isNew && dirty && <p className="text-xs text-muted-foreground">{t("pages.workflows.saveBeforeRun")}</p>}
+                    </div>}
+
             </div>
         </div>
 

@@ -31,6 +31,17 @@ export default {
   },
   pages: {
     workflows: {
+      wrapLines: "Wrap lines",
+      cursorPosition: "Line {{line}}, column {{column}}",
+      saveShortcut: "Ctrl / ⌘ + S to save",
+      saveBeforeRun: "Save changes before running this workflow.",
+      loadingEditor: "Loading workflow…",
+      loadFailed: "Unable to load this workflow.",
+      retry: "Retry",
+      saving: "Saving…",
+      unsavedChanges: "Unsaved changes",
+      allChangesSaved: "All changes saved",
+
       runCancelled: "Run cancelled",
       title: "Workflows",
       newWorkflow: "New Workflow",
