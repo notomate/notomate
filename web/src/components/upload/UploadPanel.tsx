@@ -45,7 +45,7 @@ export function UploadPanel() {
     <div
       role="region"
       aria-label={t("uploads.title")}
-      className="fixed bottom-4 left-4 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-lg"
+      className="pointer-events-auto w-full border-b border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-md md:fixed md:bottom-4 md:left-4 md:z-[10000] md:w-80 md:rounded-xl md:border md:shadow-lg"
     >
       <div className="flex items-center gap-2 px-3 py-2">
         <Upload size={16} className="shrink-0 text-muted-foreground" />
@@ -73,7 +73,7 @@ export function UploadPanel() {
       {collapsed ? (
         !settled && <Progress value={overall} className="mx-3 mb-3 w-auto" aria-label={title} />
       ) : (
-        <div className="max-h-72 overflow-y-auto border-t border-gray-100 dark:border-neutral-800 px-3 divide-y divide-gray-100 dark:divide-neutral-800">
+        <div className="max-h-48 md:max-h-72 overflow-y-auto border-t border-gray-100 dark:border-neutral-800 px-3 divide-y divide-gray-100 dark:divide-neutral-800">
           {tasks.map((task) => (
             <UploadTaskRow key={task.id} task={task} />
           ))}
