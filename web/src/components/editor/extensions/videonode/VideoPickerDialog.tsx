@@ -29,7 +29,7 @@ const VideoPickerDialog: FC<VideoPickerDialogProps> = (props) => {
             renderFile={(file, onSelectFile, getFileUrl) => (
                 <button
                     onClick={() => onSelectFile(file)}
-                    className="relative rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-colors group bg-gray-100 dark:bg-neutral-700"
+                    className="relative block w-full rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-colors group bg-gray-100 dark:bg-neutral-700"
                 >
                     <video
                         src={getFileUrl(file.name)}

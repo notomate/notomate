@@ -136,7 +136,7 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
                     ) : files.length > 0 ? (
                         <div className={gridClassName}>
                             {files.map((file) => (
-                                <div key={file.id}>
+                                <div key={file.id} className="min-w-0">
                                     {renderFile(file, handleSelectFile, getFileUrl)}
                                 </div>
                             ))}
