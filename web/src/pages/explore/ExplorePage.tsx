@@ -218,10 +218,10 @@ const ExplorePage: React.FC = () => {
             {isMenuOpen && createPortal(
                 <>
                     <div
-                        className="fixed inset-0 bg-black/40 z-40"
+                        className="fixed inset-0 bg-black/40 z-drawer-backdrop"
                         onClick={() => setIsMenuOpen(false)}
                     />
-                    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-2xl z-50 shadow-xl">
+                    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-2xl z-drawer shadow-xl">
                         <div className="flex justify-center pt-3 pb-1">
                             <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full" />
                         </div>

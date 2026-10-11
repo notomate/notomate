@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core'
 import Suggestion, { SuggestionOptions } from '@tiptap/suggestion'
 import { ReactRenderer } from '@tiptap/react'
+import { Z_INDEX } from '@/lib/zIndex'
 import tippy, { Instance as TippyInstance } from 'tippy.js'
 import { SlashMenu } from './SlashMenu'
 import { ReactNode } from 'react'
@@ -47,6 +48,7 @@ export const SlashCommand = Extension.create({
                 interactive: true,
                 trigger: 'manual',
                 placement: 'bottom-start',
+                zIndex: Z_INDEX.popover,
               })
             },
 

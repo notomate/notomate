@@ -814,7 +814,7 @@ const Editor: FC<Props> = ({
               <GripVertical size={12} />
             </button>
             {dragMenuOpen && displayActions.length > 0 && (
-              <div className="absolute left-full top-0 ml-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded shadow-lg z-50 py-1 min-w-[150px]">
+              <div className="absolute left-full top-0 ml-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded shadow-lg z-dropdown py-1 min-w-[150px]">
                 {displayActions.map((action, i) => (
                   <button
                     key={i}
@@ -851,6 +851,7 @@ const Editor: FC<Props> = ({
           }
           return null
         }}
+        className="z-dropdown"
         options={{ placement: 'top-start', offset: 8 }}
       >
         <div className="flex gap-1 divide-x-2 bg-slate-50 border rounded shadow">

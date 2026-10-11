@@ -64,7 +64,7 @@ const Sidebar: FC<Props> = function ({ children }) {
             className={twMerge(isOver1280 ? "flex" :
                 isOpen ? "translate-x-0" : "-translate-x-full"
                 , isCollapse ? "w-[72px]" : " w-[260px]"
-                , " transition duration-200 ease-in-out transform fixed top-0 left-0 z-40 xl:flex-col gap-0.5 h-[100dvh] bg-opacity-100 ")}
+                , " transition duration-200 ease-in-out transform fixed top-0 left-0 z-sidebar xl:flex-col gap-0.5 h-[100dvh] bg-opacity-100 ")}
             aria-label="Sidebar">
             <div className={twMerge(isCollapse ? "bg-neutral-100 dark:bg-neutral-900" : "bg-neutral-50 dark:bg-neutral-950 shadow","px-4  text-neutral-900 dark:text-neutral-100 flex flex-col justify-between h-full")}>
                 {children}
@@ -82,7 +82,7 @@ const Sidebar: FC<Props> = function ({ children }) {
 
                             <DropdownMenu.Portal>
                                 <DropdownMenu.Content
-                                    className="rounded-md w-52 bg-white text-gray-900 dark:bg-neutral-700 dark:text-gray-100 p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform] data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade data-[side=right]:animate-slideLeftAndFade data-[side=top]:animate-slideDownAndFade z-[9999]"
+                                    className="rounded-md w-52 bg-white text-gray-900 dark:bg-neutral-700 dark:text-gray-100 p-[5px] shadow-[0px_10px_38px_-10px_rgba(22,_23,_24,_0.35),_0px_10px_20px_-15px_rgba(22,_23,_24,_0.2)] will-change-[opacity,transform] data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade data-[side=right]:animate-slideLeftAndFade data-[side=top]:animate-slideDownAndFade z-popover"
                                     align="start"
                                     side="top"
                                     alignOffset={0}

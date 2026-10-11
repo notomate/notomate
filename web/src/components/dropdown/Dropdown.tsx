@@ -45,7 +45,7 @@ const Dropdown:FC<DropdownProps> = ({ children, className, buttonClassName, butt
           {
             isCollapse &&
             <Tooltip.Content
-              className="z-50 select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
+              className="z-tooltip select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
               side="right"
               sideOffset={5}
             > <>
@@ -58,7 +58,7 @@ const Dropdown:FC<DropdownProps> = ({ children, className, buttonClassName, butt
       </Tooltip.Root>
       {isOpen && (
         <div
-          className={twMerge(isCollapse ? "left-[calc(100%+8px)] -top-1" : " top-[calc(100%+4px)] ", "absolute z-[9999] w-[228px] bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border dark:border-none rounded-lg py-2 flex flex-col shadow-lg mt-1 max-h-[calc(100dvh-160px)]")}
+          className={twMerge(isCollapse ? "left-[calc(100%+8px)] -top-1" : " top-[calc(100%+4px)] ", "absolute z-dropdown w-[228px] bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border dark:border-none rounded-lg py-2 flex flex-col shadow-lg mt-1 max-h-[calc(100dvh-160px)]")}
         >
           {children}
         </div>

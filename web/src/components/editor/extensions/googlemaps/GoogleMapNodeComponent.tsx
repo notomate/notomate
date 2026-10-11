@@ -211,7 +211,7 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
 
   return (
     <div className="flex flex-col md:flex-row" style={{ minHeight: 440 }}>
-      <div className="relative flex-1 min-h-[320px]">
+      <div className="relative isolate flex-1 min-h-[320px]">
         <GoogleMap
           mapId={env.mapId}
           colorScheme={env.colorScheme}

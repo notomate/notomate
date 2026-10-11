@@ -41,9 +41,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     {/* Below md the upload panel and toasts share one full-width stack pinned
         to the top so they never overlap each other; from md up the wrapper
         dissolves and each keeps its own floating corner. */}
-    <div className="fixed inset-x-0 top-0 z-[10000] flex flex-col pointer-events-none md:contents">
+    <div className="fixed inset-x-0 top-0 z-toast flex flex-col pointer-events-none md:contents">
       <UploadPanel />
-      <Toast.Viewport className="pointer-events-auto flex flex-col w-full outline-none md:fixed md:bottom-4 md:right-4 md:w-80 md:gap-2 md:z-[10000]" />
+      <Toast.Viewport className="pointer-events-auto flex flex-col w-full outline-none md:fixed md:bottom-4 md:right-4 md:w-80 md:gap-2 md:z-toast" />
     </div>
   </Toast.Provider>,
 )

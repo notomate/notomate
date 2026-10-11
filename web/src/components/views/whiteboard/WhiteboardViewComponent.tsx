@@ -886,7 +886,7 @@ const WhiteboardViewComponent = ({
 
     return (
         <>
-            <div ref={containerRef} className="relative w-full h-full bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
+            <div ref={containerRef} className="relative isolate w-full h-full bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
 
                 {/* Hidden canvas for text measurement (ctx only, never displayed) */}
                 <canvas ref={hiddenCanvasRef} style={{ display: 'none' }} />

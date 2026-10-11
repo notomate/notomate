@@ -254,7 +254,7 @@ const FilesPage = () => {
                                             </Tooltip.Trigger>
                                             <Tooltip.Portal>
                                                 <Tooltip.Content
-                                                    className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
+                                                    className="z-tooltip select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
                                                     side="bottom"
                                                 >
                                                     <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
@@ -280,7 +280,7 @@ const FilesPage = () => {
                                                 </Tooltip.Trigger>
                                                 <Tooltip.Portal>
                                                     <Tooltip.Content
-                                                        className="select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
+                                                        className="z-tooltip select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
                                                         side="bottom"
                                                     >
                                                         <Tooltip.Arrow className="fill-gray-900 dark:fill-gray-100" />
@@ -447,7 +447,7 @@ const FilesPage = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+                        className="fixed inset-0 bg-black/70 z-modal flex items-center justify-center p-4"
                         onClick={() => setPreviewFile(null)}
                     >
                         <motion.div

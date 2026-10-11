@@ -17,7 +17,7 @@ const Tooltip:FC<Props> = ({children, text, side, enabled = true}) => {
             enabled &&
             <TP.Portal>
                 <TP.Content
-                    className="z-50 select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
+                    className="z-tooltip select-none rounded-lg bg-gray-900 text-white dark:bg-gray-100 dark:text-black px-2 py-1 text-sm"
                     side={side}
                     sideOffset={5}
                 >

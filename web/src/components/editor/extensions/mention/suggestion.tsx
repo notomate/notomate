@@ -1,5 +1,6 @@
 import { ReactRenderer } from '@tiptap/react'
 import { SuggestionOptions } from '@tiptap/suggestion'
+import { Z_INDEX } from '@/lib/zIndex'
 import tippy, { Instance as TippyInstance } from 'tippy.js'
 import { WorkspaceMember } from '@/api/workspace'
 import { MentionList, MentionListRef } from './MentionList'
@@ -51,6 +52,7 @@ export const createMentionSuggestion = (
           interactive: true,
           trigger: 'manual',
           placement: 'bottom-start',
+          zIndex: Z_INDEX.popover,
         })
       },
 

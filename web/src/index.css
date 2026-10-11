@@ -356,3 +356,7 @@ ul[data-type="taskList"] > li{
 .react-flow__controls-button:where(.dark, .dark *){
   background: #222!important;
 }
+/* react-photo-view portals to <body> with z-index 2000; bring it into the app scale */
+.PhotoView-Portal {
+  z-index: theme('zIndex.lightbox') !important;
+}
