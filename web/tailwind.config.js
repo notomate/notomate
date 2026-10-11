@@ -35,6 +35,25 @@ export default {
           lighter: 'var(--primary-lighter)',
         }
       },
+      // App-wide stacking order (mirrored in src/lib/zIndex.ts). Use these names
+      // instead of raw numbers so layers stay consistent. Components with internal layering (maps,
+      // whiteboard, carousel) should `isolate` their root and keep inner
+      // z-indexes small (z-10/z-20) so they never escape into this scale.
+      zIndex: {
+        sidebar: '40',            // fixed app sidebar
+        dropdown: '50',           // in-flow absolute menus / autocomplete lists
+        'drawer-backdrop': '60',  // mobile bottom sheets & side drawers
+        drawer: '61',
+        fullscreen: '80',         // fullscreen overlays (e.g. map fullscreen)
+        'modal-backdrop': '100',
+        modal: '101',
+        'modal-nested-backdrop': '110',
+        'modal-nested': '111',
+        lightbox: '150',          // image viewer (react-photo-view), above any modal
+        popover: '200',           // portaled dropdown/select/context menus (above modals)
+        tooltip: '250',
+        toast: '300',             // toasts & upload panel
+      },
       screens: {
         '2xl': '1536px',
         '3xl': '1920px',

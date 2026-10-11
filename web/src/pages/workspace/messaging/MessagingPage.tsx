@@ -170,7 +170,7 @@ const MessagingPage: FC = () => {
       {/* Mobile channel list bottom sheet */}
       <div
         className={cn(
-          "fixed inset-0 z-50 lg:hidden",
+          "fixed inset-0 z-drawer lg:hidden",
           isChannelSheetOpen ? "" : "pointer-events-none",
         )}
       >

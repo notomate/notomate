@@ -185,7 +185,7 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
               ) : (
                 <GoogleMapGate workspaceId={workspaceId} fallback={staticMap}>
                   {env => (
-                    <div className="relative h-[320px]">
+                    <div className="relative isolate h-[320px]">
                       <GoogleMap
                         mapId={env.mapId}
                         colorScheme={env.colorScheme}

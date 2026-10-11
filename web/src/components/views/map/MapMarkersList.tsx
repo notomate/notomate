@@ -139,7 +139,7 @@ const MapMarkersList = ({
                                                         </DropdownMenu.Trigger>
                                                         <DropdownMenu.Portal>
                                                             <DropdownMenu.Content
-                                                                className="min-w-[160px] bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-1 z-50"
+                                                                className="min-w-[160px] bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-1 z-popover"
                                                                 sideOffset={5}
                                                             >
                                                                 <DropdownMenu.Item

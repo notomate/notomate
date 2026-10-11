@@ -241,7 +241,7 @@ const KanbanViewComponent = ({
                                                     </button>
                                                 </DropdownMenu.Trigger>
                                                 <DropdownMenu.Portal>
-                                                    <DropdownMenu.Content className="min-w-[160px] bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-1 z-50" sideOffset={5}>
+                                                    <DropdownMenu.Content className="min-w-[160px] bg-white dark:bg-neutral-800 rounded-lg shadow-lg border border-neutral-200 dark:border-neutral-700 p-1 z-popover" sideOffset={5}>
                                                         {index > 0 && (
                                                             <DropdownMenu.Item className="flex items-center gap-2 px-3 py-2 text-sm rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800" onSelect={() => handleMoveColumn(column.id, 'forward')}>
                                                                 <ChevronLeft size={14} />{t('actions.moveForward')}
@@ -387,8 +387,8 @@ const KanbanViewComponent = ({
 
             <Dialog.Root open={!!editingColumnId} onOpenChange={(open) => !open && setEditingColumnId(null)}>
                 <Dialog.Portal>
-                    <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[400px] z-50">
+                    <Dialog.Overlay className="fixed inset-0 bg-black/50 z-modal-backdrop" />
+                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[400px] z-modal">
                         <Dialog.Title className="text-xl font-semibold mb-4">{t('views.editColumn')}</Dialog.Title>
                         <div className="space-y-4">
                             <div>

@@ -129,7 +129,7 @@ const NoteCardMenu: FC<NoteCardMenuProps> = ({ note, workspaceId }) => {
                 {isLg && isMenuOpened && (
                     <div
                         ref={menuRef}
-                        className="absolute top-full right-0 min-w-[200px] overflow-y-auto bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg z-50"
+                        className="absolute top-full right-0 min-w-[200px] overflow-y-auto bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg z-dropdown"
                     >
                         <div className="flex flex-col p-2">
                             {menuItems}
@@ -141,10 +141,10 @@ const NoteCardMenu: FC<NoteCardMenuProps> = ({ note, workspaceId }) => {
             {!isLg && isMenuOpened && createPortal(
                 <>
                     <div
-                        className="fixed inset-0 bg-black/40 z-40"
+                        className="fixed inset-0 bg-black/40 z-drawer-backdrop"
                         onClick={() => setIsMenuOpened(false)}
                     />
-                    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-2xl z-50 shadow-xl">
+                    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-2xl z-drawer shadow-xl">
                         <div className="flex justify-center pt-3 pb-1">
                             <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full" />
                         </div>

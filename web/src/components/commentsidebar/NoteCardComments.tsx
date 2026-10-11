@@ -151,7 +151,7 @@ const NoteCardComments: FC<NoteCardCommentsProps> = ({ workspaceId, noteId, read
                 <DropdownMenu.Content
                   align="end"
                   sideOffset={4}
-                  className="min-w-[140px] bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg p-1 z-50"
+                  className="min-w-[140px] bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg p-1 z-popover"
                 >
                   <DropdownMenu.Item
                     className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800"

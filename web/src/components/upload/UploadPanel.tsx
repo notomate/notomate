@@ -45,7 +45,7 @@ export function UploadPanel() {
     <div
       role="region"
       aria-label={t("uploads.title")}
-      className="pointer-events-auto w-full border-b border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-md md:fixed md:bottom-4 md:left-4 md:z-[10000] md:w-80 md:rounded-xl md:border md:shadow-lg"
+      className="pointer-events-auto w-full border-b border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-md md:fixed md:bottom-4 md:left-4 md:z-toast md:w-80 md:rounded-xl md:border md:shadow-lg"
     >
       <div className="flex items-center gap-2 px-3 py-2">
         <Upload size={16} className="shrink-0 text-muted-foreground" />

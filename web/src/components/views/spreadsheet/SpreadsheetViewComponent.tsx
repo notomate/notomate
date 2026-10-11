@@ -235,7 +235,7 @@ const SpreadsheetViewComponent = ({
     const canShowWorkbook = isReady && dataSourceReady;
 
     return (
-        <div ref={containerRef} className="relative w-full h-full bg-white dark:bg-neutral-900">
+        <div ref={containerRef} className="relative isolate w-full h-full bg-white dark:bg-neutral-900">
             {/* Loading state */}
             {!canShowWorkbook && (
                 <div className="absolute inset-0 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center z-20">

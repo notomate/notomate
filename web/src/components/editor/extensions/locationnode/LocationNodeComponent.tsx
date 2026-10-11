@@ -57,7 +57,7 @@ function CrosshairPin({ isGeocoding }: { isGeocoding: boolean }) {
   return (
     <div
       className="absolute inset-0 flex items-center justify-center pointer-events-none"
-      style={{ zIndex: 1000 }}
+      style={{ zIndex: 10 }}
     >
       <div className="relative flex flex-col items-center" style={{ transform: "translateY(-50%)" }}>
         {isGeocoding ? (
@@ -308,7 +308,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
 
               {/* Search dropdown */}
               {results.length > 0 && (
-                <ul className="absolute z-[2000] left-0 right-0 mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-600 rounded shadow-lg max-h-52 overflow-y-auto">
+                <ul className="absolute z-dropdown left-0 right-0 mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-600 rounded shadow-lg max-h-52 overflow-y-auto">
                   {results.map((r, i) => (
                     <li key={i}>
                       <button
@@ -326,7 +326,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
           </div>
 
           {/* Draggable map with crosshair */}
-          <div className="relative" style={{ height: 240 }}>
+          <div className="relative isolate" style={{ height: 240 }}>
             <MapContainer
               center={[pendingLat, pendingLng]}
               zoom={15}
@@ -388,7 +388,7 @@ const LocationNodeComponent: React.FC<NodeViewProps> = ({
   // ════════════════════════════════════════════════════════════════════════════
   return (
     <NodeViewWrapper>
-      <div className="relative group my-1">
+      <div className="relative isolate group my-1">
         <div
           className="flex flex-wrap items-center gap-1.5 px-1 py-1 cursor-pointer"
           onClick={() => setShowMap(s => !s)}

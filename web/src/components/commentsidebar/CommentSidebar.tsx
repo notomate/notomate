@@ -307,7 +307,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
                 <DropdownMenu.Content
                   align="end"
                   sideOffset={4}
-                  className="min-w-[140px] bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg p-1 z-50"
+                  className="min-w-[140px] bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg p-1 z-popover"
                 >
                   <DropdownMenu.Item
                     className="flex items-center gap-2 px-2 py-1.5 text-xs rounded cursor-pointer outline-none hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -366,10 +366,10 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   return (
     <>
       {open && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => onOpenChange(false)} />
+        <div className="fixed inset-0 bg-black/50 z-drawer-backdrop lg:hidden" onClick={() => onOpenChange(false)} />
       )}
       <aside
-        className={`fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] rounded-t-2xl
+        className={`fixed bottom-0 left-0 right-0 z-drawer max-h-[85vh] rounded-t-2xl
         ${open ? "translate-y-0" : "translate-y-full lg:translate-y-0"}
         ${open ? "" : "lg:hidden"}
         ${isDragging ? "" : "transition-transform duration-300 ease-out"}

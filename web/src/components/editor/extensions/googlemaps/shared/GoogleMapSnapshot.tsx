@@ -90,7 +90,7 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
     <div
       ref={ref}
       className={`flex flex-col bg-white dark:bg-neutral-900 overflow-hidden ${
-        overlay ? "fixed inset-0 z-[2000]" : isFullscreen || embedded ? "" : "border dark:border-neutral-700 rounded-lg"
+        overlay ? "fixed inset-0 z-fullscreen" : isFullscreen || embedded ? "" : "border dark:border-neutral-700 rounded-lg"
       }`}
     >
       {(!embedded || isFullscreen) && (
@@ -100,7 +100,7 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
         </div>
       )}
 
-      <div className={`relative ${isFullscreen ? "flex-1 min-h-0" : "h-[420px]"}`}>
+      <div className={`relative isolate ${isFullscreen ? "flex-1 min-h-0" : "h-[420px]"}`}>
         <StaticRouteMap
           points={markers.map((m, i) => ({
             lat: m.lat, lng: m.lng, label: String(i + 1), color: m.color, title: m.name,
@@ -117,7 +117,7 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
           aroundPanel={!!panel}
         />
 
-        <div className="absolute right-2 top-2 z-[1001] flex gap-1.5">
+        <div className="absolute right-2 top-2 z-10 flex gap-1.5">
           {!hideList && (
             <button
               type="button"
@@ -137,7 +137,7 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
         {panel && (
           // Floats over the map: bottom sheet on narrow screens, left panel otherwise.
           // The close tab sticks out of the panel's top (sheet) or right edge (side panel).
-          <div className="absolute z-[1001] inset-x-2 bottom-2 max-h-[65%] md:inset-x-auto md:left-2 md:top-2 md:bottom-2 md:max-h-none md:w-80 flex flex-col">
+          <div className="absolute z-10 inset-x-2 bottom-2 max-h-[65%] md:inset-x-auto md:left-2 md:top-2 md:bottom-2 md:max-h-none md:w-80 flex flex-col">
             <button
               type="button"
               className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-px h-5 w-10 rounded-t-md border border-b-0 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:translate-x-0 md:left-full md:mb-0 md:-ml-px md:h-10 md:w-5 md:rounded-t-none md:rounded-r-md md:border-b md:border-l-0 flex items-center justify-center bg-white dark:bg-neutral-900 dark:border-neutral-700 text-muted-foreground hover:text-gray-900 dark:hover:text-gray-100 shadow"

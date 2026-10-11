@@ -144,7 +144,7 @@ export const TwoColumnSidebar = ({ children, className = "" }: TwoColumnSidebarP
             {/* Backdrop - only visible on mobile when sidebar is open */}
             {!isSidebarCollapsed && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/50 z-drawer-backdrop lg:hidden"
                     onClick={() => {
                         toggleSidebar()
                     }}
@@ -163,7 +163,7 @@ export const TwoColumnSidebar = ({ children, className = "" }: TwoColumnSidebarP
                 ${isDragging ? '' : 'transition-transform duration-300 ease-out'}
                 fixed bottom-0 left-0 right-0 max-h-[85vh] rounded-t-2xl
                 lg:static lg:w-96 lg:max-h-none lg:rounded-none lg:h-screen lg:flex-shrink-0
-                overflow-y-auto z-50 ${className}`}
+                overflow-y-auto z-drawer ${className}`}
                 style={{
                     transform: isDragging ? `translateY(${dragOffset}px)` : undefined,
                 }}

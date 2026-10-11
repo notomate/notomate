@@ -73,7 +73,7 @@ export function NodeTouchMenu({
         <MoreVertical size={16} className="text-gray-700 dark:text-gray-300" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded shadow-lg z-50 py-1 min-w-[150px]">
+        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded shadow-lg z-dropdown py-1 min-w-[150px]">
           {actions.map((action, i) => (
             <button
               key={i}

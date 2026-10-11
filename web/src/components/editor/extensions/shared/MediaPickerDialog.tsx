@@ -90,8 +90,8 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-4 sm:p-6 w-[90vw] max-w-[800px] z-50 max-h-[85vh] overflow-y-auto">
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 z-modal-backdrop" />
+                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-4 sm:p-6 w-[90vw] max-w-[800px] z-modal max-h-[85vh] overflow-y-auto">
                     <Dialog.Title className="text-xl font-semibold mb-4">
                         {title}
                     </Dialog.Title>

@@ -70,7 +70,7 @@ export const PlaceSearchBox = ({ workspaceId, bias, placeholder, autoFocus, onSe
   }
 
   const list = results.length > 0 && (
-    <ul className="list-none absolute z-[2000] left-0 right-0 mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-600 rounded shadow-lg max-h-64 overflow-y-auto">
+    <ul className="list-none absolute z-dropdown left-0 right-0 mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-600 rounded shadow-lg max-h-64 overflow-y-auto">
       {results.map(place => (
         <li key={place.id}>
           <button

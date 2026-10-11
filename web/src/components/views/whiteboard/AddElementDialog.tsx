@@ -80,8 +80,8 @@ const AddElementDialog = ({
     return (
         <Dialog.Root open={isOpen} onOpenChange={onOpenChange}>
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[500px] max-h-[80vh] overflow-y-auto z-50">
+                <Dialog.Overlay className="fixed inset-0 bg-black/50 z-modal-backdrop" />
+                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-6 w-[90vw] max-w-[500px] max-h-[80vh] overflow-y-auto z-modal">
                     <Dialog.Title className="text-xl font-semibold mb-4">
                         {t('whiteboard.addNote') || 'Add Note'}
                     </Dialog.Title>

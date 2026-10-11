@@ -33,12 +33,12 @@ export function Modal({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay
-          className={cn("fixed inset-0 bg-black/50", nested ? "z-[1002]" : "z-[1000]")}
+          className={cn("fixed inset-0 bg-black/50", nested ? "z-modal-nested-backdrop" : "z-modal-backdrop")}
         />
         <Dialog.Content
           className={cn(
             "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-xl shadow-xl p-6 w-[90vw] max-w-[500px]",
-            nested ? "z-[1003]" : "z-[1001]",
+            nested ? "z-modal-nested" : "z-modal",
             className,
           )}
         >

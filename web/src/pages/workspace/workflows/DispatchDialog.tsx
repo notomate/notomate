@@ -54,7 +54,7 @@ const DispatchDialog: FC<Props> = ({ definition, isPending, onDispatch, onClose 
     )
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+        <div className="fixed inset-0 z-modal flex items-center justify-center bg-black/40" onClick={onClose}>
             <div
                 className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg w-full max-w-md mx-4 p-5 flex flex-col gap-4"
                 onClick={e => e.stopPropagation()}
