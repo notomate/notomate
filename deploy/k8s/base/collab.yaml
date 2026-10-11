@@ -1,0 +1,58 @@
+# notomate-collab: Hocuspocus WebSocket server, proxied by nginx at /ws/.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notomate-collab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notomate-collab
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notomate-collab
+    spec:
+      containers:
+        - name: collab
+          image: notomate/notomate-collab
+          ports:
+            - name: ws
+              containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: GRPC_ADDR
+              value: notomate-api:50051
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: notomate-secrets
+                  key: APP_SECRET
+          readinessProbe:
+            tcpSocket:
+              port: ws
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: ws
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 25m
+              memory: 96Mi
+            limits:
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notomate-collab
+spec:
+  selector:
+    app.kubernetes.io/name: notomate-collab
+  ports:
+    - name: ws
+      port: 3000
+      targetPort: ws

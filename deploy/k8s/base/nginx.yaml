@@ -1,0 +1,53 @@
+# notomate-nginx: serves the SPA and reverse-proxies to the other services.
+# The image defaults API_UPSTREAM, COLLAB_UPSTREAM and MESSAGING_UPSTREAM to
+# the Service names below; set those env vars here if the names change
+# (e.g. a kustomize namePrefix).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notomate-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notomate-nginx
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notomate-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: notomate/notomate-nginx
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notomate-nginx
+spec:
+  selector:
+    app.kubernetes.io/name: notomate-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
