@@ -108,5 +108,11 @@ CMD ["node", "messaging/src/index.js"]
 # ---------- Stage 6: nginx with static frontend ----------
 FROM nginx:alpine AS nginx-runtime
 ENV CLIENT_MAX_BODY_SIZE=100m
+# host:port of the proxied services, substituted into the template by the
+# nginx image's envsubst entrypoint. Override when the services are reachable
+# under other names (e.g. prefixed Kubernetes Service names).
+ENV API_UPSTREAM=notomate-api:8080 \
+    COLLAB_UPSTREAM=notomate-collab:3000 \
+    MESSAGING_UPSTREAM=notomate-messaging:4000
 COPY nginx/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=frontend /app/web/dist /usr/share/nginx/html
