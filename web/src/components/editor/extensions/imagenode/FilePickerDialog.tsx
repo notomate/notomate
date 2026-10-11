@@ -29,7 +29,7 @@ const FilePickerDialog: FC<FilePickerDialogProps> = (props) => {
             renderFile={(file, onSelectFile, getFileUrl) => (
                 <button
                     onClick={() => onSelectFile(file)}
-                    className="relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-colors group"
+                    className="relative block w-full aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-colors group"
                 >
                     <img
                         src={getFileUrl(file.name)}
