@@ -14,6 +14,7 @@ import Settings from './pages/workspace/settings/SettingsPage';
 import WorkflowsPage from './pages/workspace/workflows/WorkflowsPage';
 import WorkflowEditPage from './pages/workspace/workflows/WorkflowEditPage';
 import WorkflowSettingsPage from './pages/workspace/workflows/WorkflowSettingsPage';
+import MarketplacePage from './pages/workspace/workflows/MarketplacePage';
 import RunsPage from './pages/workspace/workflows/RunsPage';
 import RunDetailPage from './pages/workspace/workflows/RunDetailPage';
 import MessagingPage from './pages/workspace/messaging/MessagingPage';
@@ -84,6 +85,7 @@ function App() {
               <Route path='workflows' element={<WorkflowsPage />} />
               <Route path='workflows/new' element={<WorkflowEditPage />} />
               <Route path='workflows/settings' element={<WorkflowSettingsPage />} />
+              <Route path='workflows/marketplace' element={<MarketplacePage />} />
               <Route path='workflows/:workflowId' element={<WorkflowEditPage />} />
               <Route path='workflows/:workflowId/runs' element={<RunsPage />} />
               <Route path='workflows/:workflowId/runs/:runId' element={<RunDetailPage />} />

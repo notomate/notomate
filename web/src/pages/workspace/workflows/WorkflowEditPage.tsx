@@ -3,7 +3,8 @@ import { isAxiosError } from "axios"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { History, Play, Save, Trash2, Loader } from "lucide-react"
+import { Code, History, Play, Save, Trash2, Loader, Workflow as WorkflowIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import {
     getWorkflow, createWorkflow, updateWorkflow, deleteWorkflow, dispatchWorkflow,
@@ -13,6 +14,18 @@ import { toast } from "@/stores/toast"
 import OneColumn from "@/components/onecolumn/OneColumn"
 import WorkflowDefinitionEditor from "./WorkflowDefinitionEditor"
 import DispatchDialog from "./DispatchDialog"
+import VisualWorkflowEditor from "./visual/VisualWorkflowEditor"
+
+type EditorTab = "visual" | "yaml"
+const EDITOR_TAB_KEY = "notomate:workflow-editor-tab"
+
+const loadEditorTab = (): EditorTab => {
+    try {
+        return localStorage.getItem(EDITOR_TAB_KEY) === "yaml" ? "yaml" : "visual"
+    } catch {
+        return "visual"
+    }
+}
 
 const DEFAULT_DEFINITION = `name: My workflow
 on:
@@ -44,6 +57,15 @@ const WorkflowEditForm = () => {
     const [definition, setDefinition] = useState(DEFAULT_DEFINITION)
     const [validationErrors, setValidationErrors] = useState<WorkflowValidationError[]>([])
     const [showDispatch, setShowDispatch] = useState(false)
+    const [tab, setTabState] = useState<EditorTab>(loadEditorTab)
+    const setTab = (next: EditorTab) => {
+        setTabState(next)
+        try {
+            localStorage.setItem(EDITOR_TAB_KEY, next)
+        } catch {
+            // Remembering the tab is a convenience only.
+        }
+    }
 
     const initialized = useRef(false)
     const [saved, setSaved] = useState({ name: "", definition: DEFAULT_DEFINITION })
@@ -202,8 +224,21 @@ const WorkflowEditForm = () => {
                             </div>
                             <span role="status" className="text-xs text-muted-foreground">{t(saveMutation.isPending ? "pages.workflows.saving" : dirty || isNew ? "pages.workflows.unsavedChanges" : "pages.workflows.allChangesSaved")}</span>
                         </div>
-                        <WorkflowDefinitionEditor value={definition} disabled={busy} errors={validationErrors}
-                            onChange={value => { setDefinition(value); setValidationErrors([]) }} />
+                        <div role="tablist" className="flex gap-1 border-b dark:border-neutral-700 -mt-2">
+                            {([["visual", WorkflowIcon, "pages.workflows.visual.tabVisual"], ["yaml", Code, "pages.workflows.visual.tabYaml"]] as const).map(([key, Icon, label]) => (
+                                <button key={key} role="tab" type="button" aria-selected={tab === key} onClick={() => setTab(key)}
+                                    className={cn("px-3 py-2 -mb-px flex gap-2 items-center text-sm border-b-2",
+                                        tab === key ? "border-primary font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}>
+                                    <Icon size={15} />{t(label)}
+                                </button>
+                            ))}
+                        </div>
+                        {tab === "visual"
+                            ? <VisualWorkflowEditor value={definition} errors={validationErrors} layoutKey={workflowId ?? "new"}
+                                onChange={value => { setDefinition(value); setValidationErrors([]) }}
+                                onShowLine={() => setTab("yaml")} />
+                            : <WorkflowDefinitionEditor value={definition} disabled={busy} errors={validationErrors}
+                                onChange={value => { setDefinition(value); setValidationErrors([]) }} />}
                         {!isNew && dirty && <p className="text-xs text-muted-foreground">{t("pages.workflows.saveBeforeRun")}</p>}
                     </div>}
 

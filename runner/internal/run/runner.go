@@ -189,6 +189,7 @@ func (r *Runner) execute(ctx context.Context, task *client.TaskPayload, streamer
 		LogOutput:             true,
 		AutoRemove:            true,
 		GitHubInstance:        "github.com",
+		Token:                 task.ActionsToken,
 		ActionCacheDir:        r.cfg.ActionCacheDir,
 		// act's newer action cache, in its offline-tolerant flavour: when the
 		// forge cannot be reached it resolves `uses:` from the sha already in

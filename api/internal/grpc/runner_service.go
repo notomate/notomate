@@ -20,6 +20,7 @@ import (
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 
+	"github.com/notomate/notomate/internal/actionmarket"
 	"github.com/notomate/notomate/internal/config"
 	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/model"
@@ -65,6 +66,9 @@ type TaskPayload struct {
 	Vars             map[string]string  `json:"vars,omitempty"`
 	Secrets          map[string]string  `json:"secrets,omitempty"`
 	Files            []WorkflowFileData `json:"files,omitempty"`
+	// ActionsToken is the workspace's GitHub token, used by the runner to
+	// clone `uses:` actions from private repositories.
+	ActionsToken string `json:"actions_token,omitempty"`
 }
 
 // WorkflowFileData is one codebase file attached to a workflow. Path is a
@@ -244,6 +248,11 @@ func (s *runnerServer) buildTaskPayload(job model.WorkflowJob) (*TaskPayload, er
 		return nil, err
 	}
 
+	actionsToken, err := actionmarket.LoadToken(s.db, config.C.GetString(config.APP_SECRET), job.WorkspaceID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "load github token: %v", err)
+	}
+
 	return &TaskPayload{
 		JobID:            job.ID,
 		RunID:            run.ID,
@@ -257,6 +266,7 @@ func (s *runnerServer) buildTaskPayload(job model.WorkflowJob) (*TaskPayload, er
 		Vars:             vars,
 		Secrets:          secrets,
 		Files:            files,
+		ActionsToken:     actionsToken,
 	}, nil
 }
 

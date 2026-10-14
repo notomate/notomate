@@ -42,6 +42,9 @@ type TaskPayload struct {
 	Vars             map[string]string  `json:"vars,omitempty"`
 	Secrets          map[string]string  `json:"secrets,omitempty"`
 	Files            []WorkflowFileData `json:"files,omitempty"`
+	// ActionsToken is the workspace's GitHub token for cloning `uses:`
+	// actions from private repositories; empty for anonymous clones.
+	ActionsToken string `json:"actions_token,omitempty"`
 }
 
 // WorkflowFileData is one codebase file attached to a workflow, delivered

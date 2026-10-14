@@ -28,6 +28,7 @@ type DB interface {
 	SettingRepository
 	WorkspaceIntegrationRepository
 	GoogleMapsCacheRepository
+	ActionSourceRepository
 }
 type Uow interface {
 	Begin(ctx context.Context) (DB, error)
@@ -182,4 +183,15 @@ type GoogleMapsCacheRepository interface {
 	HasGoogleMapsCacheRef(workspaceID, kind, ref string) (bool, error)
 	FindGoogleMapsCacheEntries(f model.GoogleMapsCacheFilter) ([]model.GoogleMapsCache, error)
 	DeleteGoogleMapsCacheEntries(f model.GoogleMapsCacheFilter) error
+}
+type ActionSourceRepository interface {
+	CreateActionSource(s model.ActionSource) error
+	FindActionSource(workspaceID, id string) (model.ActionSource, error)
+	FindActionSources(workspaceID string) ([]model.ActionSource, error)
+	UpdateActionSourceSync(s model.ActionSource) error
+	DeleteActionSource(workspaceID, id string) error
+	// ReplaceSourceActions swaps every action of a source for the given set
+	// in one transaction, so readers never see a half-synced source.
+	ReplaceSourceActions(sourceID string, actions []model.MarketplaceAction) error
+	FindMarketplaceActions(workspaceID string) ([]model.MarketplaceAction, error)
 }

@@ -1,0 +1,1015 @@
+{
+  "actions/checkout@v4": {
+    "kind": "action",
+    "name": "Checkout",
+    "description": "Checkout a Git repository at a particular version",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "repository",
+        "description": "Repository name with owner. For example, actions/checkout",
+        "required": false,
+        "default": "${{ github.repository }}"
+      },
+      {
+        "name": "ref",
+        "description": "The branch, tag or SHA to checkout. When checking out the repository that triggered a workflow, this defaults to the reference or SHA for that event.  Otherwise, uses the default branch.",
+        "required": false
+      },
+      {
+        "name": "token",
+        "description": "Personal access token (PAT) used to fetch the repository. The PAT is configured with the local git config, which enables your scripts to run authenticated git commands. The post-job step removes the PAT.\n\nWe recommend using a service account with the least permissions necessary. Also when generating a new PAT, select the least scopes necessary.\n\n[Learn more about creating and using encrypted secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)",
+        "required": false,
+        "default": "${{ github.token }}"
+      },
+      {
+        "name": "ssh-key",
+        "description": "SSH key used to fetch the repository. The SSH key is configured with the local git config, which enables your scripts to run authenticated git commands. The post-job step removes the SSH key.\n\nWe recommend using a service account with the least permissions necessary.\n\n[Learn more about creating and using encrypted secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)",
+        "required": false
+      },
+      {
+        "name": "ssh-known-hosts",
+        "description": "Known hosts in addition to the user and global host key database. The public SSH keys for a host may be obtained using the utility `ssh-keyscan`. For example, `ssh-keyscan github.com`. The public key for github.com is always implicitly added.",
+        "required": false
+      },
+      {
+        "name": "ssh-strict",
+        "description": "Whether to perform strict host key checking. When true, adds the options `StrictHostKeyChecking=yes` and `CheckHostIP=no` to the SSH command line. Use the input `ssh-known-hosts` to configure additional hosts.",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "ssh-user",
+        "description": "The user to use when connecting to the remote SSH host. By default 'git' is used.",
+        "required": false,
+        "default": "git"
+      },
+      {
+        "name": "persist-credentials",
+        "description": "Whether to configure the token or SSH key with the local git config",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "path",
+        "description": "Relative path under $GITHUB_WORKSPACE to place the repository",
+        "required": false
+      },
+      {
+        "name": "clean",
+        "description": "Whether to execute `git clean -ffdx && git reset --hard HEAD` before fetching",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "filter",
+        "description": "Partially clone against a given filter. Overrides sparse-checkout if set.",
+        "required": false
+      },
+      {
+        "name": "sparse-checkout",
+        "description": "Do a sparse checkout on given patterns. Each pattern should be separated with new lines.",
+        "required": false
+      },
+      {
+        "name": "sparse-checkout-cone-mode",
+        "description": "Specifies whether to use cone-mode when doing a sparse checkout.",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "fetch-depth",
+        "description": "Number of commits to fetch. 0 indicates all history for all branches and tags.",
+        "required": false,
+        "default": "1"
+      },
+      {
+        "name": "fetch-tags",
+        "description": "Whether to fetch tags, even if fetch-depth > 0.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "show-progress",
+        "description": "Whether to show progress status output when fetching.",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "lfs",
+        "description": "Whether to download Git-LFS files",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "submodules",
+        "description": "Whether to checkout submodules: `true` to checkout submodules or `recursive` to recursively checkout submodules.\n\nWhen the `ssh-key` input is not provided, SSH URLs beginning with `git@github.com:` are converted to HTTPS.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "set-safe-directory",
+        "description": "Add repository path as safe.directory for Git global config by running `git config --global --add safe.directory <path>`",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "github-server-url",
+        "description": "The base URL for the GitHub instance that you are trying to clone from, will use environment defaults to fetch from the same instance that the workflow is running from unless specified. Example URLs are https://github.com or https://my-ghes-server.example.com",
+        "required": false
+      },
+      {
+        "name": "allow-unsafe-pr-checkout",
+        "description": "Required to check out fork pull request code from a workflow triggered by `pull_request_target` or `workflow_run`. These workflows run with the base repository's GITHUB_TOKEN, secrets, default-branch cache scope, and runner access; fetching and executing a fork's code in that trusted context commonly leads to \"pwn request\" vulnerabilities. Set to `true` only after reviewing the risks at https://gh.io/securely-using-pull_request_target.",
+        "required": false,
+        "default": "false"
+      }
+    ]
+  },
+  "actions/setup-node@v4": {
+    "kind": "action",
+    "name": "Setup Node.js environment",
+    "description": "Setup a Node.js environment by adding problem matchers and optionally downloading and adding it to the PATH.",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "always-auth",
+        "description": "Set always-auth in npmrc.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "node-version",
+        "description": "Version Spec of the version to use. Examples: 12.x, 10.15.1, >=10.15.0.",
+        "required": false
+      },
+      {
+        "name": "node-version-file",
+        "description": "File containing the version Spec of the version to use.  Examples: package.json, .nvmrc, .node-version, .tool-versions.",
+        "required": false
+      },
+      {
+        "name": "architecture",
+        "description": "Target architecture for Node to use. Examples: x86, x64. Will use system architecture by default.",
+        "required": false
+      },
+      {
+        "name": "check-latest",
+        "description": "Set this option if you want the action to check for the latest available version that satisfies the version spec.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "registry-url",
+        "description": "Optional registry to set up for auth. Will set the registry in a project level .npmrc and .yarnrc file, and set up auth to read in from env.NODE_AUTH_TOKEN.",
+        "required": false
+      },
+      {
+        "name": "scope",
+        "description": "Optional scope for authenticating against scoped registries. Will fall back to the repository owner when using the GitHub Packages registry (https://npm.pkg.github.com/).",
+        "required": false
+      },
+      {
+        "name": "token",
+        "description": "Used to pull node distributions from node-versions. Since there's a default, this is typically not supplied by the user. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.",
+        "required": false,
+        "default": "${{ github.server_url == 'https://github.com' && github.token || '' }}"
+      },
+      {
+        "name": "cache",
+        "description": "Used to specify a package manager for caching in the default directory. Supported values: npm, yarn, pnpm.",
+        "required": false
+      },
+      {
+        "name": "cache-dependency-path",
+        "description": "Used to specify the path to a dependency file: package-lock.json, yarn.lock, etc. Supports wildcards or a list of file names for caching multiple dependencies.",
+        "required": false
+      },
+      {
+        "name": "mirror",
+        "description": "Used to specify an alternative mirror to downlooad Node.js binaries from",
+        "required": false
+      },
+      {
+        "name": "mirror-token",
+        "description": "The token used as Authorization header when fetching from the mirror",
+        "required": false
+      }
+    ]
+  },
+  "actions/setup-python@v5": {
+    "kind": "action",
+    "name": "Setup Python",
+    "description": "Set up a specific version of Python and add the command-line tools to the PATH.",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "python-version",
+        "description": "Version range or exact version of Python or PyPy to use, using SemVer's version range syntax. Reads from .python-version if unset.",
+        "required": false
+      },
+      {
+        "name": "python-version-file",
+        "description": "File containing the Python version to use. Example: .python-version",
+        "required": false
+      },
+      {
+        "name": "cache",
+        "description": "Used to specify a package manager for caching in the default directory. Supported values: pip, pipenv, poetry.",
+        "required": false
+      },
+      {
+        "name": "architecture",
+        "description": "The target architecture (x86, x64, arm64) of the Python or PyPy interpreter.",
+        "required": false
+      },
+      {
+        "name": "check-latest",
+        "description": "Set this option if you want the action to check for the latest available version that satisfies the version spec.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "token",
+        "description": "The token used to authenticate when fetching Python distributions from https://github.com/actions/python-versions. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.",
+        "required": false,
+        "default": "${{ github.server_url == 'https://github.com' && github.token || '' }}"
+      },
+      {
+        "name": "cache-dependency-path",
+        "description": "Used to specify the path to dependency files. Supports wildcards or a list of file names for caching multiple dependencies.",
+        "required": false
+      },
+      {
+        "name": "update-environment",
+        "description": "Set this option if you want the action to update environment variables.",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "allow-prereleases",
+        "description": "When 'true', a version range passed to 'python-version' input will match prerelease versions if no GA versions are found. Only 'x.y' version range is supported for CPython.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "freethreaded",
+        "description": "When 'true', use the freethreaded version of Python.",
+        "required": false,
+        "default": "false"
+      }
+    ]
+  },
+  "actions/setup-java@v4": {
+    "kind": "action",
+    "name": "Setup Java JDK",
+    "description": "Set up a specific version of the Java JDK and add the command-line tools to the PATH",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "java-version",
+        "description": "The Java version to set up. Takes a whole or semver Java version. See examples of supported syntax in README file",
+        "required": false
+      },
+      {
+        "name": "java-version-file",
+        "description": "The path to the `.java-version` file. See examples of supported syntax in README file",
+        "required": false
+      },
+      {
+        "name": "distribution",
+        "description": "Java distribution. See the list of supported distributions in README file. Legacy AdoptOpenJDK values (adopt, adopt-hotspot, adopt-openj9) are deprecated and will be removed in setup-java v6.",
+        "required": true
+      },
+      {
+        "name": "java-package",
+        "description": "The package type (jdk, jre, jdk+fx, jre+fx)",
+        "required": false,
+        "default": "jdk"
+      },
+      {
+        "name": "architecture",
+        "description": "The architecture of the package (defaults to the action runner's architecture)",
+        "required": false
+      },
+      {
+        "name": "jdkFile",
+        "description": "Path to where the compressed JDK is located",
+        "required": false
+      },
+      {
+        "name": "check-latest",
+        "description": "Set this option if you want the action to check for the latest available version that satisfies the version spec",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "server-id",
+        "description": "ID of the distributionManagement repository in the pom.xml file. Default is `github`",
+        "required": false,
+        "default": "github"
+      },
+      {
+        "name": "server-username",
+        "description": "Environment variable name for the username for authentication to the Apache Maven repository. Default is $GITHUB_ACTOR",
+        "required": false,
+        "default": "GITHUB_ACTOR"
+      },
+      {
+        "name": "server-password",
+        "description": "Environment variable name for password or token for authentication to the Apache Maven repository. Default is $GITHUB_TOKEN",
+        "required": false,
+        "default": "GITHUB_TOKEN"
+      },
+      {
+        "name": "settings-path",
+        "description": "Path to where the settings.xml file will be written. Default is ~/.m2.",
+        "required": false
+      },
+      {
+        "name": "overwrite-settings",
+        "description": "Overwrite the settings.xml file if it exists. Default is \"true\".",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "gpg-private-key",
+        "description": "GPG private key to import. Default is empty string.",
+        "required": false
+      },
+      {
+        "name": "gpg-passphrase",
+        "description": "Environment variable name for the GPG private key passphrase. Default is $GPG_PASSPHRASE.",
+        "required": false
+      },
+      {
+        "name": "cache",
+        "description": "Name of the build platform to cache dependencies. It can be \"maven\", \"gradle\" or \"sbt\".",
+        "required": false
+      },
+      {
+        "name": "cache-dependency-path",
+        "description": "The path to a dependency file: pom.xml, build.gradle, build.sbt, etc. This option can be used with the `cache` option. If this option is omitted, the action searches for the dependency file in the entire repository. This option supports wildcards and a list of file names for caching multiple dependencies.",
+        "required": false
+      },
+      {
+        "name": "job-status",
+        "description": "Workaround to pass job status to post job step. This variable is not intended for manual setting",
+        "required": false,
+        "default": "${{ job.status }}"
+      },
+      {
+        "name": "token",
+        "description": "The token used to authenticate when fetching version manifests hosted on github.com, such as for the Microsoft Build of OpenJDK. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.",
+        "required": false,
+        "default": "${{ github.server_url == 'https://github.com' && github.token || '' }}"
+      },
+      {
+        "name": "mvn-toolchain-id",
+        "description": "Name of Maven Toolchain ID if the default name of \"${distribution}_${java-version}\" is not wanted. See examples of supported syntax in Advanced Usage file",
+        "required": false
+      },
+      {
+        "name": "mvn-toolchain-vendor",
+        "description": "Name of Maven Toolchain Vendor if the default name of \"${distribution}\" is not wanted. See examples of supported syntax in Advanced Usage file",
+        "required": false
+      }
+    ]
+  },
+  "actions/setup-dotnet@v4": {
+    "kind": "action",
+    "name": "Setup .NET Core SDK",
+    "description": "Used to build and publish .NET source. Set up a specific version of the .NET and authentication to private NuGet repository",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "dotnet-version",
+        "description": "Optional SDK version(s) to use. If not provided, will install global.json version when available. Examples: 2.2.104, 3.1, 3.1.x, 3.x, 6.0.2xx",
+        "required": false
+      },
+      {
+        "name": "dotnet-quality",
+        "description": "Optional quality of the build. The possible values are: daily, signed, validated, preview, ga.",
+        "required": false
+      },
+      {
+        "name": "global-json-file",
+        "description": "Optional global.json location, if your global.json isn't located in the root of the repo.",
+        "required": false
+      },
+      {
+        "name": "source-url",
+        "description": "Optional package source for which to set up authentication. Will consult any existing NuGet.config in the root of the repo and provide a temporary NuGet.config using the NUGET_AUTH_TOKEN environment variable as a ClearTextPassword",
+        "required": false
+      },
+      {
+        "name": "owner",
+        "description": "Optional OWNER for using packages from GitHub Package Registry organizations/users other than the current repository's owner. Only used if a GPR URL is also provided in source-url",
+        "required": false
+      },
+      {
+        "name": "config-file",
+        "description": "Optional NuGet.config location, if your NuGet.config isn't located in the root of the repo.",
+        "required": false
+      },
+      {
+        "name": "cache",
+        "description": "Optional input to enable caching of the NuGet global-packages folder",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "cache-dependency-path",
+        "description": "Used to specify the path to a dependency file: packages.lock.json. Supports wildcards or a list of file names for caching multiple dependencies.",
+        "required": false
+      }
+    ]
+  },
+  "actions/setup-go@v5": {
+    "kind": "action",
+    "name": "Setup Go environment",
+    "description": "Setup a Go environment and add it to the PATH",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "go-version",
+        "description": "The Go version to download (if necessary) and use. Supports semver spec and ranges. Be sure to enclose this option in single quotation marks.",
+        "required": false
+      },
+      {
+        "name": "go-version-file",
+        "description": "Path to the go.mod or go.work file.",
+        "required": false
+      },
+      {
+        "name": "check-latest",
+        "description": "Set this option to true if you want the action to always check for the latest available version that satisfies the version spec",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "token",
+        "description": "Used to pull Go distributions from go-versions. Since there's a default, this is typically not supplied by the user. When running this action on github.com, the default value is sufficient. When running on GHES, you can pass a personal access token for github.com if you are experiencing rate limiting.",
+        "required": false,
+        "default": "${{ github.server_url == 'https://github.com' && github.token || '' }}"
+      },
+      {
+        "name": "cache",
+        "description": "Used to specify whether caching is needed. Set to true, if you'd like to enable caching.",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "cache-dependency-path",
+        "description": "Used to specify the path to a dependency file - go.sum",
+        "required": false
+      },
+      {
+        "name": "architecture",
+        "description": "Target architecture for Go to use. Examples: x86, x64. Will use system architecture by default.",
+        "required": false
+      }
+    ]
+  },
+  "actions/cache@v4": {
+    "kind": "action",
+    "name": "Cache",
+    "description": "Cache artifacts like dependencies and build outputs to improve workflow execution time",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "path",
+        "description": "A list of files, directories, and wildcard patterns to cache and restore",
+        "required": true
+      },
+      {
+        "name": "key",
+        "description": "An explicit key for restoring and saving the cache",
+        "required": true
+      },
+      {
+        "name": "restore-keys",
+        "description": "An ordered multiline string listing the prefix-matched keys, that are used for restoring stale cache if no cache hit occurred for key. Note `cache-hit` returns false in this case.",
+        "required": false
+      },
+      {
+        "name": "upload-chunk-size",
+        "description": "The chunk size used to split up large files during upload, in bytes",
+        "required": false
+      },
+      {
+        "name": "enableCrossOsArchive",
+        "description": "An optional boolean when enabled, allows windows runners to save or restore caches that can be restored or saved respectively on other platforms",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "fail-on-cache-miss",
+        "description": "Fail the workflow if cache entry is not found",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "lookup-only",
+        "description": "Check if a cache entry exists for the given input(s) (key, restore-keys) without downloading the cache",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "save-always",
+        "description": "Run the post step to save the cache even if another step before fails",
+        "required": false,
+        "default": "false",
+        "deprecationMessage": "save-always does not work as intended and will be removed in a future release.\nA separate `actions/cache/restore` step should be used instead.\nSee https://github.com/actions/cache/tree/main/save#always-save-cache for more details.\n"
+      }
+    ]
+  },
+  "actions/upload-artifact@v4": {
+    "kind": "action",
+    "name": "Upload a Build Artifact",
+    "description": "Upload a build artifact that can be used by subsequent workflow steps",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "name",
+        "description": "Artifact name",
+        "required": false,
+        "default": "artifact"
+      },
+      {
+        "name": "path",
+        "description": "A file, directory or wildcard pattern that describes what to upload",
+        "required": true
+      },
+      {
+        "name": "if-no-files-found",
+        "description": "The desired behavior if no files are found using the provided path.\nAvailable Options:\n  warn: Output a warning but do not fail the action\n  error: Fail the action with an error message\n  ignore: Do not output any warnings or errors, the action does not fail",
+        "required": false,
+        "default": "warn"
+      },
+      {
+        "name": "retention-days",
+        "description": "Duration after which artifact will expire in days. 0 means using default retention.\nMinimum 1 day. Maximum 90 days unless changed from the repository settings page.",
+        "required": false
+      },
+      {
+        "name": "compression-level",
+        "description": "The level of compression for Zlib to be applied to the artifact archive. The value can range from 0 to 9: - 0: No compression - 1: Best speed - 6: Default compression (same as GNU Gzip) - 9: Best compression Higher levels will result in better compression, but will take longer to complete. For large files that are not easily compressed, a value of 0 is recommended for significantly faster uploads.",
+        "required": false,
+        "default": "6"
+      },
+      {
+        "name": "overwrite",
+        "description": "If true, an artifact with a matching name will be deleted before a new one is uploaded. If false, the action will fail if an artifact for the given name already exists. Does not fail if the artifact does not exist.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "include-hidden-files",
+        "description": "If true, hidden files will be included in the artifact. If false, hidden files will be excluded from the artifact.",
+        "required": false,
+        "default": "false"
+      }
+    ]
+  },
+  "actions/download-artifact@v4": {
+    "kind": "action",
+    "name": "Download a Build Artifact",
+    "description": "Download a build artifact that was previously uploaded in the workflow by the upload-artifact action",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "name",
+        "description": "Name of the artifact to download. If unspecified, all artifacts for the run are downloaded.",
+        "required": false
+      },
+      {
+        "name": "artifact-ids",
+        "description": "IDs of the artifacts to download, comma-separated. Either inputs `artifact-ids` or `name` can be used, but not both.",
+        "required": false
+      },
+      {
+        "name": "path",
+        "description": "Destination path. Supports basic tilde expansion. Defaults to $GITHUB_WORKSPACE",
+        "required": false
+      },
+      {
+        "name": "pattern",
+        "description": "A glob pattern matching the artifacts that should be downloaded. Ignored if name is specified.",
+        "required": false
+      },
+      {
+        "name": "merge-multiple",
+        "description": "When multiple artifacts are matched, this changes the behavior of the destination directories. If true, the downloaded artifacts will be in the same directory specified by path. If false, the downloaded artifacts will be extracted into individual named directories within the specified path.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "github-token",
+        "description": "The GitHub token used to authenticate with the GitHub API. This is required when downloading artifacts from a different repository or from a different workflow run. If this is not specified, the action will attempt to download artifacts from the current repository and the current workflow run.",
+        "required": false
+      },
+      {
+        "name": "repository",
+        "description": "The repository owner and the repository name joined together by \"/\". If github-token is specified, this is the repository that artifacts will be downloaded from.",
+        "required": false,
+        "default": "${{ github.repository }}"
+      },
+      {
+        "name": "run-id",
+        "description": "The id of the workflow run where the desired download artifact was uploaded from. If github-token is specified, this is the run that artifacts will be downloaded from.",
+        "required": false,
+        "default": "${{ github.run_id }}"
+      }
+    ]
+  },
+  "docker/setup-buildx-action@v3": {
+    "kind": "action",
+    "name": "Docker Setup Buildx",
+    "description": "Set up Docker Buildx",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "version",
+        "description": "Buildx version. (eg. v0.3.0)",
+        "required": false
+      },
+      {
+        "name": "driver",
+        "description": "Sets the builder driver to be used",
+        "required": false,
+        "default": "docker-container"
+      },
+      {
+        "name": "driver-opts",
+        "description": "List of additional driver-specific options. (eg. image=moby/buildkit:master)",
+        "required": false
+      },
+      {
+        "name": "buildkitd-flags",
+        "description": "BuildKit daemon flags",
+        "required": false
+      },
+      {
+        "name": "buildkitd-config",
+        "description": "BuildKit daemon config file",
+        "required": false
+      },
+      {
+        "name": "buildkitd-config-inline",
+        "description": "Inline BuildKit daemon config",
+        "required": false
+      },
+      {
+        "name": "use",
+        "description": "Switch to this builder instance",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "name",
+        "description": "Name of the builder. If not specified, one will be generated or if it already exists, it will be used instead of creating a new one.",
+        "required": false
+      },
+      {
+        "name": "endpoint",
+        "description": "Optional address for docker socket or context from `docker context ls`",
+        "required": false
+      },
+      {
+        "name": "platforms",
+        "description": "Fixed platforms for current node. If not empty, values take priority over the detected ones",
+        "required": false
+      },
+      {
+        "name": "append",
+        "description": "Append additional nodes to the builder",
+        "required": false
+      },
+      {
+        "name": "keep-state",
+        "description": "Keep BuildKit state on cleanup. This is only useful on persistent self-hosted runners.",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "cache-binary",
+        "description": "Cache buildx binary to GitHub Actions cache backend",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "cleanup",
+        "description": "Cleanup temp files and remove builder at the end of a job",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "config",
+        "description": "BuildKit daemon config file",
+        "required": false,
+        "deprecationMessage": "Use buildkitd-config instead"
+      },
+      {
+        "name": "config-inline",
+        "description": "Inline BuildKit daemon config",
+        "required": false,
+        "deprecationMessage": "Use buildkitd-config-inline instead"
+      },
+      {
+        "name": "install",
+        "description": "Sets up docker build command as an alias to docker buildx build",
+        "required": false,
+        "default": "false",
+        "deprecationMessage": "\"docker buildx install\" command is deprecated and will be removed in a future release, use BUILDX_BUILDER environment variable instead"
+      }
+    ]
+  },
+  "docker/login-action@v3": {
+    "kind": "action",
+    "name": "Docker Login",
+    "description": "GitHub Action to login against a Docker registry",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "registry",
+        "description": "Server address of Docker registry. If not set then will default to Docker Hub",
+        "required": false
+      },
+      {
+        "name": "username",
+        "description": "Username used to log against the Docker registry",
+        "required": false
+      },
+      {
+        "name": "password",
+        "description": "Password or personal access token used to log against the Docker registry",
+        "required": false
+      },
+      {
+        "name": "ecr",
+        "description": "Specifies whether the given registry is ECR (auto, true or false)",
+        "required": false
+      },
+      {
+        "name": "scope",
+        "description": "Scope for the authentication token",
+        "required": false
+      },
+      {
+        "name": "logout",
+        "description": "Log out from the Docker registry at the end of a job",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "registry-auth",
+        "description": "Raw authentication to registries, defined as YAML objects",
+        "required": false
+      }
+    ]
+  },
+  "docker/metadata-action@v5": {
+    "kind": "action",
+    "name": "Docker Metadata action",
+    "description": "GitHub Action to extract metadata (tags, labels) for Docker",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "context",
+        "description": "Where to get context data. Allowed options are \"workflow\"  (default), \"git\".",
+        "required": true,
+        "default": "workflow"
+      },
+      {
+        "name": "images",
+        "description": "List of Docker images to use as base name for tags",
+        "required": false
+      },
+      {
+        "name": "tags",
+        "description": "List of tags as key-value pair attributes",
+        "required": false
+      },
+      {
+        "name": "flavor",
+        "description": "Flavors to apply",
+        "required": false
+      },
+      {
+        "name": "labels",
+        "description": "List of custom labels",
+        "required": false
+      },
+      {
+        "name": "annotations",
+        "description": "List of custom annotations",
+        "required": false
+      },
+      {
+        "name": "sep-tags",
+        "description": "Separator to use for tags output (default \\n)",
+        "required": false
+      },
+      {
+        "name": "sep-labels",
+        "description": "Separator to use for labels output (default \\n)",
+        "required": false
+      },
+      {
+        "name": "sep-annotations",
+        "description": "Separator to use for annotations output (default \\n)",
+        "required": false
+      },
+      {
+        "name": "bake-target",
+        "description": "Bake target name (default docker-metadata-action)",
+        "required": false
+      },
+      {
+        "name": "github-token",
+        "description": "GitHub Token as provided by secrets",
+        "required": true,
+        "default": "${{ github.token }}"
+      }
+    ]
+  },
+  "docker/build-push-action@v6": {
+    "kind": "action",
+    "name": "Build and push Docker images",
+    "description": "Build and push Docker images with Buildx",
+    "using": "node20",
+    "inputs": [
+      {
+        "name": "add-hosts",
+        "description": "List of a customs host-to-IP mapping (e.g., docker:10.180.0.1)",
+        "required": false
+      },
+      {
+        "name": "allow",
+        "description": "List of extra privileged entitlement (e.g., network.host,security.insecure)",
+        "required": false
+      },
+      {
+        "name": "annotations",
+        "description": "List of annotation to set to the image",
+        "required": false
+      },
+      {
+        "name": "attests",
+        "description": "List of attestation parameters (e.g., type=sbom,generator=image)",
+        "required": false
+      },
+      {
+        "name": "build-args",
+        "description": "List of build-time variables",
+        "required": false
+      },
+      {
+        "name": "build-contexts",
+        "description": "List of additional build contexts (e.g., name=path)",
+        "required": false
+      },
+      {
+        "name": "builder",
+        "description": "Builder instance",
+        "required": false
+      },
+      {
+        "name": "cache-from",
+        "description": "List of external cache sources for buildx (e.g., user/app:cache, type=local,src=path/to/dir)",
+        "required": false
+      },
+      {
+        "name": "cache-to",
+        "description": "List of cache export destinations for buildx (e.g., user/app:cache, type=local,dest=path/to/dir)",
+        "required": false
+      },
+      {
+        "name": "call",
+        "description": "Set method for evaluating build (e.g., check)",
+        "required": false
+      },
+      {
+        "name": "cgroup-parent",
+        "description": "Optional parent cgroup for the container used in the build",
+        "required": false
+      },
+      {
+        "name": "context",
+        "description": "Build's context is the set of files located in the specified PATH or URL",
+        "required": false
+      },
+      {
+        "name": "file",
+        "description": "Path to the Dockerfile",
+        "required": false
+      },
+      {
+        "name": "labels",
+        "description": "List of metadata for an image",
+        "required": false
+      },
+      {
+        "name": "load",
+        "description": "Load is a shorthand for --output=type=docker",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "network",
+        "description": "Set the networking mode for the RUN instructions during build",
+        "required": false
+      },
+      {
+        "name": "no-cache",
+        "description": "Do not use cache when building the image",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "no-cache-filters",
+        "description": "Do not cache specified stages",
+        "required": false
+      },
+      {
+        "name": "outputs",
+        "description": "List of output destinations (format: type=local,dest=path)",
+        "required": false
+      },
+      {
+        "name": "platforms",
+        "description": "List of target platforms for build",
+        "required": false
+      },
+      {
+        "name": "provenance",
+        "description": "Generate provenance attestation for the build (shorthand for --attest=type=provenance)",
+        "required": false
+      },
+      {
+        "name": "pull",
+        "description": "Always attempt to pull all referenced images",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "push",
+        "description": "Push is a shorthand for --output=type=registry",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "sbom",
+        "description": "Generate SBOM attestation for the build (shorthand for --attest=type=sbom)",
+        "required": false
+      },
+      {
+        "name": "secrets",
+        "description": "List of secrets to expose to the build (e.g., key=string, GIT_AUTH_TOKEN=mytoken)",
+        "required": false
+      },
+      {
+        "name": "secret-envs",
+        "description": "List of secret env vars to expose to the build (e.g., key=envname, MY_SECRET=MY_ENV_VAR)",
+        "required": false
+      },
+      {
+        "name": "secret-files",
+        "description": "List of secret files to expose to the build (e.g., key=filename, MY_SECRET=./secret.txt)",
+        "required": false
+      },
+      {
+        "name": "shm-size",
+        "description": "Size of /dev/shm (e.g., 2g)",
+        "required": false
+      },
+      {
+        "name": "ssh",
+        "description": "List of SSH agent socket or keys to expose to the build",
+        "required": false
+      },
+      {
+        "name": "tags",
+        "description": "List of tags",
+        "required": false
+      },
+      {
+        "name": "target",
+        "description": "Sets the target stage to build",
+        "required": false
+      },
+      {
+        "name": "ulimit",
+        "description": "Ulimit options (e.g., nofile=1024:1024)",
+        "required": false
+      },
+      {
+        "name": "github-token",
+        "description": "GitHub Token used to authenticate against a repository for Git context",
+        "required": false,
+        "default": "${{ github.token }}"
+      }
+    ]
+  }
+}

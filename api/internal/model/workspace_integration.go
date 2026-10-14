@@ -1,6 +1,9 @@
 package model
 
-const WorkspaceIntegrationProviderGoogleMaps = "google_maps"
+const (
+	WorkspaceIntegrationProviderGoogleMaps = "google_maps"
+	WorkspaceIntegrationProviderGitHub     = "github"
+)
 
 // WorkspaceIntegration holds third-party credentials for a workspace. The
 // config is an encrypted JSON blob and is never exposed over JSON.
