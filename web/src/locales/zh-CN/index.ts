@@ -33,6 +33,10 @@ export default {
       visual: {
         tabVisual: "视觉编辑",
         tabYaml: "YAML",
+        insertRef: "插入变量或 secret",
+        refVars: "变量",
+        refSecrets: "Secrets",
+        refEmpty: "还没有可用的变量或 secret，请到这里新增：",
         fixYamlFirst: "YAML 有语法错误，请先在 YAML 分页修正后再用视觉编辑。",
         staleGraph: "YAML 有语法错误，图形显示的是最后一次有效的内容。",
         triggerNode: "触发条件 (on:)",

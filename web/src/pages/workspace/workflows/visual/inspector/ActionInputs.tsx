@@ -10,6 +10,7 @@ import * as m from "../model/mutate"
 import { useEditorStore } from "../store"
 import { DOCKER_EXTRA_INPUTS, actionKey, checkInputs, isRemoteUses, useActionCatalog, usesRef, type ActionEntry, type InputDef } from "../actions/catalog"
 import { YamlField, inputClass, labelClass } from "./fields"
+import RefPicker from "./RefPicker"
 
 type Values = Record<string, unknown> | undefined
 
@@ -87,13 +88,16 @@ function InputRow({ def, value, onCommit }: { def: InputDef; value: unknown; onC
 
     return (
         <div className={cn("flex flex-col gap-1", def.deprecationMessage && "opacity-70")}>
-            <label htmlFor={id} className={cn(labelClass, "flex items-center gap-1.5 flex-wrap")}>
-                <span className="font-mono">{def.name}</span>
-                {def.required && <span className="text-[10px] px-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">{t("pages.workflows.visual.required")}</span>}
-                {def.deprecationMessage && (
-                    <span className="text-[10px] px-1 rounded bg-neutral-200 dark:bg-neutral-700" title={def.deprecationMessage}>{t("pages.workflows.visual.deprecated")}</span>
-                )}
-            </label>
+            <div className="flex items-center gap-1.5">
+                <label htmlFor={id} className={cn(labelClass, "flex items-center gap-1.5 flex-wrap")}>
+                    <span className="font-mono">{def.name}</span>
+                    {def.required && <span className="text-[10px] px-1 rounded bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">{t("pages.workflows.visual.required")}</span>}
+                    {def.deprecationMessage && (
+                        <span className="text-[10px] px-1 rounded bg-neutral-200 dark:bg-neutral-700" title={def.deprecationMessage}>{t("pages.workflows.visual.deprecated")}</span>
+                    )}
+                </label>
+                <RefPicker onPick={expression => { setLocal(expression); commit(expression) }} />
+            </div>
             <textarea
                 id={id}
                 className={cn(inputClass, "font-mono resize-y")}
