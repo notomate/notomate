@@ -91,7 +91,7 @@ export default function ActionPickerDialog() {
                 {groups.map(g => (
                     <section key={g.source}>
                         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 font-mono">{g.label}</h3>
-                        <ul className="flex flex-col gap-1">
+                        <ul className="list-none flex flex-col gap-1">
                             {g.items.map(e => {
                                 const required = e.inputs.filter(i => i.required && i.default === undefined).length
                                 return (

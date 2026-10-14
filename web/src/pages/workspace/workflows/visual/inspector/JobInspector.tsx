@@ -69,7 +69,7 @@ export default function JobInspector({ job }: { job: JobView }) {
             </header>
 
             {issues.length > 0 && (
-                <ul className="px-4 py-2 flex flex-col gap-1 border-b dark:border-neutral-700">
+                <ul className="list-none px-4 py-2 flex flex-col gap-1 border-b dark:border-neutral-700">
                     {issues.map((i, k) => (
                         <li key={k} className={cn("text-xs", i.level === "error" ? "text-red-500" : "text-amber-600 dark:text-amber-400")}>{issueText(i)}</li>
                     ))}
@@ -165,7 +165,7 @@ function StepsEditor({ job }: { job: JobView }) {
 
     return (
         <Section title={<>{t("pages.workflows.visual.steps")} <span className="ml-1 font-normal">{job.steps.length}</span></>}>
-            <ol className="flex flex-col gap-1">
+            <ol className="list-none flex flex-col gap-1">
                 {job.steps.map((s, i) => {
                     const Icon = s.uses ? Package : Terminal
                     return (

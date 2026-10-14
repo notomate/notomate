@@ -20,7 +20,7 @@ export function TriggerNode({ data, selected }: NodeProps<TriggerNodeType>) {
             {data.triggers.length === 0 ? (
                 <div className="text-xs text-muted-foreground">{t("pages.workflows.visual.noTriggers")}</div>
             ) : (
-                <ul className="flex flex-col gap-1">
+                <ul className="list-none flex flex-col gap-1">
                     {data.triggers.map(tr => {
                         const Icon = TRIGGER_ICONS[tr] ?? Zap
                         return (
@@ -72,7 +72,7 @@ export function JobNode({ data, selected }: NodeProps<JobNodeType>) {
                 </div>
             </div>
             {!job.uses && (
-                <ol className="px-2 py-1.5 flex flex-col gap-0.5">
+                <ol className="list-none px-2 py-1.5 flex flex-col gap-0.5">
                     {shown.map(s => {
                         const Icon = s.uses ? Package : Terminal
                         return (
