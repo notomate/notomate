@@ -79,7 +79,7 @@ const MarketplacePage = () => {
                     ) : sources.length === 0 ? (
                         <div className="text-sm text-muted-foreground py-2">{t("pages.workflows.marketplace.noSources")}</div>
                     ) : (
-                        <ul className="divide-y divide-neutral-100 dark:divide-neutral-700">
+                        <ul className="list-none divide-y divide-neutral-100 dark:divide-neutral-700">
                             {sources.map(s => <SourceRow key={s.id} source={s} count={countBySource.get(s.id) ?? 0} canManage={canManage} workspaceId={workspaceId} />)}
                         </ul>
                     )}

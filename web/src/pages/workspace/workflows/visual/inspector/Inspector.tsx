@@ -53,7 +53,7 @@ export default function Inspector({ serverErrors, onShowLine }: Props) {
 
             {serverErrors.length > 0 && (
                 <Section title={t("pages.workflows.visual.serverErrors")}>
-                    <ul className="flex flex-col gap-1">
+                    <ul className="list-none flex flex-col gap-1">
                         {serverErrors.map((e, k) => (
                             <li key={k} className="text-xs text-red-500">
                                 {e.line > 0
@@ -69,7 +69,7 @@ export default function Inspector({ serverErrors, onShowLine }: Props) {
                 {issues.length === 0 ? (
                     <p className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400"><CheckCircle2 size={15} />{t("pages.workflows.visual.noIssues")}</p>
                 ) : (
-                    <ul className="flex flex-col gap-1">
+                    <ul className="list-none flex flex-col gap-1">
                         {issues.map((i, k) => (
                             <li key={k}>
                                 <button type="button"
@@ -84,7 +84,7 @@ export default function Inspector({ serverErrors, onShowLine }: Props) {
             </Section>
 
             <Section title={t("pages.workflows.visual.help")}>
-                <ul className="list-disc pl-4 flex flex-col gap-1 text-xs text-muted-foreground">
+                <ul className="list-disc list-outside pl-4 space-y-1 text-xs text-muted-foreground">
                     {(["helpSelect", "helpConnect", "helpDropNew", "helpDelete", "helpAddAction", "helpUndo"] as const).map(k => (
                         <li key={k}>{t(`pages.workflows.visual.${k}`)}</li>
                     ))}
