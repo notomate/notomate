@@ -8,6 +8,16 @@ export const STRINGIFY_OPTS = { lineWidth: 0, nullStr: "" } as const
 type Value = unknown
 const isEmpty = (v: Value) => v === undefined || v === null || v === ""
 
+/**
+ * An emptied collection is written as `[]` / `{}` and parses back as flow
+ * style, so items added to it later come out inline (`[ { uses: … } ]`).
+ * Turn empty flow collections back to block style before adding to them.
+ */
+function blockIfEmpty<T extends YAMLMap | YAMLSeq>(coll: T): T {
+    if (coll.flow && coll.items.length === 0) coll.flow = false
+    return coll
+}
+
 function ensureRootMap(doc: Document): YAMLMap {
     if (!isMap(doc.contents)) doc.contents = doc.createNode({}) as YAMLMap
     return doc.contents as YAMLMap
@@ -16,7 +26,7 @@ function ensureRootMap(doc: Document): YAMLMap {
 function ensureJobsMap(doc: Document): YAMLMap {
     const root = ensureRootMap(doc)
     const jobs: unknown = root.get("jobs", true)
-    if (isMap(jobs)) return jobs
+    if (isMap(jobs)) return blockIfEmpty(jobs)
     const created = doc.createNode({}) as YAMLMap
     root.set("jobs", created)
     return created
@@ -31,7 +41,11 @@ function jobMap(doc: Document, id: string): YAMLMap {
 function stepsSeq(doc: Document, jobId: string): YAMLSeq {
     const job = jobMap(doc, jobId)
     const steps: unknown = job.get("steps", true)
-    if (isSeq(steps)) return steps
+    // Steps are always block style; inline steps are unreadable.
+    if (isSeq(steps)) {
+        steps.flow = false
+        return steps
+    }
     const created = new YAMLSeq()
     job.set("steps", created)
     return created
@@ -161,7 +175,7 @@ export function updateStep(doc: Document, jobId: string, index: number, patch: R
         step = doc.createNode({}) as YAMLMap
         seq.items[index] = step
     }
-    for (const [k, v] of Object.entries(patch)) setOrDelete(doc, step as YAMLMap, k, v)
+    for (const [k, v] of Object.entries(patch)) setOrDelete(doc, blockIfEmpty(step as YAMLMap), k, v)
 }
 
 /**
@@ -175,7 +189,7 @@ export function setMapKeys(doc: Document, path: (string | number)[], patch: Reco
         map = doc.createNode({})
         doc.setIn(path, map)
     }
-    const m = map as YAMLMap
+    const m = blockIfEmpty(map as YAMLMap)
     for (const [k, v] of Object.entries(patch)) setOrDelete(doc, m, k, v)
     if (m.items.length === 0) doc.deleteIn(path)
 }
@@ -207,7 +221,7 @@ export function moveStep(doc: Document, jobId: string, from: number, to: number)
 function ensureOnMap(doc: Document): YAMLMap {
     const root = ensureRootMap(doc)
     const on = root.get("on", true)
-    if (isMap(on)) return on
+    if (isMap(on)) return blockIfEmpty(on)
     const normalized = normalizeOn(on === undefined ? undefined : (on as Scalar | YAMLSeq).toJSON())
     const map = doc.createNode(normalized) as YAMLMap
     if (root.has("on")) root.set("on", map)
