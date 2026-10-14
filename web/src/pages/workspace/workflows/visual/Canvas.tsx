@@ -17,7 +17,7 @@ import {
     type OnSelectionChangeParams,
 } from "@xyflow/react"
 import { AlertTriangle } from "lucide-react"
-import { useThemeStore } from "@/stores/theme"
+import { useTheme } from "@/providers/Theme"
 import { toast } from "@/stores/toast"
 import { useEditor, useEditorStore } from "./store"
 import { useIssues } from "./actions/issues"
@@ -36,7 +36,7 @@ export default function Canvas() {
     const selection = useEditor(s => s.selection)
     const parseError = useEditor(s => s.parseError)
     const issues = useIssues()
-    const colorMode = useThemeStore(s => s.theme.name) === "light" ? "light" : "dark"
+    const colorMode = useTheme()?.theme === "dark" ? "dark" : "light"
     const { apply, select, setPosition, mergePositions } = store.getState()
     const { screenToFlowPosition, fitView } = useReactFlow()
     const needsFit = useRef(true)
