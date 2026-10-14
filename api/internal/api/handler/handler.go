@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"github.com/notomate/notomate/internal/actionmarket"
 	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/github"
 	"github.com/notomate/notomate/internal/googlemaps"
 	"github.com/notomate/notomate/internal/model"
 	"github.com/notomate/notomate/internal/storage"
@@ -12,6 +14,7 @@ type Handler struct {
 	storage        storage.Storage
 	workflowEngine WorkflowEngine
 	googleMaps     *googlemaps.Service
+	actionMarket   *actionmarket.Service
 }
 
 // WorkflowEngine is the part of the workflow trigger engine handlers need:
@@ -30,9 +33,10 @@ type WorkflowEngine interface {
 
 func NewHandler(r db.DB, s storage.Storage) *Handler {
 	return &Handler{
-		db:         r,
-		storage:    s,
-		googleMaps: googlemaps.NewService(r, s, googlemaps.NewClient(), encryptionKey),
+		db:           r,
+		storage:      s,
+		googleMaps:   googlemaps.NewService(r, s, googlemaps.NewClient(), encryptionKey),
+		actionMarket: actionmarket.NewService(r, github.NewClient(), encryptionKey),
 	}
 }
 

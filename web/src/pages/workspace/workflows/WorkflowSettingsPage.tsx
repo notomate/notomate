@@ -8,6 +8,7 @@ import OneColumn from "@/components/onecolumn/OneColumn"
 import WorkflowVarsSecretsSection from "./WorkflowVarsSecretsSection"
 import WorkflowFilesSection from "./WorkflowFilesSection"
 import ConnectedRunnersSection from "./ConnectedRunnersSection"
+import GitHubTokenSection from "./GitHubTokenSection"
 
 // Dedicated settings page for workflow-wide configuration (variables,
 // secrets, codebase files, connected runners) - previously lived in
@@ -52,6 +53,7 @@ const WorkflowSettingsPage = () => {
                                         <>
                                             <WorkflowVarsSecretsSection />
                                             <WorkflowFilesSection />
+                                            <GitHubTokenSection />
                                         </>
                                     )}
                                     <ConnectedRunnersSection />
