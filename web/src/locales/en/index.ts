@@ -34,6 +34,10 @@ export default {
       visual: {
         tabVisual: "Visual",
         tabYaml: "YAML",
+        insertRef: "Insert a variable or secret",
+        refVars: "Variables",
+        refSecrets: "Secrets",
+        refEmpty: "No variables or secrets you can use yet. Add them in",
         fixYamlFirst: "The YAML has a syntax error. Fix it in the YAML tab before editing visually.",
         staleGraph: "The YAML has a syntax error; the graph shows the last valid version.",
         triggerNode: "Triggers (on:)",
