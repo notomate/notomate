@@ -10,6 +10,9 @@ export interface UploadResult {
   original_name: string;
   size: number;
   ext: string;
+  /** Image dimensions, when the API could read them. */
+  width?: number;
+  height?: number;
 }
 
 export interface UploadTask {
@@ -133,6 +136,8 @@ export const useUploadStore = create<UploadStore>((set, get) => {
               original_name: file.name,
               size: file.size,
               ext: fileExt(file.name),
+              width: Number(lastResponse.getHeader("Notomate-File-Width")) || undefined,
+              height: Number(lastResponse.getHeader("Notomate-File-Height")) || undefined,
             };
             patch(id, { status: "done", bytesUploaded: file.size, result });
             const task = get().tasks.find((t) => t.id === id);

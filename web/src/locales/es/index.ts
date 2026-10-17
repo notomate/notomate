@@ -400,7 +400,8 @@ export default {
     cancel: "Cancelar",
     collapse: "Contraer",
     expand: "Expandir",
-    close: "Cerrar"
+    close: "Cerrar",
+    image_pending: "Subiendo imagen…"
   },
   files: {
     drag_drop: "Arrastra y suelta archivos aquí o haz clic para seleccionar",

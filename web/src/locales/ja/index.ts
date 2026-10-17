@@ -400,7 +400,8 @@ export default {
     cancel: "キャンセル",
     collapse: "折りたたむ",
     expand: "展開",
-    close: "閉じる"
+    close: "閉じる",
+    image_pending: "画像をアップロード中…"
   },
   files: {
     drag_drop: "ファイルをここにドラッグしてドロップするか、クリックして選択してください",

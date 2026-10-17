@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import CarouselMediaPickerDialog from "./CarouselMediaPickerDialog"
 import { CarouselItem } from "./CarouselNode"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
+import ProgressiveImage from "@/components/image/ProgressiveImage"
 
 const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes, selected, editor, deleteNode, getPos }) => {
     const { t } = useTranslation()
@@ -74,7 +75,7 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
                                 className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800"
                             >
                                 {item.type === 'image' ? (
-                                    <img src={item.src} alt={item.name} className="w-full h-full object-cover" draggable={false} />
+                                    <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full" draggable={false} />
                                 ) : (
                                     <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
                                 )}
@@ -140,7 +141,7 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
                                     style={isOverlay ? { cursor: 'pointer' } : undefined}
                                 >
                                     {item.type === 'image' ? (
-                                        <img src={item.src} alt={item.name} className="w-full h-full object-cover" draggable={false} />
+                                        <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full" draggable={false} />
                                     ) : (
                                         <video src={item.src} className="w-full h-full object-cover" preload="metadata" />
                                     )}
@@ -190,7 +191,7 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
                                     className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800 group/item"
                                 >
                                     {item.type === 'image' ? (
-                                        <img src={item.src} alt={item.name} className="w-full h-full object-cover" draggable={false} />
+                                        <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full" draggable={false} />
                                     ) : (
                                         <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
                                     )}

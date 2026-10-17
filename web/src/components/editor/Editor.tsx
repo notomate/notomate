@@ -14,6 +14,7 @@ import { CommandItem, SlashCommand } from './extensions/slashcommand/SlashComman
 import { createMentionSuggestion } from './extensions/mention/suggestion'
 import { Attachment } from './extensions/attachment/Attachment'
 import { ImageNode } from './extensions/imagenode/ImageNode'
+import { startPendingImageUpload } from './extensions/imagenode/pendingImages'
 import { PasteHandler } from './extensions/pastehandler/PasteHandler'
 import { YoutubeEmbed } from './extensions/youtubeembed/YoutubeEmbed'
 import { ThreadsEmbed } from './extensions/threadsembed/ThreadsEmbed'
@@ -220,13 +221,7 @@ const Editor: FC<Props> = ({
         deleteView,
       }),
       PasteHandler.configure({
-        upload: async (f: File, onProgress?: (percent: number) => void) => {
-          const res = await uploadFile(currentWorkspaceId, f, onProgress)
-          return {
-            src: `/api/v1/workspaces/${currentWorkspaceId}/files/${res.filename}`,
-            name: res.original_name
-          }
-        },
+        startImageUpload: (f: File) => startPendingImageUpload(currentWorkspaceId, f),
       }),
       SlashCommand.configure({
         suggestion: {

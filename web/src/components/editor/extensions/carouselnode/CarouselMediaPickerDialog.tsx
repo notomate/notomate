@@ -6,6 +6,7 @@ import { FileInfo } from "@/api/file"
 import { PendingUploads } from "@/components/upload/PendingUploads"
 import useUploadComplete from "@/hooks/use-upload-complete"
 import { CarouselItem } from "./CarouselNode"
+import ProgressiveImage from "@/components/image/ProgressiveImage"
 
 interface CarouselMediaPickerDialogProps {
     open: boolean
@@ -172,10 +173,12 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
                                             className={`relative rounded-lg overflow-hidden border-2 transition-colors group ${isSelected ? 'border-blue-500' : 'border-transparent hover:border-blue-300'}`}
                                         >
                                             {type === 'image' ? (
-                                                <img
+                                                <ProgressiveImage
+                                                    cover
+                                                    variantWidth={320}
                                                     src={getFileUrl(file.name)}
                                                     alt={file.original_name}
-                                                    className="w-full aspect-square object-cover"
+                                                    className="w-full aspect-square"
                                                 />
                                             ) : (
                                                 <div className="w-full aspect-square bg-gray-100 dark:bg-neutral-700 flex items-center justify-center relative overflow-hidden">

@@ -7,6 +7,9 @@ export interface FileInfo {
     original_name: string;
     size: number;
     ext: string;
+    /** Image dimensions; null until probed, 0 when unreadable. */
+    width?: number | null;
+    height?: number | null;
     created_at: string;
     updated_at: string;
 }
