@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,8 +20,10 @@ import (
 
 // Response headers carrying the stored file once a resumable upload finishes.
 const (
-	HeaderFileID   = "Notomate-File-Id"
-	HeaderFileName = "Notomate-File-Name"
+	HeaderFileID     = "Notomate-File-Id"
+	HeaderFileName   = "Notomate-File-Name"
+	HeaderFileWidth  = "Notomate-File-Width"
+	HeaderFileHeight = "Notomate-File-Height"
 )
 
 type tusUserKey struct{}
@@ -149,10 +152,15 @@ func (r *ResumableUploads) preFinish(hook tusd.HookEvent) (tusd.HTTPResponse, er
 		log.Printf("tus: failed to remove staged upload %s: %v", hook.Upload.ID, err)
 	}
 
-	return tusd.HTTPResponse{Header: tusd.HTTPHeader{
+	header := tusd.HTTPHeader{
 		HeaderFileID:   file.ID,
 		HeaderFileName: file.Name,
-	}}, nil
+	}
+	if file.Width != nil && file.Height != nil && *file.Width > 0 {
+		header[HeaderFileWidth] = strconv.Itoa(*file.Width)
+		header[HeaderFileHeight] = strconv.Itoa(*file.Height)
+	}
+	return tusd.HTTPResponse{Header: header}, nil
 }
 
 // StartJanitor periodically removes staged uploads that were abandoned.

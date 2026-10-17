@@ -79,6 +79,8 @@ type FileRepository interface {
 	FindFileByID(id string) (model.File, error)
 	UpdateFile(f model.File) error
 	DeleteFile(f model.FileFilter) error
+	FindFilesMissingDimensions(afterID string, exts []string, limit int) ([]model.File, error)
+	UpdateFileDimensions(id string, width, height int) error
 }
 type WorkspaceRepository interface {
 	FindWorkspaces(f model.WorkspaceFilter) ([]model.Workspace, error)

@@ -5,6 +5,7 @@ import (
 	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/github"
 	"github.com/notomate/notomate/internal/googlemaps"
+	"github.com/notomate/notomate/internal/imagevariant"
 	"github.com/notomate/notomate/internal/model"
 	"github.com/notomate/notomate/internal/storage"
 )
@@ -15,6 +16,7 @@ type Handler struct {
 	workflowEngine WorkflowEngine
 	googleMaps     *googlemaps.Service
 	actionMarket   *actionmarket.Service
+	images         *imagevariant.Service
 }
 
 // WorkflowEngine is the part of the workflow trigger engine handlers need:
@@ -37,7 +39,14 @@ func NewHandler(r db.DB, s storage.Storage) *Handler {
 		storage:      s,
 		googleMaps:   googlemaps.NewService(r, s, googlemaps.NewClient(), encryptionKey),
 		actionMarket: actionmarket.NewService(r, github.NewClient(), encryptionKey),
+		images:       imagevariant.NewService(s, r),
 	}
+}
+
+// Images exposes the image variant service so the server can start the
+// dimension backfill.
+func (h *Handler) Images() *imagevariant.Service {
+	return h.images
 }
 
 // GoogleMaps exposes the Google Maps service so the server can start its

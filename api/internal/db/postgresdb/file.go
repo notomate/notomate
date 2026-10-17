@@ -73,3 +73,18 @@ func (s PostgresDB) DeleteFile(f model.FileFilter) error {
 
 	return err
 }
+
+func (s PostgresDB) FindFilesMissingDimensions(afterID string, exts []string, limit int) ([]model.File, error) {
+	return gorm.
+		G[model.File](s.getDB()).
+		Where("width IS NULL AND id > ? AND LOWER(ext) IN ?", afterID, exts).
+		Order("id").
+		Limit(limit).
+		Find(context.Background())
+}
+
+func (s PostgresDB) UpdateFileDimensions(id string, width, height int) error {
+	_, err := gorm.G[model.File](s.getDB()).Where("id = ?", id).Updates(context.Background(), model.File{Width: &width, Height: &height})
+
+	return err
+}

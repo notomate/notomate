@@ -59,6 +59,7 @@ func New(db db.DB, storage storage.Storage, engine *workflow.Engine) (*echo.Echo
 	uploads.StartJanitor(context.Background(), time.Hour, time.Duration(config.C.GetInt(config.UPLOAD_EXPIRE_HOURS))*time.Hour)
 
 	handler.GoogleMaps().StartJanitor(context.Background(), time.Hour)
+	handler.Images().StartBackfill(context.Background())
 
 	return e, nil
 }
