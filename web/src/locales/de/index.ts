@@ -400,7 +400,8 @@ export default {
     cancel: "Abbrechen",
     collapse: "Einklappen",
     expand: "Ausklappen",
-    close: "Schließen"
+    close: "Schließen",
+    image_pending: "Bild wird hochgeladen…"
   },
   files: {
     drag_drop: "Dateien hier ablegen oder klicken zum Auswählen",

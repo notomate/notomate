@@ -26,6 +26,24 @@ export const ImageNode = Node.create({
     return {
       src: { default: null },
       name: { default: null },
+      // Original image size, so the node can reserve its space before the
+      // image loads. Missing on images inserted before this was tracked.
+      width: {
+        default: null,
+        parseHTML: (el: HTMLElement) => Number(el.getAttribute('width')) || null,
+      },
+      height: {
+        default: null,
+        parseHTML: (el: HTMLElement) => Number(el.getAttribute('height')) || null,
+      },
+      // Set (with no src) while a pasted image is still uploading; see
+      // pendingImages.ts.
+      uploadId: {
+        default: null,
+        parseHTML: (el: HTMLElement) => el.getAttribute('data-upload-id'),
+        renderHTML: (attrs: Record<string, unknown>) =>
+          attrs.uploadId ? { 'data-upload-id': attrs.uploadId } : {},
+      },
     }
   },
 
@@ -41,7 +59,7 @@ export const ImageNode = Node.create({
     return {
       ...this.parent?.(),
       setImage:
-        (options: { src: string; name: string }) =>
+        (options: { src: string; name: string; width?: number; height?: number }) =>
         ({ chain }:any) =>
           chain()
             .insertContent({

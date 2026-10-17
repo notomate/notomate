@@ -1,8 +1,6 @@
 import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import MarkdownIt from 'markdown-it'
-import i18n from '@/i18n'
-import { toast } from '@/stores/toast'
 
 const md = new MarkdownIt({
   html: false,
@@ -65,7 +63,12 @@ const fetchImageAsFile = async (src: string): Promise<File | null> => {
 }
 
 interface PasteHandlerOptions {
-  upload: (file: File, onProgress?: (percent: number) => void) => Promise<{ src: string; name: string }>
+  /**
+   * Starts uploading a pasted image and returns the uploadId for its image
+   * node, which shows a local preview until the upload finishes. Pasted
+   * images are left to the default handling when unset.
+   */
+  startImageUpload?: (file: File) => string
 }
 
 export const PasteHandler = Extension.create<PasteHandlerOptions>({
@@ -73,15 +76,12 @@ export const PasteHandler = Extension.create<PasteHandlerOptions>({
 
   addOptions() {
     return {
-      upload: async (file: File) => ({
-        src: URL.createObjectURL(file),
-        name: file.name,
-      }),
+      startImageUpload: undefined,
     }
   },
 
   addProseMirrorPlugins() {
-    const { upload } = this.options
+    const { startImageUpload } = this.options
     const editor = this.editor
 
     return [
@@ -94,17 +94,16 @@ export const PasteHandler = Extension.create<PasteHandlerOptions>({
               if (!clipboardData) return false
 
               // 1. Image file in clipboard (screenshot / copy from file manager)
-              const imageFiles = getClipboardImageFiles(clipboardData)
-              if (imageFiles.length > 0) {
+              const imageFiles = startImageUpload ? getClipboardImageFiles(clipboardData) : []
+              if (startImageUpload && imageFiles.length > 0) {
                 event.preventDefault()
                 event.stopPropagation()
-                imageFiles.forEach(file => {
-                  upload(file).then(({ src, name }) => {
-                    editor.commands.insertContent({ type: 'image', attrs: { src, name } })
-                  }).catch(() => {
-                    toast.error(i18n.t('files.upload_error'))
-                  })
-                })
+                // Insert right away; each node shows its local preview and
+                // gets its src when the upload completes.
+                editor.commands.insertContent(imageFiles.map(file => ({
+                  type: 'image',
+                  attrs: { name: file.name, uploadId: startImageUpload(file) },
+                })))
                 return true
               }
 
@@ -115,7 +114,7 @@ export const PasteHandler = Extension.create<PasteHandlerOptions>({
                 const parsed = new DOMParser().parseFromString(rawHtml, 'text/html')
                 const imgEls = Array.from(parsed.querySelectorAll('img'))
 
-                if (imgEls.length > 0) {
+                if (startImageUpload && imgEls.length > 0) {
                   event.preventDefault()
                   event.stopPropagation()
                   ;(async () => {
@@ -125,19 +124,11 @@ export const PasteHandler = Extension.create<PasteHandlerOptions>({
                         if (!src) { img.remove(); return }
                         const file = await fetchImageAsFile(src)
                         if (!file) { img.remove(); return }
-                        let uploaded: { src: string; name: string }
-                        try {
-                          uploaded = await upload(file)
-                        } catch {
-                          toast.error(i18n.t('files.upload_error'))
-                          img.remove()
-                          return
-                        }
-                        const { src: uploadedSrc, name } = uploaded
-                        // Replace <img> with our custom image-node tag so TipTap picks it up
+                        // Replace <img> with our custom image-node tag so TipTap
+                        // picks it up; it fills in its src once uploaded.
                         const node = parsed.createElement('image-node')
-                        node.setAttribute('src', uploadedSrc)
-                        node.setAttribute('name', name)
+                        node.setAttribute('name', file.name)
+                        node.setAttribute('data-upload-id', startImageUpload(file))
                         img.replaceWith(node)
                       })
                     )

@@ -281,6 +281,7 @@ func (h Handler) DownloadAvatar(c echo.Context) error {
 	}
 	defer f.Close()
 
+	setImmutableCache(c)
 	http.ServeContent(c.Response(), c.Request(), filename, time.Time{}, f)
 	return nil
 }

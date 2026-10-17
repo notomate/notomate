@@ -400,7 +400,8 @@ export default {
     cancel: "Отмена",
     collapse: "Свернуть",
     expand: "Развернуть",
-    close: "Закрыть"
+    close: "Закрыть",
+    image_pending: "Загрузка изображения…"
   },
   files: {
     drag_drop: "Перетащите файлы сюда или нажмите для выбора",

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bufio"
 	"io"
 	"math/rand"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/notomate/notomate/internal/imagevariant"
 	"github.com/notomate/notomate/internal/model"
 	"github.com/notomate/notomate/internal/util"
 )
@@ -42,6 +44,8 @@ func (h Handler) Upload(c echo.Context) error {
 		"original_name": fileModel.OriginalFilename,
 		"size":          fileModel.Size,
 		"ext":           fileModel.Ext,
+		"width":         fileModel.Width,
+		"height":        fileModel.Height,
 		"created_at":    fileModel.CreatedAt,
 		"updated_at":    fileModel.UpdatedAt,
 	})
@@ -53,6 +57,20 @@ func (h Handler) Upload(c echo.Context) error {
 func (h Handler) persistWorkspaceFile(workspaceId string, user model.User, originalName string, size int64, r io.Reader) (model.File, error) {
 	ext := filepath.Ext(originalName)
 	newFileName := time.Now().Format("20060102150405") + "_" + randStringRunes(4) + ext
+
+	// Peek at the head of images for their dimensions; Save then reads the
+	// same buffered stream, so the file is still read only once.
+	var width, height *int
+	if imagevariant.IsProbeable(ext) {
+		br := bufio.NewReaderSize(r, imagevariant.ProbeBytes)
+		header, _ := br.Peek(imagevariant.ProbeBytes)
+		w, h, ok := imagevariant.ProbeDimensions(header)
+		if !ok {
+			w, h = 0, 0
+		}
+		width, height = &w, &h
+		r = br
+	}
 
 	if err := h.storage.Save([]string{workspaceId, newFileName}, r); err != nil {
 		return model.File{}, err
@@ -66,6 +84,8 @@ func (h Handler) persistWorkspaceFile(workspaceId string, user model.User, origi
 		Ext:              ext,
 		Size:             size,
 		OriginalFilename: originalName,
+		Width:            width,
+		Height:           height,
 		CreatedAt:        now,
 		CreatedBy:        user.ID,
 		UpdatedAt:        now,
@@ -85,17 +105,31 @@ func (h Handler) Download(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Workspace id and filename are required")
 	}
 
-	segments := []string{workspaceId, filename}
-
-	f, err := h.storage.Load(segments)
-
+	// ?w= asks for a downscaled copy of an image.
+	var (
+		f   io.ReadSeekCloser
+		err error
+	)
+	servedName := filename
+	if w, _ := strconv.Atoi(c.QueryParam("w")); w > 0 {
+		f, servedName, err = h.images.Variant(workspaceId, filename, w)
+	} else {
+		f, err = h.storage.Load([]string{workspaceId, filename})
+	}
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	http.ServeContent(c.Response(), c.Request(), filename, time.Time{}, f)
+	setImmutableCache(c)
+	http.ServeContent(c.Response(), c.Request(), servedName, time.Time{}, f)
 	return nil
+}
+
+// setImmutableCache lets browsers keep a stored file for good: stored names
+// are generated per upload and never overwritten.
+func setImmutableCache(c echo.Context) {
+	c.Response().Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 }
 
 func (h Handler) Delete(c echo.Context) error {
@@ -126,6 +160,7 @@ func (h Handler) Delete(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, "failed to delete file")
 	}
+	h.images.DeleteVariants(workspaceId, f.Name)
 
 	return c.JSON(http.StatusOK, echo.Map{"message": "File deleted"})
 }
@@ -187,6 +222,8 @@ func (h Handler) List(c echo.Context) error {
 			"original_name": f.OriginalFilename,
 			"size":          f.Size,
 			"ext":           f.Ext,
+			"width":         f.Width,
+			"height":        f.Height,
 			"created_at":    f.CreatedAt,
 			"updated_at":    f.UpdatedAt,
 		})

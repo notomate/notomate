@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { Tooltip } from 'radix-ui';
 import FilesGridSkeleton from '@/components/skeletons/FilesGridSkeleton';
+import ProgressiveImage from "@/components/image/ProgressiveImage"
 
 const PAGE_SIZE = 20;
 
@@ -309,11 +310,12 @@ const FilesPage = () => {
                                             {/* Thumbnail/Icon Area */}
                                             <div className="aspect-square relative bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center overflow-hidden">
                                                 {isImageFile(file.ext) ? (
-                                                    <img
+                                                    <ProgressiveImage
+                                                        cover
+                                                        variantWidth={320}
                                                         src={getFileDownloadUrl(currentWorkspaceId!, file.name)}
                                                         alt={file.original_name}
-                                                        className="w-full h-full object-cover"
-                                                        loading="lazy"
+                                                        className="w-full h-full"
                                                     />
                                                 ) : isTextFile(file.ext) ? (
                                                     <FileText className="h-16 w-16 text-green-500" />

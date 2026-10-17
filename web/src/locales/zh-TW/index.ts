@@ -567,7 +567,8 @@ export default {
     cancel: "取消",
     collapse: "收合",
     expand: "展開",
-    close: "關閉"
+    close: "關閉",
+    image_pending: "圖片上傳中…"
   },
   files: {
     drag_drop: "拖放檔案到這裡或點擊選擇檔案",

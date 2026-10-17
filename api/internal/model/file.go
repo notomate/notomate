@@ -17,6 +17,10 @@ type File struct {
 	Ext              string
 	OriginalFilename string `json:"original_filename"`
 	Visibility       string
+	// Width and Height are the displayed image dimensions; nil until probed
+	// (or for non-images), 0 when the image couldn't be read.
+	Width  *int
+	Height *int
 	CreatedAt        string
 	CreatedBy        string
 	UpdatedAt        string

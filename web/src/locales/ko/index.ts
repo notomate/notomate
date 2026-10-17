@@ -400,7 +400,8 @@ export default {
     cancel: "취소",
     collapse: "접기",
     expand: "펼치기",
-    close: "닫기"
+    close: "닫기",
+    image_pending: "이미지 업로드 중…"
   },
   files: {
     drag_drop: "여기에 파일을 드래그 앤 드롭하거나 클릭하여 선택",

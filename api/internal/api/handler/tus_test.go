@@ -5,6 +5,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
+	"image"
+	"image/png"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -200,5 +202,44 @@ func TestResumableUploadRejectsNonMember(t *testing.T) {
 	}, nil)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 without workspaceId, got %d", rec.Code)
+	}
+}
+
+func TestResumableUploadRecordsImageDimensions(t *testing.T) {
+	env := setupTusTest(t)
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, 30, 20))); err != nil {
+		t.Fatal(err)
+	}
+	content := buf.Bytes()
+
+	rec := env.do(t, env.member, http.MethodPost, tusBase, map[string]string{
+		"Upload-Length":   strconv.Itoa(len(content)),
+		"Upload-Metadata": tusMeta("workspaceId", "ws1", "filename", "pic.png"),
+	}, nil)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create: status %d body %q", rec.Code, rec.Body.String())
+	}
+	rec = env.do(t, env.member, http.MethodPatch, rec.Header().Get("Location"), map[string]string{
+		"Upload-Offset": "0",
+		"Content-Type":  "application/offset+octet-stream",
+	}, content)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("patch: status %d body %q", rec.Code, rec.Body.String())
+	}
+	if w, h := rec.Header().Get(HeaderFileWidth), rec.Header().Get(HeaderFileHeight); w != "30" || h != "20" {
+		t.Fatalf("expected 30x20 dimension headers, got %qx%q", w, h)
+	}
+
+	file, err := env.h.db.FindFileByID(rec.Header().Get(HeaderFileID))
+	if err != nil {
+		t.Fatalf("find file: %v", err)
+	}
+	if file.Width == nil || file.Height == nil || *file.Width != 30 || *file.Height != 20 {
+		t.Fatalf("expected 30x20 recorded, got %v x %v", file.Width, file.Height)
+	}
+	stored, err := os.ReadFile(filepath.Join(env.storeDir, "ws1", file.Name))
+	if err != nil || !bytes.Equal(stored, content) {
+		t.Fatalf("stored content mismatch (err %v)", err)
 	}
 }

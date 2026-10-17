@@ -567,7 +567,8 @@ export default {
     cancel: "Cancel",
     collapse: "Collapse",
     expand: "Expand",
-    close: "Close"
+    close: "Close",
+    image_pending: "Uploading image…"
   },
   files: {
     drag_drop: "Drag and drop files here or click to select",

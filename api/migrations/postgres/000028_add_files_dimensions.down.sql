@@ -1,0 +1,2 @@
+ALTER TABLE files DROP COLUMN height;
+ALTER TABLE files DROP COLUMN width;

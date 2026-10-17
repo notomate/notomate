@@ -27,6 +27,7 @@ import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/sha
 import { MapMarker, MapRoute, StoredRoute, placesToMarkers, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
 import { CompactBody, CompactFrame, DirectionsSummary, MarkersSummary } from '@/components/editor/extensions/googlemaps/shared/CompactSummary'
 import type { PlaceDetails, TravelMode } from '@/api/googleMaps'
+import ProgressiveImage from "@/components/image/ProgressiveImage"
 
 const InstagramRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
     const containerRef = useRef<HTMLDivElement>(null)
@@ -451,11 +452,11 @@ const CarouselNodeRenderer: React.FC<{ items: Array<{ src: string; name: string;
                                 {item.type === 'image' ? (
                                     isOverlay ? (
                                         <PhotoView src={item.src}>
-                                            <img src={item.src} alt={item.name} className="w-full h-full object-cover pointer-events-none" />
+                                            <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full pointer-events-none" />
                                         </PhotoView>
                                     ) : (
                                         <PhotoView src={item.src}>
-                                            <img src={item.src} alt={item.name} className="w-full h-full object-cover cursor-zoom-in" />
+                                            <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full cursor-zoom-in" />
                                         </PhotoView>
                                     )
                                 ) : (
@@ -487,7 +488,7 @@ const CarouselNodeRenderer: React.FC<{ items: Array<{ src: string; name: string;
                 <div key={`${item.src}-${idx}`} className="relative flex-shrink-0 aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800" style={{ width: 'calc((100% - 1rem) / 3)' }}>
                     {item.type === 'image' ? (
                         <PhotoView src={item.src}>
-                            <img src={item.src} alt={item.name} className="w-full h-full object-cover cursor-zoom-in" />
+                            <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full cursor-zoom-in" />
                         </PhotoView>
                     ) : (
                         <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
@@ -673,9 +674,20 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                     <hr />
                 </div>
             case 'image':
+                if (!node.attrs?.src) {
+                    // Still uploading in the author's editor.
+                    return <div key={key} className="h-40 w-full rounded bg-gray-100 animate-pulse dark:bg-neutral-800" />
+                }
                 return <div className="" key={key}>
                     <PhotoView src={node.attrs?.src}>
-                        <img className="rounded overflow-hidden max-w-full max-h-[620px]" alt={node.attrs?.alt || ''} src={node.attrs?.src} />
+                        <ProgressiveImage
+                            src={node.attrs?.src}
+                            width={node.attrs?.width}
+                            height={node.attrs?.height}
+                            maxHeight={620}
+                            alt={node.attrs?.alt || ''}
+                            className="rounded cursor-zoom-in"
+                        />
                     </PhotoView>
                 </div>
             case 'attachment':

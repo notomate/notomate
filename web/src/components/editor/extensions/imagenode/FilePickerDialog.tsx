@@ -2,6 +2,7 @@ import { FC } from "react"
 import { Image as ImageIcon } from "lucide-react"
 import { FileInfo } from "@/api/file"
 import MediaPickerDialog from "../shared/MediaPickerDialog"
+import ProgressiveImage from "@/components/image/ProgressiveImage"
 
 interface FilePickerDialogProps {
     open: boolean
@@ -31,10 +32,12 @@ const FilePickerDialog: FC<FilePickerDialogProps> = (props) => {
                     onClick={() => onSelectFile(file)}
                     className="relative block w-full aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-colors group"
                 >
-                    <img
+                    <ProgressiveImage
+                        cover
+                        variantWidth={320}
                         src={getFileUrl(file.name)}
                         alt={file.original_name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="text-white text-sm text-center px-2 truncate">
