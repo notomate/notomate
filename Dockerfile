@@ -6,8 +6,9 @@ WORKDIR /app/web
 ARG VITE_APP_VERSION=dev
 ENV VITE_APP_VERSION=${VITE_APP_VERSION}
 
-COPY web/package.json ./
-RUN npm install
+# Install from the lockfile so builds don't pick up newly published versions.
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
 
 COPY web/ .
 RUN npm run build
