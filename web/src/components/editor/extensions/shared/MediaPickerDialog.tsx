@@ -1,9 +1,10 @@
-import { FC, ReactNode, useState, useEffect, useCallback, useRef } from "react"
+import { FC, ReactNode, useState, useEffect, useRef } from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import { Search, Loader2, Upload } from "lucide-react"
 import { FileInfo } from "@/api/file"
 import { PendingUploads } from "@/components/upload/PendingUploads"
 import useUploadComplete from "@/hooks/use-upload-complete"
+import usePagedFiles from "@/hooks/use-paged-files"
 
 export interface MediaPickerDialogProps {
     open: boolean
@@ -34,8 +35,6 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
     emptyState,
     renderFile,
 }) => {
-    const [files, setFiles] = useState<FileInfo[]>([])
-    const [isLoading, setIsLoading] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const [debouncedQuery, setDebouncedQuery] = useState("")
     const inputRef = useRef<HTMLInputElement>(null)
@@ -47,25 +46,9 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
         return () => clearTimeout(timer)
     }, [searchQuery])
 
-    const loadFiles = useCallback(async () => {
-        if (!workspaceId) return
-        setIsLoading(true)
-        try {
-            const result = await listFiles(workspaceId, debouncedQuery, extensions, 50, 1)
-            setFiles(result.files || [])
-        } catch (error) {
-            console.error('Failed to load files:', error)
-            setFiles([])
-        } finally {
-            setIsLoading(false)
-        }
-    }, [workspaceId, debouncedQuery, extensions, listFiles])
-
-    useEffect(() => {
-        if (open) {
-            loadFiles()
-        }
-    }, [open, loadFiles])
+    const { files, isLoading, isLoadingMore, refresh, scrollRef, sentinelRef } = usePagedFiles({
+        open, workspaceId, listFiles, query: debouncedQuery, ext: extensions,
+    })
 
     const handleSelectFile = (file: FileInfo) => {
         onSelect(file)
@@ -81,7 +64,7 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
         uploadedFiles.forEach(f => { upload(f).catch(() => {}) })
     }
 
-    useUploadComplete(workspaceId, open, loadFiles)
+    useUploadComplete(workspaceId, open, refresh)
 
     const getFileUrl = (fileName: string) => {
         return `/api/v1/workspaces/${workspaceId}/files/${fileName}`
@@ -91,12 +74,12 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 z-modal-backdrop" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-4 sm:p-6 w-[90vw] max-w-[800px] z-modal max-h-[85vh] overflow-y-auto">
-                    <Dialog.Title className="text-xl font-semibold mb-4">
+                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-4 sm:p-6 w-[90vw] max-w-[800px] z-modal h-[85vh] max-h-[760px] flex flex-col">
+                    <Dialog.Title className="shrink-0 text-xl font-semibold mb-4">
                         {title}
                     </Dialog.Title>
 
-                    <div className="mb-4 flex gap-2">
+                    <div className="mb-4 flex shrink-0 gap-2">
                         <div className="relative min-w-0 flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                             <input
@@ -118,7 +101,7 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
                             </button>
                         )}
                     </div>
-                    <PendingUploads workspaceId={workspaceId} className="mb-4 divide-y divide-gray-100 dark:divide-neutral-700" />
+                    <PendingUploads workspaceId={workspaceId} className="mb-4 max-h-40 shrink-0 overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-700" />
                     <input
                         ref={inputRef}
                         type="file"
@@ -129,23 +112,37 @@ const MediaPickerDialog: FC<MediaPickerDialogProps> = ({
                         onChange={handleUpload}
                     />
 
-                    {isLoading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <Loader2 className="animate-spin" size={32} />
-                        </div>
-                    ) : files.length > 0 ? (
-                        <div className={gridClassName}>
-                            {files.map((file) => (
-                                <div key={file.id} className="min-w-0">
-                                    {renderFile(file, handleSelectFile, getFileUrl)}
+                    {/* Spinner, empty state and list share this box, so the
+                        panel keeps its height while files load. */}
+                    <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+                        {isLoading ? (
+                            <div className="flex h-full items-center justify-center">
+                                <Loader2 className="animate-spin" size={32} />
+                            </div>
+                        ) : files.length > 0 ? (
+                            <>
+                                <div className={gridClassName}>
+                                    {files.map((file) => (
+                                        <div key={file.id} className="min-w-0">
+                                            {renderFile(file, handleSelectFile, getFileUrl)}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        emptyState
-                    )}
+                                <div ref={sentinelRef} className="h-px" />
+                                {isLoadingMore && (
+                                    <div className="flex justify-center py-4">
+                                        <Loader2 className="animate-spin text-muted-foreground" size={20} />
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="flex h-full items-center justify-center">
+                                {emptyState}
+                            </div>
+                        )}
+                    </div>
 
-                    <div className="mt-6 flex justify-end">
+                    <div className="mt-6 flex shrink-0 justify-end">
                         <Dialog.Close asChild>
                             <button className="shrink-0 whitespace-nowrap px-4 py-2 border dark:border-neutral-600 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
                                 Close

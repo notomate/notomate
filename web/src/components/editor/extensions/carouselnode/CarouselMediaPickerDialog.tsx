@@ -1,10 +1,11 @@
-import { FC, useState, useEffect, useCallback, useRef } from "react"
+import { FC, useState, useEffect, useRef } from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import { Search, Loader2, Image as ImageIcon, Video as VideoIcon, Check, Upload, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { FileInfo } from "@/api/file"
 import { PendingUploads } from "@/components/upload/PendingUploads"
 import useUploadComplete from "@/hooks/use-upload-complete"
+import usePagedFiles from "@/hooks/use-paged-files"
 import { CarouselItem } from "./CarouselNode"
 import ProgressiveImage from "@/components/image/ProgressiveImage"
 
@@ -27,15 +28,17 @@ const getMediaType = (filename: string): 'image' | 'video' | null => {
     return null
 }
 
+const isMediaFile = (file: FileInfo) => getMediaType(file.name) !== null
+
 const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
     open, onOpenChange, workspaceId, listFiles, onAdd, onUpload,
 }) => {
     const { t } = useTranslation()
-    const [files, setFiles] = useState<FileInfo[]>([])
-    const [isLoading, setIsLoading] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const [debouncedQuery, setDebouncedQuery] = useState("")
-    const [selected, setSelected] = useState<Set<string>>(new Set())
+    // Keyed by file id; keeps the FileInfo so picks survive a search or filter
+    // change that drops them from the current list.
+    const [selected, setSelected] = useState<Map<string, FileInfo>>(new Map())
     const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all')
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -44,43 +47,29 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
         return () => clearTimeout(timer)
     }, [searchQuery])
 
-    const loadFiles = useCallback(async () => {
-        if (!workspaceId) return
-        setIsLoading(true)
-        try {
-            const exts =
-                filter === 'image' ? '.jpg,.jpeg,.png,.gif,.webp,.svg'
-                : filter === 'video' ? '.mp4,.webm,.ogg,.mov,.avi,.mkv'
-                : '.jpg,.jpeg,.png,.gif,.webp,.svg,.mp4,.webm,.ogg,.mov,.avi,.mkv'
-            const result = await listFiles(workspaceId, debouncedQuery, exts, 100, 1)
-            setFiles((result.files || []).filter(f => getMediaType(f.name) !== null))
-        } catch {
-            setFiles([])
-        } finally {
-            setIsLoading(false)
-        }
-    }, [workspaceId, debouncedQuery, filter, listFiles])
+    const exts =
+        filter === 'image' ? '.jpg,.jpeg,.png,.gif,.webp,.svg'
+        : filter === 'video' ? '.mp4,.webm,.ogg,.mov,.avi,.mkv'
+        : '.jpg,.jpeg,.png,.gif,.webp,.svg,.mp4,.webm,.ogg,.mov,.avi,.mkv'
+    const { files, isLoading, isLoadingMore, refresh, scrollRef, sentinelRef } = usePagedFiles({
+        open, workspaceId, listFiles, query: debouncedQuery, ext: exts, include: isMediaFile,
+    })
 
     useEffect(() => {
-        if (open) loadFiles()
-    }, [open, loadFiles])
-
-    useEffect(() => {
-        if (!open) setSelected(new Set())
+        if (!open) setSelected(new Map())
     }, [open])
 
-    const toggleSelect = (fileId: string) => {
+    const toggleSelect = (file: FileInfo) => {
         setSelected(prev => {
-            const next = new Set(prev)
-            if (next.has(fileId)) next.delete(fileId)
-            else next.add(fileId)
+            const next = new Map(prev)
+            if (next.has(file.id)) next.delete(file.id)
+            else next.set(file.id, file)
             return next
         })
     }
 
     const handleAdd = () => {
-        const items = files
-            .filter(f => selected.has(f.id))
+        const items = Array.from(selected.values())
             .map(f => ({
                 src: `/api/v1/workspaces/${workspaceId}/files/${f.name}`,
                 name: f.original_name,
@@ -99,7 +88,7 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
         uploadedFiles.forEach(f => { onUpload(f).catch(() => {}) })
     }
 
-    useUploadComplete(workspaceId, open, loadFiles)
+    useUploadComplete(workspaceId, open, refresh)
 
     const getFileUrl = (fileName: string) => `/api/v1/workspaces/${workspaceId}/files/${fileName}`
 
@@ -108,7 +97,7 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 bg-black/50 z-modal-backdrop" />
                 <Dialog.Content
-                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-4 sm:p-6 w-[90vw] max-w-[800px] z-modal max-h-[85vh] flex flex-col"
+                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-xl p-4 sm:p-6 w-[90vw] max-w-[800px] z-modal h-[85vh] max-h-[760px] flex flex-col"
                     onPointerDownOutside={(e) => e.preventDefault()}
                 >
                     <div className="flex shrink-0 items-center justify-between gap-2 mb-4">
@@ -153,11 +142,11 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
                         )}
                     </div>
 
-                    <PendingUploads workspaceId={workspaceId} className="mb-4 divide-y divide-gray-100 dark:divide-neutral-700" />
+                    <PendingUploads workspaceId={workspaceId} className="mb-4 max-h-40 shrink-0 overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-700" />
 
-                    <div className="flex-1 overflow-y-auto min-h-0">
+                    <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
                         {isLoading ? (
-                            <div className="flex items-center justify-center py-12">
+                            <div className="flex h-full items-center justify-center">
                                 <Loader2 className="animate-spin" size={32} />
                             </div>
                         ) : files.length > 0 ? (
@@ -169,7 +158,7 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
                                         <button
                                             key={file.id}
                                             type="button"
-                                            onClick={() => toggleSelect(file.id)}
+                                            onClick={() => toggleSelect(file)}
                                             className={`relative rounded-lg overflow-hidden border-2 transition-colors group ${isSelected ? 'border-blue-500' : 'border-transparent hover:border-blue-300'}`}
                                         >
                                             {type === 'image' ? (
@@ -201,9 +190,15 @@ const CarouselMediaPickerDialog: FC<CarouselMediaPickerDialogProps> = ({
                                         </button>
                                     )
                                 })}
+                                <div ref={sentinelRef} className="col-span-full h-px" />
+                                {isLoadingMore && (
+                                    <div className="col-span-full flex justify-center py-4">
+                                        <Loader2 className="animate-spin text-muted-foreground" size={20} />
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                            <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
                                 <ImageIcon size={48} className="mb-4" />
                                 <p>{t('editor.carousel.noMediaFiles')}</p>
                             </div>
