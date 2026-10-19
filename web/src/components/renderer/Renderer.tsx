@@ -24,7 +24,7 @@ import { MapInlinePreview, CalendarInlinePreview, KanbanInlinePreview } from '@/
 import { StaticRouteMap, RouteSummary } from '@/components/editor/extensions/googlemaps/shared/MapParts'
 import { useRouteChoice } from '@/components/editor/extensions/googlemaps/shared/useRouteChoice'
 import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/shared/GoogleMapSnapshot'
-import { MapMarker, MapRoute, StoredRoute, placesToMarkers, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
+import { MapMarker, StoredRoute, placesToMarkers, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
 import { CompactBody, CompactFrame, DirectionsSummary, MarkersSummary } from '@/components/editor/extensions/googlemaps/shared/CompactSummary'
 import type { PlaceDetails, TravelMode } from '@/api/googleMaps'
 import ProgressiveImage from "@/components/image/ProgressiveImage"
@@ -308,7 +308,7 @@ const LocationRenderer: React.FC<{ lat: number; lng: number; name?: string; zoom
 // ── Google Maps renderers ─────────────────────────────────────────────────────
 // Read-only pages draw stored snapshots on Leaflet so the workspace's Google
 // key is never needed (or exposed) here.
-const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route: MapRoute | null; workspaceId?: string }> = ({ title, markers, route, workspaceId: workspaceIdProp }) => {
+const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; workspaceId?: string }> = ({ title, markers, workspaceId: workspaceIdProp }) => {
     const { t } = useTranslation()
     const { workspaceId: workspaceIdParam } = useParams<{ workspaceId?: string }>()
     const workspaceId = workspaceIdProp || workspaceIdParam
@@ -317,7 +317,7 @@ const GoogleMapRenderer: React.FC<{ title?: string; markers: MapMarker[]; route:
     return (
         <CompactFrame icon={<Map size={15} />} title={title || t('editor.GoogleMapNode')} expanded={expanded} onToggle={() => setExpanded(v => !v)} framed={expanded}>
             {expanded
-                ? <GoogleMapSnapshot title={title} markers={markers} route={route} workspaceId={workspaceId} embedded />
+                ? <GoogleMapSnapshot title={title} markers={markers} workspaceId={workspaceId} embedded />
                 : (
                     <CompactBody onExpand={() => setExpanded(true)}>
                         <MarkersSummary markers={markers} emptyText={t('googleMaps.noMarkers')} />
@@ -340,7 +340,7 @@ const GooglePlacesRenderer: React.FC<{ query?: string; places: PlaceDetails[]; w
     return (
         <CompactFrame icon={<Store size={15} />} title={title} expanded={expanded} onToggle={() => setExpanded(v => !v)} framed={expanded}>
             {expanded
-                ? <GoogleMapSnapshot title={title} markers={markers} route={null} workspaceId={workspaceId} embedded hideList defaultOpen />
+                ? <GoogleMapSnapshot title={title} markers={markers} workspaceId={workspaceId} embedded hideList defaultOpen />
                 : (
                     <CompactBody onExpand={() => setExpanded(true)}>
                         <MarkersSummary markers={markers} emptyText={t('googleMaps.noPlaces')} />
@@ -733,7 +733,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 return <LocationRenderer key={key} lat={lat} lng={lng} name={node.attrs?.name} zoom={node.attrs?.zoom ?? 15} />
             }
             case 'googleMapNode':
-                return <div key={key} className="py-1"><GoogleMapRenderer title={node.attrs?.title} markers={node.attrs?.markers ?? []} route={node.attrs?.route ?? null} workspaceId={workspaceIdProp} /></div>
+                return <div key={key} className="py-1"><GoogleMapRenderer title={node.attrs?.title} markers={node.attrs?.markers ?? []} workspaceId={workspaceIdProp} /></div>
             case 'googlePlacesNode': {
                 const places: PlaceDetails[] = node.attrs?.places ?? []
                 if (!places.length) return null

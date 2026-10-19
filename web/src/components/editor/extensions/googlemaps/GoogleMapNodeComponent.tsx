@@ -1,50 +1,41 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Map as GoogleMap, MapMouseEvent, MapCameraChangedEvent, Polyline } from "@vis.gl/react-google-maps"
-import { ChevronDown, ChevronUp, Loader2, Map as MapIcon, MapPinPlus, MapPinX, Palette, Route as RouteIcon, Trash2, X } from "lucide-react"
+import { Map as GoogleMap, MapMouseEvent, MapCameraChangedEvent } from "@vis.gl/react-google-maps"
+import { ChevronDown, ChevronUp, Map as MapIcon, MapPinPlus, MapPinX, Palette, Trash2 } from "lucide-react"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
-import { PlaceDetails, PlaceSummary, TravelMode, computeGoogleRoutes, googleMapsErrorMessage, toLatLng } from "@/api/googleMaps"
+import { PlaceDetails, PlaceSummary, toLatLng } from "@/api/googleMaps"
 import { GoogleMapGate, GoogleMapEnv } from "./shared/GoogleMapGate"
 import { PlaceSearchBox } from "./shared/PlaceSearchBox"
 import { PlaceDetailPanel } from "./shared/PlaceDetailView"
-import { LabeledMarker, MarkerIcon, PanTo, RouteSummary } from "./shared/MapParts"
+import { LabeledMarker, MarkerIcon, PanTo } from "./shared/MapParts"
 import { useNodeMove } from "./shared/useNodeMove"
-import { DEFAULT_CENTER, MARKER_COLORS, MapMarker, MapRoute, TRAVEL_MODES, chooseRoute, newId, placeThumbnailUrl, toStoredRoutes, trimPlace } from "./shared/types"
+import { DEFAULT_CENTER, MARKER_COLORS, MapMarker, newId, placeThumbnailUrl, trimPlace } from "./shared/types"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
 import { CompactBody, ExpandToggle, MarkersSummary, frameClass } from "./shared/CompactSummary"
-
-type Tab = "markers" | "route"
-
-const emptyRoute: MapRoute = { markerIds: [], travelMode: "DRIVE", optimize: false, result: null }
 
 interface EditorProps {
   env: GoogleMapEnv
   workspaceId: string
   editable: boolean
   markers: MapMarker[]
-  route: MapRoute | null
   center: { lat: number; lng: number }
   zoom: number
   updateAttributes: NodeViewProps["updateAttributes"]
 }
 
-const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, zoom, updateAttributes }: EditorProps) => {
-  const { t, i18n } = useTranslation()
-  const [tab, setTab] = useState<Tab>("markers")
+const GoogleMapEditor = ({ env, workspaceId, editable, markers, center, zoom, updateAttributes }: EditorProps) => {
+  const { t } = useTranslation()
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null)
   const [previewLocation, setPreviewLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [panTarget, setPanTarget] = useState<{ lat: number; lng: number } | null>(null)
   const [panTrigger, setPanTrigger] = useState(0)
   const [liveCenter, setLiveCenter] = useState(center)
-  const [routeBusy, setRouteBusy] = useState(false)
-  const [routeError, setRouteError] = useState("")
   const cameraDebounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => () => { if (cameraDebounce.current) clearTimeout(cameraDebounce.current) }, [])
 
-  const r = route ?? emptyRoute
   const markerById = useMemo(() => new Map(markers.map(m => [m.id, m])), [markers])
 
   const panTo = (loc: { lat: number; lng: number }) => {
@@ -132,10 +123,7 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
   }
 
   const removeMarker = (id: string) => {
-    const nextRoute = r.markerIds.includes(id)
-      ? { ...r, markerIds: r.markerIds.filter(m => m !== id), result: null, alternatives: null }
-      : route
-    updateAttributes({ markers: markers.filter(m => m.id !== id), route: nextRoute })
+    updateAttributes({ markers: markers.filter(m => m.id !== id) })
     if (selectedMarkerId === id) setSelectedMarkerId(null)
   }
 
@@ -143,71 +131,8 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
     updateAttributes({ markers: markers.map(m => (m.id === id ? { ...m, ...patch } : m)) })
   }
 
-  const updateRoute = (patch: Partial<MapRoute>) => {
-    updateAttributes({ route: { ...r, ...patch, result: null, alternatives: null } })
-    setRouteError("")
-  }
-
-  const addToRoute = (place: PlaceDetails) => {
-    const existing = markerForPlace(place.id)
-    const marker = existing ?? buildMarker(place)
-    if (!marker) return
-    // One update for both, so the new marker and the route stop land together.
-    updateAttributes({
-      markers: existing ? markers : [...markers, marker],
-      route: r.markerIds.includes(marker.id) ? r : { ...r, markerIds: [...r.markerIds, marker.id], result: null, alternatives: null },
-    })
-    setTab("route")
-    setSelectedPlaceId(null)
-  }
-
-  const moveStop = (index: number, delta: number) => {
-    const ids = [...r.markerIds]
-    const target = index + delta
-    if (target < 0 || target >= ids.length) return
-    ;[ids[index], ids[target]] = [ids[target], ids[index]]
-    updateRoute({ markerIds: ids })
-  }
-
-  const computeRoute = async () => {
-    const stops = r.markerIds.map(id => markerById.get(id)).filter((m): m is MapMarker => !!m)
-    if (stops.length < 2) return
-    setRouteBusy(true)
-    setRouteError("")
-    try {
-      const routes = await computeGoogleRoutes(workspaceId, {
-        waypoints: stops.map(m => (m.placeId ? { placeId: m.placeId } : { lat: m.lat, lng: m.lng })),
-        travelMode: r.travelMode,
-        optimize: r.optimize,
-        languageCode: i18n.language,
-      })
-      let markerIds = stops.map(m => m.id)
-      const order = routes[0].optimizedIntermediateWaypointIndex
-      if (r.optimize && order?.length && order[0] !== -1) {
-        const middle = markerIds.slice(1, -1)
-        markerIds = [markerIds[0], ...order.map(i => middle[i]), markerIds[markerIds.length - 1]]
-      }
-      updateAttributes({ route: { ...r, markerIds, ...toStoredRoutes(routes) } })
-    } catch (e) {
-      setRouteError(googleMapsErrorMessage(e))
-    } finally {
-      setRouteBusy(false)
-    }
-  }
-
-  const routeStops = r.markerIds.map(id => markerById.get(id)).filter((m): m is MapMarker => !!m)
   const selectedMarker = selectedMarkerId ? markerById.get(selectedMarkerId) : undefined
   const previewIsMarker = selectedPlaceId ? !!markerForPlace(selectedPlaceId) : true
-
-  const tabButton = (value: Tab, label: string) => (
-    <button
-      type="button"
-      className={`flex-1 px-3 py-1.5 text-xs font-medium border-b-2 ${tab === value ? "border-blue-600 text-blue-600" : "border-transparent text-muted-foreground"}`}
-      onClick={() => setTab(value)}
-    >
-      {label}
-    </button>
-  )
 
   return (
     <div className="flex flex-col md:flex-row" style={{ minHeight: 440 }}>
@@ -244,9 +169,6 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
           {previewLocation && !previewIsMarker && (
             <LabeledMarker position={previewLocation} label="?" color="#5f6368" active />
           )}
-          {r.result?.encodedPolyline && (
-            <Polyline encodedPath={r.result.encodedPolyline} strokeColor="#4285f4" strokeOpacity={0.85} strokeWeight={5} />
-          )}
           <PanTo target={panTarget} trigger={panTrigger} />
         </GoogleMap>
       </div>
@@ -274,153 +196,72 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, route, center, z
                       <MapPinPlus size={13} />{t("googleMaps.addMarker")}
                     </button>
                   )}
-                  <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded border dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800" onClick={() => addToRoute(place)}>
-                    <RouteIcon size={13} />{t("googleMaps.addToRoute")}
-                  </button>
                 </>
               )}
             />
           ) : (
             <>
-              <div className="flex border-b dark:border-neutral-700">
-                {tabButton("markers", `${t("googleMaps.markers")} (${markers.length})`)}
-                {tabButton("route", t("googleMaps.route"))}
+              <div className="px-3 py-1.5 border-b dark:border-neutral-700 text-xs font-semibold text-muted-foreground">
+                {t("googleMaps.markers")} ({markers.length})
               </div>
-
-              {tab === "markers" && (
-                <div className="flex flex-col">
-                  {markers.length === 0 && (
-                    <p className="p-3 text-xs text-muted-foreground">{t("googleMaps.noMarkers")}</p>
-                  )}
-                  {markers.map((m, i) => (
-                    <div key={m.id} className={`px-3 py-2 border-b dark:border-neutral-800 ${m.id === selectedMarkerId ? "bg-blue-50 dark:bg-blue-950/30" : ""}`}>
-                      <div className="flex items-start gap-2">
-                        <button type="button" className="shrink-0 mt-0.5" onClick={() => { setSelectedMarkerId(m.id); panTo(m) }}>
-                          <MarkerIcon label={String(i + 1)} color={m.color ?? MARKER_COLORS[0]} imageUrl={placeThumbnailUrl(workspaceId, m.details)} size={20} imageSize={36} />
+              <div className="flex flex-col">
+                {markers.length === 0 && (
+                  <p className="p-3 text-xs text-muted-foreground">{t("googleMaps.noMarkers")}</p>
+                )}
+                {markers.map((m, i) => (
+                  <div key={m.id} className={`px-3 py-2 border-b dark:border-neutral-800 ${m.id === selectedMarkerId ? "bg-blue-50 dark:bg-blue-950/30" : ""}`}>
+                    <div className="flex items-start gap-2">
+                      <button type="button" className="shrink-0 mt-0.5" onClick={() => { setSelectedMarkerId(m.id); panTo(m) }}>
+                        <MarkerIcon label={String(i + 1)} color={m.color ?? MARKER_COLORS[0]} imageUrl={placeThumbnailUrl(workspaceId, m.details)} size={20} imageSize={36} />
+                      </button>
+                      <button type="button" className="flex-1 min-w-0 text-left" onClick={() => { setSelectedMarkerId(m.id); panTo(m) }}>
+                        <div className="text-sm font-medium truncate">{m.name}</div>
+                        {m.address && <div className="text-xs text-muted-foreground truncate">{m.address}</div>}
+                      </button>
+                      {m.placeId && (
+                        <button type="button" className="text-xs text-blue-600 hover:underline shrink-0" onClick={() => setSelectedPlaceId(m.placeId!)}>
+                          {t("googleMaps.details")}
                         </button>
-                        <button type="button" className="flex-1 min-w-0 text-left" onClick={() => { setSelectedMarkerId(m.id); panTo(m) }}>
-                          <div className="text-sm font-medium truncate">{m.name}</div>
-                          {m.address && <div className="text-xs text-muted-foreground truncate">{m.address}</div>}
-                        </button>
-                        {m.placeId && (
-                          <button type="button" className="text-xs text-blue-600 hover:underline shrink-0" onClick={() => setSelectedPlaceId(m.placeId!)}>
-                            {t("googleMaps.details")}
-                          </button>
-                        )}
-                        {editable && (
-                          <>
-                            <button
-                              type="button"
-                              className="p-0.5 text-muted-foreground hover:text-gray-700 shrink-0"
-                              title={t("googleMaps.changeColor")}
-                              onClick={() => updateMarker(m.id, { color: MARKER_COLORS[(MARKER_COLORS.indexOf(m.color ?? "") + 1) % MARKER_COLORS.length] })}
-                            >
-                              <Palette size={13} />
-                            </button>
-                            <button type="button" className="p-0.5 text-muted-foreground hover:text-red-500 shrink-0" onClick={() => removeMarker(m.id)} aria-label="remove marker">
-                              <Trash2 size={13} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                      {m.id === selectedMarker?.id && editable ? (
+                      )}
+                      {editable && (
                         <>
-                          <input
-                            className="mt-1.5 w-full px-2 py-1 text-xs rounded border dark:border-neutral-600 bg-transparent"
-                            defaultValue={m.name}
-                            placeholder={t("googleMaps.markerName")}
-                            onBlur={e => e.target.value !== m.name && updateMarker(m.id, { name: e.target.value })}
-                          />
-                          <textarea
-                            className="mt-1 w-full px-2 py-1 text-xs rounded border dark:border-neutral-600 bg-transparent"
-                            rows={2}
-                            defaultValue={m.note ?? ""}
-                            placeholder={t("googleMaps.markerNote")}
-                            onBlur={e => e.target.value !== (m.note ?? "") && updateMarker(m.id, { note: e.target.value })}
-                          />
+                          <button
+                            type="button"
+                            className="p-0.5 text-muted-foreground hover:text-gray-700 shrink-0"
+                            title={t("googleMaps.changeColor")}
+                            onClick={() => updateMarker(m.id, { color: MARKER_COLORS[(MARKER_COLORS.indexOf(m.color ?? "") + 1) % MARKER_COLORS.length] })}
+                          >
+                            <Palette size={13} />
+                          </button>
+                          <button type="button" className="p-0.5 text-muted-foreground hover:text-red-500 shrink-0" onClick={() => removeMarker(m.id)} aria-label="remove marker">
+                            <Trash2 size={13} />
+                          </button>
                         </>
-                      ) : (
-                        m.note && <p className="mt-1 ml-7 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-line">{m.note}</p>
                       )}
                     </div>
-                  ))}
-                  {editable && <p className="p-3 text-[11px] text-muted-foreground">{t("googleMaps.markersHint")}</p>}
-                </div>
-              )}
-
-              {tab === "route" && (
-                <div className="flex flex-col gap-2 p-3">
-                  {editable && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <select
-                        className="px-2 py-1 text-xs rounded border dark:border-neutral-600 bg-transparent dark:bg-neutral-900"
-                        value={r.travelMode}
-                        onChange={e => updateRoute({ travelMode: e.target.value as TravelMode })}
-                      >
-                        {TRAVEL_MODES.map(mode => <option key={mode} value={mode}>{t(`googleMaps.travelMode.${mode}`)}</option>)}
-                      </select>
-                      <label className="inline-flex items-center gap-1 text-xs">
-                        <input type="checkbox" checked={r.optimize} disabled={r.travelMode === "TRANSIT"} onChange={e => updateRoute({ optimize: e.target.checked })} />
-                        {t("googleMaps.optimizeOrder")}
-                      </label>
-                    </div>
-                  )}
-
-                  {routeStops.length === 0 && <p className="text-xs text-muted-foreground">{t("googleMaps.routeEmpty")}</p>}
-                  <ol className="list-none flex flex-col gap-1">
-                    {routeStops.map((m, i) => (
-                      <li key={m.id} className="flex items-center gap-2 text-sm">
-                        <MarkerIcon label={String(markers.indexOf(m) + 1)} color={m.color ?? MARKER_COLORS[0]} imageUrl={placeThumbnailUrl(workspaceId, m.details)} size={20} imageSize={28} />
-                        <span className="flex-1 truncate">{m.name}</span>
-                        {editable && (
-                          <>
-                            <button type="button" className="p-0.5 text-muted-foreground disabled:opacity-30" disabled={i === 0} onClick={() => moveStop(i, -1)} aria-label="move up"><ChevronUp size={13} /></button>
-                            <button type="button" className="p-0.5 text-muted-foreground disabled:opacity-30" disabled={i === routeStops.length - 1} onClick={() => moveStop(i, 1)} aria-label="move down"><ChevronDown size={13} /></button>
-                            <button type="button" className="p-0.5 text-muted-foreground hover:text-red-500" onClick={() => updateRoute({ markerIds: r.markerIds.filter(id => id !== m.id) })} aria-label="remove stop"><X size={13} /></button>
-                          </>
-                        )}
-                      </li>
-                    ))}
-                  </ol>
-
-                  {editable && markers.some(m => !r.markerIds.includes(m.id)) && (
-                    <select
-                      className="px-2 py-1 text-xs rounded border dark:border-neutral-600 bg-transparent dark:bg-neutral-900"
-                      value=""
-                      onChange={e => e.target.value && updateRoute({ markerIds: [...r.markerIds, e.target.value] })}
-                    >
-                      <option value="">{t("googleMaps.addStop")}</option>
-                      {markers.filter(m => !r.markerIds.includes(m.id)).map(m => (
-                        <option key={m.id} value={m.id}>{markers.indexOf(m) + 1}. {m.name}</option>
-                      ))}
-                    </select>
-                  )}
-
-                  {r.travelMode === "TRANSIT" && routeStops.length > 2 && (
-                    <p className="text-xs text-amber-600">{t("googleMaps.transitNoStops")}</p>
-                  )}
-                  {editable && (
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
-                      disabled={routeBusy || routeStops.length < 2}
-                      onClick={computeRoute}
-                    >
-                      {routeBusy ? <Loader2 size={14} className="animate-spin" /> : <RouteIcon size={14} />}
-                      {t("googleMaps.getDirections")}
-                    </button>
-                  )}
-                  {routeError && <p className="text-xs text-red-500">{routeError}</p>}
-                  {r.result && (
-                    <RouteSummary
-                      route={r.result}
-                      stopNames={routeStops.map(m => m.name)}
-                      alternatives={r.alternatives}
-                      onSelect={chosen => updateAttributes({ route: { ...r, ...chooseRoute(r.result!, r.alternatives ?? [], chosen) } })}
-                    />
-                  )}
-                </div>
-              )}
+                    {m.id === selectedMarker?.id && editable ? (
+                      <>
+                        <input
+                          className="mt-1.5 w-full px-2 py-1 text-xs rounded border dark:border-neutral-600 bg-transparent"
+                          defaultValue={m.name}
+                          placeholder={t("googleMaps.markerName")}
+                          onBlur={e => e.target.value !== m.name && updateMarker(m.id, { name: e.target.value })}
+                        />
+                        <textarea
+                          className="mt-1 w-full px-2 py-1 text-xs rounded border dark:border-neutral-600 bg-transparent"
+                          rows={2}
+                          defaultValue={m.note ?? ""}
+                          placeholder={t("googleMaps.markerNote")}
+                          onBlur={e => e.target.value !== (m.note ?? "") && updateMarker(m.id, { note: e.target.value })}
+                        />
+                      </>
+                    ) : (
+                      m.note && <p className="mt-1 ml-7 text-xs text-gray-700 dark:text-gray-300 whitespace-pre-line">{m.note}</p>
+                    )}
+                  </div>
+                ))}
+                {editable && <p className="p-3 text-[11px] text-muted-foreground">{t("googleMaps.markersHint")}</p>}
+              </div>
             </>
           )}
         </div>
@@ -433,7 +274,6 @@ const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttribute
   const { t } = useTranslation()
   const workspaceId: string = extension.options.workspaceId
   const markers: MapMarker[] = node.attrs.markers ?? []
-  const route: MapRoute | null = node.attrs.route ?? null
   const editable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
   const { moveUp, moveDown } = useNodeMove({ editor, node, getPos })
@@ -485,7 +325,7 @@ const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttribute
         <GoogleMapGate
           workspaceId={workspaceId}
           fallback={
-            <GoogleMapSnapshot title={node.attrs.title} markers={markers} route={route} workspaceId={workspaceId} embedded />
+            <GoogleMapSnapshot title={node.attrs.title} markers={markers} workspaceId={workspaceId} embedded />
           }
         >
           {env => (
@@ -494,7 +334,6 @@ const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttribute
               workspaceId={workspaceId}
               editable={editable}
               markers={markers}
-              route={route}
               center={initialCamera.center}
               zoom={initialCamera.zoom}
               updateAttributes={updateAttributes}

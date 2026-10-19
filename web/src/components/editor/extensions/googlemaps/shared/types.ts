@@ -61,15 +61,6 @@ export interface StoredRoute {
   computedAt: string
 }
 
-export interface MapRoute {
-  markerIds: string[]
-  travelMode: TravelMode
-  optimize: boolean
-  // The chosen route; the others Google offered are kept in alternatives.
-  result: StoredRoute | null
-  alternatives?: StoredRoute[] | null
-}
-
 export interface Waypoint {
   id: string
   placeId?: string

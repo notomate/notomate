@@ -21,6 +21,8 @@ export const GoogleMapNode = Node.create({
       center: jsonAttribute('center', null),
       zoom: { default: 13 },
       markers: jsonAttribute('markers', []),
+      // Legacy: routes are no longer supported. Kept so older nodes still
+      // load as-is; the value is ignored.
       route: jsonAttribute('route', null),
     }
   },
