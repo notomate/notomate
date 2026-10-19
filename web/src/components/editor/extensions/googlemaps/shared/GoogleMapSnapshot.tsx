@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { ChevronDown, ChevronLeft, List, Map as MapIcon, Maximize2, Minimize2 } from "lucide-react"
-import { MapMarker, MapRoute, placeThumbnailUrl } from "./types"
-import { MarkerIcon, PanTarget, RouteSummary, StaticRouteMap } from "./MapParts"
-import { useRouteChoice } from "./useRouteChoice"
+import { MapMarker, placeThumbnailUrl } from "./types"
+import { MarkerIcon, PanTarget, StaticRouteMap } from "./MapParts"
 import { PlaceDetailView, RatingStars } from "./PlaceDetailView"
 
 interface Props {
   title?: string
   markers: MapMarker[]
-  route: MapRoute | null
   workspaceId?: string
   // Inside a node that already has its own frame and header.
   embedded?: boolean
@@ -60,20 +58,18 @@ const useFullscreen = () => {
 
 const overlayButton = "p-1.5 rounded bg-white/95 dark:bg-neutral-800/95 shadow text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-neutral-700"
 
-// Read-only Google Map node: the stored markers and route drawn on Leaflet
+// Read-only Google Map node: the stored markers drawn on Leaflet
 // (no Google key needed). The map always keeps its full size; place details
 // and the marker list open in a panel floating over it.
-export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded, hideList, defaultOpen }: Props) => {
+export const GoogleMapSnapshot = ({ title, markers, workspaceId, embedded, hideList, defaultOpen }: Props) => {
   const { t } = useTranslation()
   const { ref, isFullscreen, overlay, toggle } = useFullscreen()
   const [panel, setPanel] = useState<Panel>(() => (defaultOpen && markers.length ? { kind: "marker", id: markers[0].id } : null))
   const [panTarget, setPanTarget] = useState<PanTarget | null>(null)
   const [panTrigger, setPanTrigger] = useState(0)
-  const choice = useRouteChoice(route?.result ?? null, route?.alternatives)
 
   if (!markers.length) return null
 
-  const stops = (route?.markerIds ?? []).map(id => markers.find(m => m.id === id)).filter((m): m is MapMarker => !!m)
   const selectedIndex = panel?.kind === "marker" ? markers.findIndex(m => m.id === panel.id) : -1
   const selected = selectedIndex >= 0 ? markers[selectedIndex] : null
 
@@ -106,7 +102,6 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
             lat: m.lat, lng: m.lng, label: String(i + 1), color: m.color, title: m.name,
             imageUrl: placeThumbnailUrl(workspaceId, m.details),
           }))}
-          encodedPolyline={choice.result?.encodedPolyline}
           height="100%"
           framed={false}
           activeIndex={selectedIndex >= 0 ? selectedIndex : null}
@@ -183,11 +178,6 @@ export const GoogleMapSnapshot = ({ title, markers, route, workspaceId, embedded
                   </div>
                 ) : (
                   <>
-                    {choice.result && (
-                      <div className="p-3 border-b dark:border-neutral-700">
-                        <RouteSummary route={choice.result} stopNames={stops.map(m => m.name)} alternatives={choice.alternatives} onSelect={choice.select} />
-                      </div>
-                    )}
                     <ol className="list-none">
                       {markers.map((m, i) => (
                         <li key={m.id}>

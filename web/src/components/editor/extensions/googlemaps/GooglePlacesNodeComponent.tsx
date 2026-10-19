@@ -193,7 +193,7 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
           {error && <p className="px-3 pt-2 text-xs text-red-500">{error}</p>}
           {markers.length === 0
             ? <p className="p-3 text-xs text-muted-foreground">{t("googleMaps.noPlaces")}</p>
-            : <GoogleMapSnapshot title={node.attrs.query} markers={markers} route={null} workspaceId={workspaceId} embedded hideList defaultOpen />}
+            : <GoogleMapSnapshot title={node.attrs.query} markers={markers} workspaceId={workspaceId} embedded hideList defaultOpen />}
         </>
       )}
       {isTouchDevice && editable && <NodeTouchMenu visible={selected} actions={nodeActions} />}
