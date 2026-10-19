@@ -28,6 +28,7 @@ import { MapMarker, MapRoute, StoredRoute, placesToMarkers, Waypoint, waypointCo
 import { CompactBody, CompactFrame, DirectionsSummary, MarkersSummary } from '@/components/editor/extensions/googlemaps/shared/CompactSummary'
 import type { PlaceDetails, TravelMode } from '@/api/googleMaps'
 import ProgressiveImage from "@/components/image/ProgressiveImage"
+import { computeCarouselLayout } from './carouselLayout'
 
 const InstagramRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
     const containerRef = useRef<HTMLDivElement>(null)
@@ -427,75 +428,73 @@ const TagsRenderer: React.FC<{ tags: string[] }> = ({ tags }) => {
 }
 
 const CarouselNodeRenderer: React.FC<{ items: Array<{ src: string; name: string; type: 'image' | 'video' }> }> = ({ items }) => {
-    const [isExpanded, setIsExpanded] = useState(false)
-    const scrollRef = useRef<HTMLDivElement>(null)
+    const [ratios, setRatios] = useState<Record<number, number>>({})
 
     if (!items.length) return null
 
-    const remaining = items.length - 3
-    const showCompact = !isExpanded
-
-    if (showCompact) {
-        const visibleItems = items.slice(0, 3)
-        return (
-            <>
-                <div className="flex gap-2 w-full">
-                    {visibleItems.map((item, idx) => {
-                        const isOverlay = idx === 2 && remaining > 0
-                        return (
-                            <div
-                                key={`${item.src}-${idx}`}
-                                className="relative flex-shrink-0 aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800"
-                                onClick={isOverlay ? () => setIsExpanded(true) : undefined}
-                                style={{ width: 'calc((100% - 1rem) / 3)', ...(isOverlay ? { cursor: 'pointer' } : {}) }}
-                            >
-                                {item.type === 'image' ? (
-                                    isOverlay ? (
-                                        <PhotoView src={item.src}>
-                                            <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full pointer-events-none" />
-                                        </PhotoView>
-                                    ) : (
-                                        <PhotoView src={item.src}>
-                                            <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full cursor-zoom-in" />
-                                        </PhotoView>
-                                    )
-                                ) : (
-                                    <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
-                                )}
-                                {isOverlay && (
-                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                        <span className="text-white text-2xl font-semibold">+{remaining}</span>
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })}
-                </div>
-                {items.slice(3).map((item, idx) =>
-                    item.type === 'image' ? (
-                        <PhotoView key={`hidden-${idx}`} src={item.src}>
-                            <span style={{ display: 'none' }} />
-                        </PhotoView>
-                    ) : null
-                )}
-            </>
-        )
+    const layout = computeCarouselLayout(items.length, ratios)
+    const remaining = items.length - layout.visible
+    const setRatio = (idx: number, width: number, height: number) => {
+        if (!width || !height) return
+        setRatios(prev => (prev[idx] === width / height ? prev : { ...prev, [idx]: width / height }))
     }
 
     return (
-        <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-1 w-full" style={{ scrollbarWidth: 'thin' }}>
-            {items.map((item, idx) => (
-                <div key={`${item.src}-${idx}`} className="relative flex-shrink-0 aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800" style={{ width: 'calc((100% - 1rem) / 3)' }}>
-                    {item.type === 'image' ? (
-                        <PhotoView src={item.src}>
-                            <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full cursor-zoom-in" />
-                        </PhotoView>
-                    ) : (
-                        <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
-                    )}
-                </div>
-            ))}
-        </div>
+        <>
+            <div
+                className="grid gap-1 w-full max-h-[620px] rounded-lg overflow-hidden"
+                style={{
+                    aspectRatio: layout.aspectRatio,
+                    gridTemplateColumns: layout.templateColumns,
+                    gridTemplateRows: layout.templateRows,
+                    gridTemplateAreas: layout.templateAreas,
+                }}
+            >
+                {items.slice(0, layout.visible).map((item, idx) => {
+                    const isOverlay = idx === layout.visible - 1 && remaining > 0
+                    return (
+                        <div
+                            key={`${item.src}-${idx}`}
+                            className="relative min-w-0 min-h-0 overflow-hidden bg-gray-100 dark:bg-neutral-800"
+                            style={{ gridArea: layout.areas[idx] }}
+                        >
+                            {item.type === 'image' ? (
+                                <PhotoView src={item.src}>
+                                    <ProgressiveImage
+                                        cover
+                                        variantWidth={idx === 0 ? 1280 : 640}
+                                        src={item.src}
+                                        alt={item.name}
+                                        className="w-full h-full cursor-zoom-in"
+                                        onLoad={(w, h) => setRatio(idx, w, h)}
+                                    />
+                                </PhotoView>
+                            ) : (
+                                <video
+                                    src={item.src}
+                                    className="w-full h-full object-cover"
+                                    controls
+                                    preload="metadata"
+                                    onLoadedMetadata={e => setRatio(idx, e.currentTarget.videoWidth, e.currentTarget.videoHeight)}
+                                />
+                            )}
+                            {isOverlay && (
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none">
+                                    <span className="text-white text-2xl font-semibold">+{remaining}</span>
+                                </div>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
+            {items.slice(layout.visible).map((item, idx) =>
+                item.type === 'image' ? (
+                    <PhotoView key={`hidden-${idx}`} src={item.src}>
+                        <span style={{ display: 'none' }} />
+                    </PhotoView>
+                ) : null
+            )}
+        </>
     )
 }
 
