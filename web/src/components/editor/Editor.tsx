@@ -16,6 +16,7 @@ import { Attachment } from './extensions/attachment/Attachment'
 import { ImageNode } from './extensions/imagenode/ImageNode'
 import { startPendingImageUpload } from './extensions/imagenode/pendingImages'
 import { PasteHandler } from './extensions/pastehandler/PasteHandler'
+import { ProtectNodes } from './extensions/protectnodes/ProtectNodes'
 import { YoutubeEmbed } from './extensions/youtubeembed/YoutubeEmbed'
 import { ThreadsEmbed } from './extensions/threadsembed/ThreadsEmbed'
 import { InstagramEmbed } from './extensions/instagramembed/InstagramEmbed'
@@ -515,6 +516,7 @@ const Editor: FC<Props> = ({
         suggestion: createMentionSuggestion(() => workspaceMembersRef.current),
       }),
       CommentMark,
+      ProtectNodes,
     ],
     editorProps: {
       attributes: {
