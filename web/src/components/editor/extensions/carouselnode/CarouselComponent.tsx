@@ -1,17 +1,19 @@
 import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Trash2, Plus, X, Images } from "lucide-react"
-import { useRef, useState, useCallback } from "react"
+import { ChevronUp, ChevronDown, Trash2, Plus, X, Images } from "lucide-react"
+import { useState, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import CarouselMediaPickerDialog from "./CarouselMediaPickerDialog"
 import { CarouselItem } from "./CarouselNode"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 import ProgressiveImage from "@/components/image/ProgressiveImage"
+import { computeCarouselLayout } from "@/components/renderer/carouselLayout"
 
 const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes, selected, editor, deleteNode, getPos }) => {
     const { t } = useTranslation()
     const [isPickerOpen, setIsPickerOpen] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
-    const scrollRef = useRef<HTMLDivElement>(null)
+    // Keyed by src so known ratios survive removing or appending items.
+    const [ratios, setRatios] = useState<Record<string, number>>({})
     const items: CarouselItem[] = node.attrs.items || []
     const isEditable = editor.isEditable
     const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
@@ -24,8 +26,10 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
         updateAttributes({ items: items.filter((_, i) => i !== index) })
     }
 
-    const scrollLeft = () => scrollRef.current?.scrollBy({ left: -220, behavior: 'smooth' })
-    const scrollRight = () => scrollRef.current?.scrollBy({ left: 220, behavior: 'smooth' })
+    const setRatio = (src: string, width: number, height: number) => {
+        if (!width || !height) return
+        setRatios(prev => (prev[src] === width / height ? prev : { ...prev, [src]: width / height }))
+    }
 
     const handleMoveUp = useCallback(() => {
         const pos = getPos()
@@ -61,37 +65,6 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
 
     if (!isEditable && items.length === 0) return null
 
-    if (!isEditable) {
-        const visibleItems = items.slice(0, 3)
-        const remaining = items.length - 3
-
-        return (
-            <NodeViewWrapper>
-                <div className="carousel-node select-none">
-                    <div className="flex gap-2">
-                        {visibleItems.map((item, index) => (
-                            <div
-                                key={`${item.src}-${index}`}
-                                className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800"
-                            >
-                                {item.type === 'image' ? (
-                                    <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full" draggable={false} />
-                                ) : (
-                                    <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
-                                )}
-                                {index === 2 && remaining > 0 && (
-                                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                        <span className="text-white text-2xl font-semibold">+{remaining}</span>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </NodeViewWrapper>
-        )
-    }
-
     if (items.length === 0) {
         return (
             <NodeViewWrapper className="carousel-node select-none border dark:border-neutral-700 rounded p-2 bg-gray-100 dark:bg-neutral-800">
@@ -119,8 +92,42 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
         )
     }
 
-    const showCompact = !isExpanded && items.length > 3
-    const remaining = items.length - 3
+    const layout = computeCarouselLayout(items.length, Object.fromEntries(items.map((item, i) => [i, ratios[item.src]])))
+    const remaining = items.length - layout.visible
+    // Expanding lists every item (so hidden ones can still be removed) in a wrapping grid.
+    const showExpanded = isEditable && isExpanded && remaining > 0
+
+    const renderMedia = (item: CarouselItem, variantWidth: number) =>
+        item.type === 'image' ? (
+            <ProgressiveImage
+                cover
+                variantWidth={variantWidth}
+                src={item.src}
+                alt={item.name}
+                className="w-full h-full"
+                draggable={false}
+                onLoad={(w, h) => setRatio(item.src, w, h)}
+            />
+        ) : (
+            <video
+                src={item.src}
+                className="w-full h-full object-cover"
+                controls
+                preload="metadata"
+                onLoadedMetadata={e => setRatio(item.src, e.currentTarget.videoWidth, e.currentTarget.videoHeight)}
+            />
+        )
+
+    const renderRemoveButton = (index: number) => (
+        <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleRemoveItem(index) }}
+            className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-black/80 rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity"
+            title={t('editor.carousel.remove')}
+        >
+            <X size={12} className="text-white" />
+        </button>
+    )
 
     return (
         <NodeViewWrapper>
@@ -129,34 +136,52 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
                     <NodeTouchMenu visible={selected} actions={nodeActions} />
                 )}
 
-                {showCompact ? (
-                    <div className="flex gap-2">
-                        {items.slice(0, 3).map((item, index) => {
-                            const isOverlay = index === 2
+                {showExpanded ? (
+                    <>
+                        <div className="grid grid-cols-3 gap-1 w-full rounded-lg overflow-hidden">
+                            {items.map((item, index) => (
+                                <div
+                                    key={`${item.src}-${index}`}
+                                    className="relative min-w-0 aspect-square overflow-hidden bg-gray-100 dark:bg-neutral-800 group/item"
+                                >
+                                    {renderMedia(item, 640)}
+                                    {renderRemoveButton(index)}
+                                </div>
+                            ))}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setIsExpanded(false) }}
+                            className="mt-1 w-full py-1 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded transition-colors"
+                        >
+                            {t('actions.collapse')}
+                        </button>
+                    </>
+                ) : (
+                    <div
+                        className="grid gap-1 w-full max-h-[620px] rounded-lg overflow-hidden"
+                        style={{
+                            aspectRatio: layout.aspectRatio,
+                            gridTemplateColumns: layout.templateColumns,
+                            gridTemplateRows: layout.templateRows,
+                            gridTemplateAreas: layout.templateAreas,
+                        }}
+                    >
+                        {items.slice(0, layout.visible).map((item, index) => {
+                            const isOverlay = index === layout.visible - 1 && remaining > 0
                             return (
                                 <div
                                     key={`${item.src}-${index}`}
-                                    className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800 group/item"
-                                    onClick={isOverlay ? (e) => { e.stopPropagation(); setIsExpanded(true) } : undefined}
-                                    style={isOverlay ? { cursor: 'pointer' } : undefined}
+                                    className="relative min-w-0 min-h-0 overflow-hidden bg-gray-100 dark:bg-neutral-800 group/item"
+                                    style={{ gridArea: layout.areas[index] }}
                                 >
-                                    {item.type === 'image' ? (
-                                        <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full" draggable={false} />
-                                    ) : (
-                                        <video src={item.src} className="w-full h-full object-cover" preload="metadata" />
-                                    )}
-                                    {!isOverlay && (
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveItem(index)}
-                                            className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-black/80 rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                            title={t('editor.carousel.remove')}
-                                        >
-                                            <X size={12} className="text-white" />
-                                        </button>
-                                    )}
+                                    {renderMedia(item, index === 0 ? 1280 : 640)}
+                                    {isEditable && !isOverlay && renderRemoveButton(index)}
                                     {isOverlay && (
-                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                        <div
+                                            className={`absolute inset-0 bg-black/50 flex items-center justify-center ${isEditable ? 'cursor-pointer' : 'pointer-events-none'}`}
+                                            onClick={isEditable ? (e) => { e.stopPropagation(); setIsExpanded(true) } : undefined}
+                                        >
                                             <span className="text-white text-2xl font-semibold">+{remaining}</span>
                                         </div>
                                     )}
@@ -164,52 +189,9 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
                             )
                         })}
                     </div>
-                ) : (
-                    <>
-                        {items.length > 2 && (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={scrollLeft}
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 dark:bg-neutral-800/90 hover:bg-white dark:hover:bg-neutral-800 rounded-full shadow-lg border border-gray-200 dark:border-neutral-600 transition-all opacity-0 group-hover:opacity-100"
-                                >
-                                    <ChevronLeft size={16} className="text-gray-700 dark:text-gray-300" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={scrollRight}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 bg-white/90 dark:bg-neutral-800/90 hover:bg-white dark:hover:bg-neutral-800 rounded-full shadow-lg border border-gray-200 dark:border-neutral-600 transition-all opacity-0 group-hover:opacity-100"
-                                >
-                                    <ChevronRight size={16} className="text-gray-700 dark:text-gray-300" />
-                                </button>
-                            </>
-                        )}
-                        <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
-                            {items.map((item, index) => (
-                                <div
-                                    key={`${item.src}-${index}`}
-                                    className="relative flex-shrink-0 w-48 h-48 rounded-lg overflow-hidden bg-gray-100 dark:bg-neutral-800 group/item"
-                                >
-                                    {item.type === 'image' ? (
-                                        <ProgressiveImage cover variantWidth={640} src={item.src} alt={item.name} className="w-full h-full" draggable={false} />
-                                    ) : (
-                                        <video src={item.src} className="w-full h-full object-cover" controls preload="metadata" />
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={() => handleRemoveItem(index)}
-                                        className="absolute top-1.5 right-1.5 p-1 bg-black/60 hover:bg-black/80 rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                        title={t('editor.carousel.remove')}
-                                    >
-                                        <X size={12} className="text-white" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </>
                 )}
 
-                {extension.options?.workspaceId && (
+                {isEditable && extension.options?.workspaceId && (
                     <CarouselMediaPickerDialog
                         open={isPickerOpen}
                         onOpenChange={setIsPickerOpen}
