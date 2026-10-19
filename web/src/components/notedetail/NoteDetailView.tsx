@@ -100,7 +100,7 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                     </div>
                     <div className="flex-1 overflow-x-auto overflow-y-auto">
                         <div className="lg:max-w-3xl w-full m-auto">
-                            <div className="lg:p-10">
+                            <div className="pb-32 lg:p-10 lg:pb-40">
                                 <div className="flex flex-col gap-2">
                                     <div className="px-4">
                                         <div key={`editor-${note.id}`}>
