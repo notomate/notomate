@@ -1,6 +1,6 @@
 // Widths the API can scale workspace images down to (see ?w= on file
 // downloads). Keep in sync with imagevariant.Widths in the API.
-export const IMAGE_VARIANT_WIDTHS = [320, 640, 1280] as const
+export const IMAGE_VARIANT_WIDTHS = [320, 640, 1280, 1920, 2560] as const
 
 const WORKSPACE_FILE = /^\/api\/v1\/workspaces\/[^/]+\/files\/[^/?#]+$/
 const RESIZABLE_EXT = /\.(jpe?g|png|webp)$/i
@@ -33,3 +33,20 @@ export const imageSrcSet = (src: string, originalWidth: number) => {
 /** Positive dimensions or undefined; 0 means the API couldn't read them. */
 export const knownDimensions = (width?: number | null, height?: number | null) =>
     width && height && width > 0 && height > 0 ? { width, height } : undefined
+
+/**
+ * URL of src sized for the full-screen viewer: the smallest variant at least
+ * as wide as the image appears when fitted to the viewport, at the device
+ * pixel ratio. Without known dimensions the viewport width is the bound.
+ * The original is returned when no variant is smaller.
+ */
+export const viewerImageUrl = (src: string, width?: number | null, height?: number | null) => {
+    if (!isResizableImage(src)) return src
+    const dims = knownDimensions(width, height)
+    const fitWidth = dims
+        ? Math.min(window.innerWidth, (window.innerHeight * dims.width) / dims.height)
+        : window.innerWidth
+    const needed = Math.ceil(fitWidth * (window.devicePixelRatio || 1))
+    const variant = IMAGE_VARIANT_WIDTHS.find(w => w >= needed)
+    return variant && (!dims || variant < dims.width) ? `${src}?w=${variant}` : src
+}

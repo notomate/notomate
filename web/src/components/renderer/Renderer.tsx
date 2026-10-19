@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useId, useCallback } from 'react'
-import { PhotoView, PhotoProvider } from 'react-photo-view'
+import { PhotoProvider } from 'react-photo-view'
 import ShikiHighlighter from "react-shiki"
 import { useTranslation } from 'react-i18next'
 import { FileText, ChevronDown, LoaderCircle, CalendarDays, ExternalLink, Star, Map, MapPin, Navigation, Store, Kanban, PenTool, Sheet } from 'lucide-react'
@@ -28,6 +28,7 @@ import { MapMarker, StoredRoute, placesToMarkers, Waypoint, waypointColor, waypo
 import { CompactBody, CompactFrame, DirectionsSummary, MarkersSummary } from '@/components/editor/extensions/googlemaps/shared/CompactSummary'
 import type { PlaceDetails, TravelMode } from '@/api/googleMaps'
 import ProgressiveImage from "@/components/image/ProgressiveImage"
+import ProgressivePhotoView from "@/components/image/ProgressivePhotoView"
 import { computeCarouselLayout } from './carouselLayout'
 
 const InstagramRendererEmbed: React.FC<{ url: string }> = ({ url }) => {
@@ -459,7 +460,7 @@ const CarouselNodeRenderer: React.FC<{ items: Array<{ src: string; name: string;
                             style={{ gridArea: layout.areas[idx] }}
                         >
                             {item.type === 'image' ? (
-                                <PhotoView src={item.src}>
+                                <ProgressivePhotoView src={item.src}>
                                     <ProgressiveImage
                                         cover
                                         variantWidth={idx === 0 ? 1280 : 640}
@@ -468,7 +469,7 @@ const CarouselNodeRenderer: React.FC<{ items: Array<{ src: string; name: string;
                                         className="w-full h-full cursor-zoom-in"
                                         onLoad={(w, h) => setRatio(idx, w, h)}
                                     />
-                                </PhotoView>
+                                </ProgressivePhotoView>
                             ) : (
                                 <video
                                     src={item.src}
@@ -489,9 +490,9 @@ const CarouselNodeRenderer: React.FC<{ items: Array<{ src: string; name: string;
             </div>
             {items.slice(layout.visible).map((item, idx) =>
                 item.type === 'image' ? (
-                    <PhotoView key={`hidden-${idx}`} src={item.src}>
+                    <ProgressivePhotoView key={`hidden-${idx}`} src={item.src}>
                         <span style={{ display: 'none' }} />
-                    </PhotoView>
+                    </ProgressivePhotoView>
                 ) : null
             )}
         </>
@@ -678,7 +679,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                     return <div key={key} className="h-40 w-full rounded bg-gray-100 animate-pulse dark:bg-neutral-800" />
                 }
                 return <div className="" key={key}>
-                    <PhotoView src={node.attrs?.src}>
+                    <ProgressivePhotoView src={node.attrs.src} width={node.attrs.width} height={node.attrs.height}>
                         <ProgressiveImage
                             src={node.attrs?.src}
                             width={node.attrs?.width}
@@ -687,7 +688,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                             alt={node.attrs?.alt || ''}
                             className="rounded cursor-zoom-in"
                         />
-                    </PhotoView>
+                    </ProgressivePhotoView>
                 </div>
             case 'attachment':
                 return <a key={key} href={node.attrs?.src} className="text-blue-600">{node.attrs?.name}</a>

@@ -31,8 +31,9 @@ const (
 )
 
 // Widths are the variant sizes. Requested widths snap up to one of them so
-// requests share cache entries.
-var Widths = []int{320, 640, 1280}
+// requests share cache entries. The larger sizes serve the full-screen
+// image viewer on high-density and desktop screens.
+var Widths = []int{320, 640, 1280, 1920, 2560}
 
 // FileStore is the part of the database the dimension backfill needs.
 type FileStore interface {
