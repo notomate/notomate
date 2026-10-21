@@ -15,9 +15,10 @@
   height: 8rem;
 }
 
+/* The gutter floats below the block here, so it needs no room on the left. */
 @media (max-width: 600px) {
   .ne-root.note-editor .page-column {
-    padding: 0 0 0 36px;
+    padding: 0;
   }
 }
 
@@ -112,6 +113,6 @@
 
 @media (max-width: 600px) {
   .note-editor-skeleton {
-    padding-left: 38px;
+    padding-left: 2px;
   }
 }
