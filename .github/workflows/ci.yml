@@ -84,7 +84,22 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: web/package-lock.json
+          cache-dependency-path: |
+            web/package-lock.json
+            packages/editor/package-lock.json
+
+      # web depends on file:../packages/editor, whose build output (dist) is not committed.
+      - name: Install editor package dependencies
+        working-directory: ./packages/editor
+        run: npm ci
+
+      - name: Test editor package
+        working-directory: ./packages/editor
+        run: npm test
+
+      - name: Build editor package
+        working-directory: ./packages/editor
+        run: npm run build
 
       - name: Install dependencies
         working-directory: ./web
@@ -94,10 +109,40 @@ jobs:
         working-directory: ./web
         run: npm run build
 
+  collab-test:
+    name: Collab Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            collab/package-lock.json
+            packages/editor/package-lock.json
+
+      # collab imports the TipTap converter from file:../packages/editor (dist/convert.js).
+      - name: Build editor package
+        working-directory: ./packages/editor
+        run: npm ci && npm run build
+
+      - name: Install dependencies
+        working-directory: ./collab
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ./collab
+        run: npm test
+
   docker-build-test:
     name: Docker Build Test
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
+    needs: [backend-test, frontend-test, collab-test]
 
     steps:
       - name: Checkout code
@@ -113,6 +158,18 @@ jobs:
           file: ./Dockerfile
           push: false
           tags: notomate:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # The default (last) stage is nginx; collab has its own build path through the editor package.
+      - name: Build collab image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: collab-runtime
+          push: false
+          tags: notomate-collab:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -141,7 +198,7 @@ jobs:
   pr-summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [backend-test, runner-test, frontend-test, docker-build-test, runner-docker-build-test]
+    needs: [backend-test, runner-test, frontend-test, collab-test, docker-build-test, runner-docker-build-test]
     if: always()
 
     steps:
@@ -150,12 +207,14 @@ jobs:
           echo "Backend Test: ${{ needs.backend-test.result }}"
           echo "Runner Test: ${{ needs.runner-test.result }}"
           echo "Frontend Test: ${{ needs.frontend-test.result }}"
+          echo "Collab Test: ${{ needs.collab-test.result }}"
           echo "Docker Build Test: ${{ needs.docker-build-test.result }}"
           echo "Runner Docker Build Test: ${{ needs.runner-docker-build-test.result }}"
 
           if [ "${{ needs.backend-test.result }}" != "success" ] || \
              [ "${{ needs.runner-test.result }}" != "success" ] || \
              [ "${{ needs.frontend-test.result }}" != "success" ] || \
+             [ "${{ needs.collab-test.result }}" != "success" ] || \
              [ "${{ needs.docker-build-test.result }}" != "success" ] || \
              [ "${{ needs.runner-docker-build-test.result }}" != "success" ]; then
             echo "❌ CI checks failed"
