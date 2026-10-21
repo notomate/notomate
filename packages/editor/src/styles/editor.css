@@ -1074,15 +1074,34 @@ body.ne-is-dragging * {
 
 @media (max-width: 600px) {
   .ne-root .page-column {
-    padding: 32px 16px 0 40px;
+    padding: 32px 16px 0;
   }
 
   .ne-root .page-title {
     font-size: 32px;
   }
 
-  .ne-root .gutter {
-    left: -38px;
+  /* No room on the left: float the gutter below the row instead, over the next block.
+     While hidden it must not swallow clicks meant for that block. */
+  .ne-root .block-row > .gutter {
+    top: 100%;
+    left: 0;
+    height: auto;
+    padding: 2px;
+    border-radius: 6px;
+    background: var(--menu-bg);
+    box-shadow: var(--menu-shadow);
+    pointer-events: none;
+  }
+
+  .ne-root.fine .block-row:hover > .gutter,
+  .ne-root.coarse .block.focused > .block-row > .gutter,
+  .ne-root.coarse .block.selected > .block-row > .gutter {
+    pointer-events: auto;
+  }
+
+  .ne-root.coarse .gutter-btn.handle {
+    margin-top: 0;
   }
 }
 
