@@ -4,12 +4,14 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "node --test"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.12.0",
     "@hocuspocus/server": "^4.0.0",
     "jsonwebtoken": "^9.0.0",
-    "yjs": "^13.6.0"
+    "yjs": "^13.6.0",
+    "@notomate/editor": "file:../packages/editor"
   }
 }

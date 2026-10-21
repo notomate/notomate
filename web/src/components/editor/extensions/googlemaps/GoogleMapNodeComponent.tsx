@@ -1,15 +1,14 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Map as GoogleMap, MapMouseEvent, MapCameraChangedEvent } from "@vis.gl/react-google-maps"
-import { ChevronDown, ChevronUp, Map as MapIcon, MapPinPlus, MapPinX, Palette, Trash2 } from "lucide-react"
-import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
+import { Map as MapIcon, MapPinPlus, MapPinX, Palette, Trash2 } from "lucide-react"
+import { useDragMenu, NodeTouchMenu, type MenuAction } from "@/components/editor/DragMenuContext"
 import { PlaceDetails, PlaceSummary, toLatLng } from "@/api/googleMaps"
 import { GoogleMapGate, GoogleMapEnv } from "./shared/GoogleMapGate"
 import { PlaceSearchBox } from "./shared/PlaceSearchBox"
 import { PlaceDetailPanel } from "./shared/PlaceDetailView"
 import { LabeledMarker, MarkerIcon, PanTo } from "./shared/MapParts"
-import { useNodeMove } from "./shared/useNodeMove"
 import { DEFAULT_CENTER, MARKER_COLORS, MapMarker, newId, placeThumbnailUrl, trimPlace } from "./shared/types"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
 import { CompactBody, ExpandToggle, MarkersSummary, frameClass } from "./shared/CompactSummary"
@@ -270,13 +269,12 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, center, zoom, up
   )
 }
 
-const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos, extension }) => {
+const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos, extension }) => {
   const { t } = useTranslation()
   const workspaceId: string = extension.options.workspaceId
   const markers: MapMarker[] = node.attrs.markers ?? []
   const editable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
-  const { moveUp, moveDown } = useNodeMove({ editor, node, getPos })
   // A new, empty map opens straight into editing.
   const [expanded, setExpanded] = useState(markers.length === 0)
 
@@ -292,10 +290,7 @@ const GoogleMapNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttribute
     setExpanded(!expanded)
   }
 
-  const nodeActions = [
-    { label: t("editor.moveUp"), icon: <ChevronUp size={14} />, onClick: moveUp },
-    { label: t("editor.moveDown"), icon: <ChevronDown size={14} />, onClick: moveDown },
-    { label: t("actions.delete"), icon: <Trash2 size={14} />, onClick: deleteNode, variant: "danger" as const },
+  const nodeActions: MenuAction[] = [
   ]
   useDragMenu(getPos, () => nodeActions)
 

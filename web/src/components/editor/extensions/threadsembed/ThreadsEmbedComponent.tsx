@@ -1,5 +1,5 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { ChevronUp, ChevronDown, Edit3, Trash2, LoaderCircle } from "lucide-react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
+import { Edit3, LoaderCircle } from "lucide-react"
 import { useState, useRef, useEffect, useCallback, useId } from "react"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 
@@ -27,7 +27,7 @@ function isValidThreadsUrl(url: string): boolean {
   return extractThreadsPostId(url) !== null
 }
 
-const ThreadsEmbedComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos }) => {
+const ThreadsEmbedComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos }) => {
   const { url } = node.attrs
   const isEditable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
@@ -153,34 +153,10 @@ const ThreadsEmbedComponent: React.FC<NodeViewProps> = ({ node, updateAttributes
     }
   }
 
-  const handleMoveUp = useCallback(() => {
-    const pos = getPos()
-    if (pos === undefined) return
-    const { state } = editor
-    const $pos = state.doc.resolve(pos)
-    if ($pos.index() === 0) return
-    const nodeBefore = $pos.nodeBefore
-    if (!nodeBefore) return
-    editor.view.dispatch(state.tr.replaceWith(pos - nodeBefore.nodeSize, pos + node.nodeSize, [node, nodeBefore]))
-  }, [editor, node, getPos])
 
-  const handleMoveDown = useCallback(() => {
-    const pos = getPos()
-    if (pos === undefined) return
-    const { state } = editor
-    const $pos = state.doc.resolve(pos)
-    if ($pos.index() >= $pos.parent.childCount - 1) return
-    const nodeAfterPos = pos + node.nodeSize
-    const nodeAfter = state.doc.resolve(nodeAfterPos).nodeAfter
-    if (!nodeAfter) return
-    editor.view.dispatch(state.tr.replaceWith(pos, nodeAfterPos + nodeAfter.nodeSize, [nodeAfter, node]))
-  }, [editor, node, getPos])
 
   const nodeActions = [
-    { label: 'Move up', icon: <ChevronUp size={14} />, onClick: handleMoveUp },
-    { label: 'Move down', icon: <ChevronDown size={14} />, onClick: handleMoveDown },
     { label: 'Edit URL', icon: <Edit3 size={14} />, onClick: () => { setInputValue(url); setIsEditing(true) } },
-    { label: 'Delete', icon: <Trash2 size={14} />, onClick: deleteNode, variant: 'danger' as const },
   ]
 
   useDragMenu(getPos, () => nodeActions)

@@ -1,6 +1,6 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { FileText, ExternalLink, Loader2, Trash2, ChevronUp, ChevronDown } from "lucide-react"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
+import { FileText, ExternalLink, Loader2, Trash2 } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { getNote } from "@/api/note"
@@ -50,34 +50,10 @@ const SubPageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttr
         navigate(`/workspaces/${workspaceId}/notes/${noteId}`)
     }
 
-    const handleMoveUp = useCallback(() => {
-        const pos = getPos()
-        if (pos === undefined) return
-        const { state } = editor
-        const $pos = state.doc.resolve(pos)
-        if ($pos.index() === 0) return
-        const nodeBefore = $pos.nodeBefore
-        if (!nodeBefore) return
-        editor.view.dispatch(state.tr.replaceWith(pos - nodeBefore.nodeSize, pos + node.nodeSize, [node, nodeBefore]))
-    }, [editor, node, getPos])
 
-    const handleMoveDown = useCallback(() => {
-        const pos = getPos()
-        if (pos === undefined) return
-        const { state } = editor
-        const $pos = state.doc.resolve(pos)
-        if ($pos.index() >= $pos.parent.childCount - 1) return
-        const nodeAfterPos = pos + node.nodeSize
-        const nodeAfter = state.doc.resolve(nodeAfterPos).nodeAfter
-        if (!nodeAfter) return
-        editor.view.dispatch(state.tr.replaceWith(pos, nodeAfterPos + nodeAfter.nodeSize, [nodeAfter, node]))
-    }, [editor, node, getPos])
 
     const nodeActions = [
         { label: 'Open page', icon: <ExternalLink size={14} />, onClick: handleNavigate },
-        { label: 'Move up', icon: <ChevronUp size={14} />, onClick: handleMoveUp },
-        { label: 'Move down', icon: <ChevronDown size={14} />, onClick: handleMoveDown },
-        { label: 'Delete', icon: <Trash2 size={14} />, onClick: deleteNode, variant: 'danger' as const },
     ]
 
     useDragMenu(getPos, () => nodeActions)

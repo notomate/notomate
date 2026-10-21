@@ -5,7 +5,7 @@ import { X, Send, Pencil, Trash2, MoreVertical, ChevronDown } from "lucide-react
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import { CommentData, createComment, deleteComment, getComments, updateComment } from "@/api/comment"
 import { getWorkspaceMembers } from "@/api/workspace"
-import { COMMENT_CLICK_EVENT } from "@/components/editor/extensions/comment/CommentMark"
+import { COMMENT_CLICK_EVENT } from "@/components/noteeditor/NoteEditor"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { useToastStore } from "@/stores/toast"
 import Avatar from "@/components/avatar/Avatar"

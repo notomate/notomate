@@ -1,14 +1,14 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { ChevronUp, ChevronDown, Trash2, Plus, X, Images } from "lucide-react"
-import { useState, useCallback } from "react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
+import { Plus, X, Images } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import CarouselMediaPickerDialog from "./CarouselMediaPickerDialog"
-import { CarouselItem } from "./CarouselNode"
+import { CarouselItem } from "./types"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 import ProgressiveImage from "@/components/image/ProgressiveImage"
 import { computeCarouselLayout } from "@/components/renderer/carouselLayout"
 
-const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes, selected, editor, deleteNode, getPos }) => {
+const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes, selected, editor, getPos }) => {
     const { t } = useTranslation()
     const [isPickerOpen, setIsPickerOpen] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
@@ -31,34 +31,10 @@ const CarouselComponent: React.FC<NodeViewProps> = ({ node, extension, updateAtt
         setRatios(prev => (prev[src] === width / height ? prev : { ...prev, [src]: width / height }))
     }
 
-    const handleMoveUp = useCallback(() => {
-        const pos = getPos()
-        if (pos === undefined) return
-        const { state } = editor
-        const $pos = state.doc.resolve(pos)
-        if ($pos.index() === 0) return
-        const nodeBefore = $pos.nodeBefore
-        if (!nodeBefore) return
-        editor.view.dispatch(state.tr.replaceWith(pos - nodeBefore.nodeSize, pos + node.nodeSize, [node, nodeBefore]))
-    }, [editor, node, getPos])
 
-    const handleMoveDown = useCallback(() => {
-        const pos = getPos()
-        if (pos === undefined) return
-        const { state } = editor
-        const $pos = state.doc.resolve(pos)
-        if ($pos.index() >= $pos.parent.childCount - 1) return
-        const nodeAfterPos = pos + node.nodeSize
-        const nodeAfter = state.doc.resolve(nodeAfterPos).nodeAfter
-        if (!nodeAfter) return
-        editor.view.dispatch(state.tr.replaceWith(pos, nodeAfterPos + nodeAfter.nodeSize, [nodeAfter, node]))
-    }, [editor, node, getPos])
 
     const nodeActions = [
-        { label: t('editor.carousel.moveUp'), icon: <ChevronUp size={14} />, onClick: handleMoveUp },
-        { label: t('editor.carousel.moveDown'), icon: <ChevronDown size={14} />, onClick: handleMoveDown },
         { label: t('editor.carousel.addMedia'), icon: <Plus size={14} />, onClick: () => setIsPickerOpen(true) },
-        { label: t('actions.delete'), icon: <Trash2 size={14} />, onClick: deleteNode, variant: 'danger' as const },
     ]
 
     useDragMenu(getPos, () => nodeActions)

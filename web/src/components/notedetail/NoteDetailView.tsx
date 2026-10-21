@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { getNote, NoteData } from "@/api/note"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
-import Editor from "../editor/Editor"
+import NoteEditor from "../noteeditor/NoteEditor"
+import type { NoteRoom } from "@/hooks/use-note-collab"
 import EditableDiv from "@/components/editablediv/EditableDiv"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 
@@ -13,8 +14,8 @@ interface NoteDetailViewProps {
     wsTitle: string
     wsReady?: boolean
     onTitleChange: (title: string) => void
-    yDoc?: any
-    yText?: any
+    /** The note's collaboration room; the editor mounts once it has synced. */
+    room: NoteRoom | null
 }
 
 const NoteDetailView: FC<NoteDetailViewProps> = ({
@@ -23,11 +24,10 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
     wsTitle,
     wsReady,
     onTitleChange,
-    yDoc,
-    yText
+    room
 }) => {
     const navigate = useNavigate()
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const currentWorkspaceId = useCurrentWorkspaceId()
 
     const { data: parentNote } = useQuery<NoteData>({
@@ -36,26 +36,28 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
         enabled: !!note?.parent_id && !!currentWorkspaceId,
     })
 
-    if (!note) {
+    if (!note || !wsReady || !room) {
         return (
             <div className="flex flex-col flex-1 min-h-0 animate-pulse">
                 <div className="shrink-0 p-2 lg:p-4">
-                    <div className="flex items-center gap-2 px-3">
+                    {/* h-8: as tall as the real header row, whose menu buttons are 32px */}
+                    <div className="flex items-center gap-2 px-3 h-8">
                         <div className="h-6 bg-gray-200 dark:bg-neutral-700 rounded w-1/3"></div>
                     </div>
                 </div>
-                <div className="flex-1 overflow-auto">
+                {/* Same wrappers as the editor below, so the bars sit where the text will. */}
+                <div className="flex-1 overflow-hidden [scrollbar-gutter:stable]">
                     <div className="lg:max-w-3xl w-full m-auto">
-                        <div className="lg:p-10">
-                            <div className="px-4">
-                                {/* Bar/gap heights mirror the prose-sm/base/lg/2xl line-heights (24/28/32/40px) used by the tiptap editor */}
-                                <div className="flex flex-col gap-[7px] sm:gap-2 lg:gap-2.5 xl:gap-3">
-                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
-                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-5/6"></div>
-                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-4/5"></div>
-                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-full"></div>
-                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-3/4"></div>
-                                    <div className="h-[17px] sm:h-5 lg:h-[22px] xl:h-7 bg-gray-200 dark:bg-neutral-700 rounded w-5/6"></div>
+                        <div className="pb-32 lg:p-10 lg:pb-40">
+                            <div className="flex flex-col gap-2">
+                                <div className="px-4">
+                                    <div className="note-editor-skeleton">
+                                        {['100%', '83%', '80%', '100%', '75%', '83%'].map((width, i) => (
+                                            <div key={i} className="note-editor-skeleton-row">
+                                                <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded" style={{ width }} />
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -98,19 +100,20 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                             <div className="inline-flex flex-shrink-0">{menu}</div>
                         </div>
                     </div>
-                    <div className="flex-1 overflow-x-auto overflow-y-auto">
+                    {/* Stable gutter: a long note's scrollbar must not shift the centered column (or the skeleton). */}
+                    <div className="flex-1 overflow-x-auto overflow-y-auto [scrollbar-gutter:stable]">
                         <div className="lg:max-w-3xl w-full m-auto">
                             <div className="pb-32 lg:p-10 lg:pb-40">
                                 <div className="flex flex-col gap-2">
                                     <div className="px-4">
-                                        <div key={`editor-${note.id}`}>
-                                            <Editor
-                                                note={note}
-                                                yDoc={yDoc}
-                                                yText={yText}
-                                                yjsReady={wsReady}
-                                            />
-                                        </div>
+                                        {/* The editor reads its UI text on mount, so remount on a language switch;
+                                            content lives in the room and survives it. */}
+                                        <NoteEditor
+                                            key={`${note.id}:${i18n.language}`}
+                                            room={room}
+                                            workspaceId={currentWorkspaceId}
+                                            noteId={note.id!}
+                                        />
                                     </div>
                                 </div>
                             </div>

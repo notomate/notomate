@@ -1,7 +1,7 @@
-import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
-import { ChevronUp, ChevronDown, Trash2, X, Plus } from 'lucide-react'
-import { useState, useRef, useEffect, KeyboardEvent, useCallback } from 'react'
-import { useDragMenu, NodeTouchMenu } from '@/components/editor/DragMenuContext'
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
+import { X, Plus } from 'lucide-react'
+import { useState, useRef, useEffect, KeyboardEvent } from 'react'
+import { useDragMenu, NodeTouchMenu, type MenuAction } from '@/components/editor/DragMenuContext'
 
 const TAG_STYLE = { bg: 'bg-gray-100 dark:bg-neutral-700', text: 'text-muted-foreground dark:text-gray-300' }
 
@@ -19,7 +19,7 @@ function TagChip({ label, onRemove }: { label: string; onRemove?: () => void }) 
   )
 }
 
-const TagsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos }) => {
+const TagsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos }) => {
   const tags: string[] = node.attrs.tags ?? []
   const isEditable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
@@ -50,33 +50,9 @@ const TagsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, se
     else if (e.key === 'Escape') { setInputValue(''); inputRef.current?.blur() }
   }
 
-  const handleMoveUp = useCallback(() => {
-    const pos = getPos()
-    if (pos === undefined) return
-    const { state } = editor
-    const $pos = state.doc.resolve(pos)
-    if ($pos.index() === 0) return
-    const nodeBefore = $pos.nodeBefore
-    if (!nodeBefore) return
-    editor.view.dispatch(state.tr.replaceWith(pos - nodeBefore.nodeSize, pos + node.nodeSize, [node, nodeBefore]))
-  }, [editor, node, getPos])
 
-  const handleMoveDown = useCallback(() => {
-    const pos = getPos()
-    if (pos === undefined) return
-    const { state } = editor
-    const $pos = state.doc.resolve(pos)
-    if ($pos.index() >= $pos.parent.childCount - 1) return
-    const nodeAfterPos = pos + node.nodeSize
-    const nodeAfter = state.doc.resolve(nodeAfterPos).nodeAfter
-    if (!nodeAfter) return
-    editor.view.dispatch(state.tr.replaceWith(pos, nodeAfterPos + nodeAfter.nodeSize, [nodeAfter, node]))
-  }, [editor, node, getPos])
 
-  const nodeActions = [
-    { label: 'Move up', icon: <ChevronUp size={14} />, onClick: handleMoveUp },
-    { label: 'Move down', icon: <ChevronDown size={14} />, onClick: handleMoveDown },
-    { label: 'Delete', icon: <Trash2 size={14} />, onClick: deleteNode, variant: 'danger' as const },
+  const nodeActions: MenuAction[] = [
   ]
 
   useDragMenu(getPos, () => nodeActions)

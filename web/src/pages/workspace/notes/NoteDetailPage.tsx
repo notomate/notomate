@@ -22,8 +22,7 @@ const NoteDetailPage = () => {
         isReady,
         title: wsTitle,
         sendUpdateTitle,
-        yDoc,
-        yText
+        room
     } = useNoteCollab({
         noteId: noteId || '',
         workspaceId: currentWorkspaceId || '',
@@ -109,8 +108,7 @@ const NoteDetailPage = () => {
                 wsTitle={wsTitle}
                 wsReady={isReady}
                 onTitleChange={sendUpdateTitle}
-                yDoc={yDoc}
-                yText={yText}
+                room={room}
             />
             {currentWorkspaceId && noteId && (
                 <CommentSidebar

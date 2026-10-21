@@ -1,4 +1,5 @@
 import * as Y from 'yjs'
+import { migrateLegacyContent, readNoteContent, seedNoteDoc } from '../notes/note-doc.js'
 
 /**
  * Database persistence extension for Hocuspocus
@@ -11,7 +12,7 @@ import * as Y from 'yjs'
  * the source tables each time the server starts or a room is first opened.
  *
  * Document naming convention:
- *   note:{noteId}         - Note documents
+ *   note:{noteId}         - Note documents (layout: ../notes/note-doc.js)
  *   whiteboard:{viewId}   - Whiteboard documents
  *   spreadsheet:{viewId}  - Spreadsheet documents
  */
@@ -62,6 +63,18 @@ export class DatabaseExtension {
   }
 
   /**
+   * Fold whole-document writes from older note clients (content.data) into blocks.
+   */
+  async onChange(data) {
+    if (this.parseDocumentName(data.documentName).type !== 'note') return
+    try {
+      migrateLegacyContent(data.document)
+    } catch (err) {
+      console.error(`[DB] Error migrating legacy content in ${data.documentName}:`, err)
+    }
+  }
+
+  /**
    * Called after document changes (debounced by Hocuspocus).
    * Extracts human-readable data and saves to original application tables.
    */
@@ -95,17 +108,7 @@ export class DatabaseExtension {
       return
     }
 
-    document.transact(() => {
-      const yContent = document.getMap('content')
-      if (note.content && !yContent.has('data')) {
-        yContent.set('data', note.content)
-      }
-
-      const yMeta = document.getMap('meta')
-      if (!yMeta.has('title')) {
-        yMeta.set('title', note.title || '')
-      }
-    })
+    seedNoteDoc(document, note)
   }
 
   /**
@@ -194,10 +197,10 @@ export class DatabaseExtension {
    * Persist note Y.Doc back to notes table
    */
   async persistNote(document, noteId, data) {
-    const yContent = document.getMap('content')
     const yMeta = document.getMap('meta')
 
-    const content = yContent.get('data') || ''
+    // null when the room was never seeded: keep the stored body rather than blank it.
+    const content = readNoteContent(document)
     const title = yMeta.get('title')
     const now = new Date().toISOString()
     const updatedBy = data.lastContext?.userId || 'system'
@@ -207,7 +210,7 @@ export class DatabaseExtension {
 
     await this.db.updateNote(noteId, {
       title: title !== undefined ? title : note.title,
-      content,
+      content: content ?? note.content,
       updated_at: now,
       updated_by: updatedBy,
     })

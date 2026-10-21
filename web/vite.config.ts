@@ -34,5 +34,8 @@ export default defineConfig({
     alias: {
       '@': path.resolve('src'),
     },
+    // @notomate/editor is linked from ../packages/editor, which has its own dev copies
+    // of these; one React (and one zustand) for the whole app.
+    dedupe: ['react', 'react-dom', 'zustand'],
   },
 })
