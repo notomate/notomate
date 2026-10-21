@@ -1,6 +1,6 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { FolderOpen, Trash2, Edit3, ChevronUp, ChevronDown } from "lucide-react"
-import { useRef, useState, useEffect, useCallback } from "react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
+import { FolderOpen, Edit3 } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
 import { twMerge } from "tailwind-merge"
 import FilePickerDialog from "./FilePickerDialog"
 import { FileInfo } from "@/api/file"
@@ -13,30 +13,12 @@ import { releasePendingImage } from "./pendingImages"
 
 const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttributes, selected, editor, deleteNode, getPos }) => {
     const [isPickerOpen, setIsPickerOpen] = useState(false)
-    const wasEditableRef = useRef<boolean>(true)
     const [isLoaded, setIsLoaded] = useState(false)
     // Local preview of a just-uploaded paste, shown while the real image loads.
     const [previewUrl, setPreviewUrl] = useState<string>()
     const { src, name, width, height, uploadId } = node.attrs
     const dims = knownDimensions(width, height)
     const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
-
-    useEffect(() => {
-        if (!isTouchDevice) return
-        if (selected) {
-            wasEditableRef.current = editor.isEditable
-            editor.setEditable(false)
-        } else {
-            if (wasEditableRef.current) {
-                editor.setEditable(true)
-            }
-        }
-        return () => {
-            if (wasEditableRef.current && !editor.isEditable) {
-                editor.setEditable(true)
-            }
-        }
-    }, [selected, editor, isTouchDevice])
 
     const handleSelectExistingFile = (file: FileInfo) => {
         const workspaceId = extension.options?.workspaceId
@@ -50,34 +32,10 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttrib
         }
     }
 
-    const handleMoveUp = useCallback(() => {
-        const pos = getPos()
-        if (pos === undefined) return
-        const { state } = editor
-        const $pos = state.doc.resolve(pos)
-        if ($pos.index() === 0) return
-        const nodeBefore = $pos.nodeBefore
-        if (!nodeBefore) return
-        editor.view.dispatch(state.tr.replaceWith(pos - nodeBefore.nodeSize, pos + node.nodeSize, [node, nodeBefore]))
-    }, [editor, node, getPos])
 
-    const handleMoveDown = useCallback(() => {
-        const pos = getPos()
-        if (pos === undefined) return
-        const { state } = editor
-        const $pos = state.doc.resolve(pos)
-        if ($pos.index() >= $pos.parent.childCount - 1) return
-        const nodeAfterPos = pos + node.nodeSize
-        const nodeAfter = state.doc.resolve(nodeAfterPos).nodeAfter
-        if (!nodeAfter) return
-        editor.view.dispatch(state.tr.replaceWith(pos, nodeAfterPos + nodeAfter.nodeSize, [nodeAfter, node]))
-    }, [editor, node, getPos])
 
     const nodeActions = [
-        { label: 'Move up', icon: <ChevronUp size={14} />, onClick: handleMoveUp },
-        { label: 'Move down', icon: <ChevronDown size={14} />, onClick: handleMoveDown },
         { label: 'Reselect', icon: <Edit3 size={14} />, onClick: () => setIsPickerOpen(true) },
-        { label: 'Delete', icon: <Trash2 size={14} />, onClick: deleteNode, variant: 'danger' as const },
     ]
 
     useDragMenu(getPos, () => nodeActions)
@@ -89,13 +47,8 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttrib
         // later views can reserve the space. Without a known size a downscaled
         // variant is loaded, so this may be the variant's size; the aspect
         // ratio is what matters. Kept out of the undo history.
-        const pos = getPos()
-        if (pos === undefined) return
-        const tr = editor.state.tr
-            .setNodeMarkup(pos, undefined, { ...node.attrs, width: naturalWidth, height: naturalHeight })
-            .setMeta('addToHistory', false)
-        editor.view.dispatch(tr)
-    }, [dims, editor, getPos, node.attrs])
+        updateAttributes({ width: naturalWidth, height: naturalHeight }, { history: false })
+    }, [dims, editor, updateAttributes])
 
     useEffect(() => () => {
         if (previewUrl) URL.revokeObjectURL(previewUrl)
@@ -103,22 +56,17 @@ const ImageComponent: React.FC<NodeViewProps> = ({ node, extension, updateAttrib
 
     const handleUploaded = useCallback((task: UploadTask, preview: string) => {
         const result = task.result
-        const pos = getPos()
-        if (!result || pos === undefined) return
+        if (!result) return
         // Not a separate undo step: undoing the paste should remove the image.
-        const tr = editor.state.tr
-            .setNodeMarkup(pos, undefined, {
-                ...node.attrs,
-                src: `/api/v1/workspaces/${task.workspaceId}/files/${result.filename}`,
-                width: result.width ?? null,
-                height: result.height ?? null,
-                uploadId: null,
-            })
-            .setMeta('addToHistory', false)
-        editor.view.dispatch(tr)
+        updateAttributes({
+            src: `/api/v1/workspaces/${task.workspaceId}/files/${result.filename}`,
+            width: result.width ?? null,
+            height: result.height ?? null,
+            uploadId: null,
+        }, { history: false })
         releasePendingImage(node.attrs.uploadId)
         setPreviewUrl(preview)
-    }, [editor, getPos, node.attrs])
+    }, [updateAttributes, node.attrs.uploadId])
 
     if (!src && uploadId) {
         return (

@@ -1,0 +1,126 @@
+/* Light by default. Dark follows data-theme on the editor root: "dark", or "inherit" under an
+   ancestor .dark / [data-theme=dark] (Tailwind-style apps), or "system" with the OS setting. */
+.ne-root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --text: rgb(55, 53, 47);
+  --text-soft: rgba(55, 53, 47, 0.65);
+  --text-faint: rgba(55, 53, 47, 0.35);
+  --hover: rgba(55, 53, 47, 0.08);
+  --active: rgba(55, 53, 47, 0.16);
+  --border: rgba(55, 53, 47, 0.16);
+  --accent: rgb(35, 131, 226);
+  --select: rgba(35, 131, 226, 0.14);
+  --marquee-fill: rgba(35, 131, 226, 0.1);
+  --marquee-border: rgba(35, 131, 226, 0.45);
+  --code-bg: rgb(247, 246, 243);
+  --inline-code: rgba(135, 131, 120, 0.15);
+  --inline-code-text: #eb5757;
+  --callout-bg: rgb(241, 241, 239);
+  --menu-bg: #ffffff;
+  --menu-shadow: rgba(15, 15, 15, 0.05) 0 0 0 1px, rgba(15, 15, 15, 0.1) 0 3px 6px, rgba(15, 15, 15, 0.2) 0 9px 24px;
+  --toolbar-bg: #ffffff;
+  --backdrop: rgba(15, 15, 15, 0.4);
+
+  --c-gray: rgb(120, 119, 116);
+  --c-brown: rgb(159, 107, 83);
+  --c-orange: rgb(217, 115, 13);
+  --c-yellow: rgb(203, 145, 47);
+  --c-green: rgb(68, 131, 97);
+  --c-blue: rgb(51, 126, 169);
+  --c-purple: rgb(144, 101, 176);
+  --c-pink: rgb(193, 76, 138);
+  --c-red: rgb(212, 76, 71);
+  --b-gray: rgb(241, 241, 239);
+  --b-brown: rgb(244, 238, 238);
+  --b-orange: rgb(251, 236, 221);
+  --b-yellow: rgb(251, 243, 219);
+  --b-green: rgb(237, 243, 236);
+  --b-blue: rgb(231, 243, 248);
+  --b-purple: rgba(244, 240, 247, 0.8);
+  --b-pink: rgba(249, 238, 243, 0.8);
+  --b-red: rgb(253, 235, 236);
+
+  --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Display', 'Segoe UI', Helvetica,
+    'Microsoft JhengHei', 'PingFang TC', 'Apple Color Emoji', Arial, sans-serif, 'Segoe UI Emoji';
+  --mono: 'SFMono-Regular', Menlo, Consolas, 'PT Mono', 'Liberation Mono', Courier, monospace;
+}
+
+.ne-root[data-theme='dark'],
+:is(.dark, [data-theme='dark']) .ne-root[data-theme='inherit'] {
+  color-scheme: dark;
+  --bg: #191919;
+  --text: rgba(255, 255, 255, 0.81);
+  --text-soft: rgba(255, 255, 255, 0.55);
+  --text-faint: rgba(255, 255, 255, 0.28);
+  --hover: rgba(255, 255, 255, 0.06);
+  --active: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.13);
+  --select: rgba(35, 131, 226, 0.28);
+  --marquee-fill: rgba(35, 131, 226, 0.18);
+  --code-bg: rgba(255, 255, 255, 0.05);
+  --inline-code: rgba(135, 131, 120, 0.25);
+  --callout-bg: rgba(255, 255, 255, 0.05);
+  --menu-bg: #252525;
+  --menu-shadow: rgba(15, 15, 15, 0.1) 0 0 0 1px, rgba(15, 15, 15, 0.2) 0 3px 6px, rgba(15, 15, 15, 0.4) 0 9px 24px;
+  --toolbar-bg: #252525;
+  --backdrop: rgba(0, 0, 0, 0.55);
+  --c-gray: rgb(155, 155, 155);
+  --c-brown: rgb(186, 133, 111);
+  --c-orange: rgb(199, 125, 72);
+  --c-yellow: rgb(202, 152, 73);
+  --c-green: rgb(82, 158, 114);
+  --c-blue: rgb(94, 135, 201);
+  --c-purple: rgb(157, 104, 211);
+  --c-pink: rgb(209, 87, 150);
+  --c-red: rgb(223, 84, 82);
+  --b-gray: rgb(47, 47, 47);
+  --b-brown: rgb(74, 50, 40);
+  --b-orange: rgb(92, 59, 35);
+  --b-yellow: rgb(86, 67, 40);
+  --b-green: rgb(36, 61, 48);
+  --b-blue: rgb(20, 58, 78);
+  --b-purple: rgb(60, 45, 73);
+  --b-pink: rgb(78, 44, 60);
+  --b-red: rgb(82, 46, 42);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ne-root[data-theme='system'] {
+    color-scheme: dark;
+    --bg: #191919;
+    --text: rgba(255, 255, 255, 0.81);
+    --text-soft: rgba(255, 255, 255, 0.55);
+    --text-faint: rgba(255, 255, 255, 0.28);
+    --hover: rgba(255, 255, 255, 0.06);
+    --active: rgba(255, 255, 255, 0.12);
+    --border: rgba(255, 255, 255, 0.13);
+    --select: rgba(35, 131, 226, 0.28);
+    --marquee-fill: rgba(35, 131, 226, 0.18);
+    --code-bg: rgba(255, 255, 255, 0.05);
+    --inline-code: rgba(135, 131, 120, 0.25);
+    --callout-bg: rgba(255, 255, 255, 0.05);
+    --menu-bg: #252525;
+    --menu-shadow: rgba(15, 15, 15, 0.1) 0 0 0 1px, rgba(15, 15, 15, 0.2) 0 3px 6px, rgba(15, 15, 15, 0.4) 0 9px 24px;
+    --toolbar-bg: #252525;
+    --backdrop: rgba(0, 0, 0, 0.55);
+    --c-gray: rgb(155, 155, 155);
+    --c-brown: rgb(186, 133, 111);
+    --c-orange: rgb(199, 125, 72);
+    --c-yellow: rgb(202, 152, 73);
+    --c-green: rgb(82, 158, 114);
+    --c-blue: rgb(94, 135, 201);
+    --c-purple: rgb(157, 104, 211);
+    --c-pink: rgb(209, 87, 150);
+    --c-red: rgb(223, 84, 82);
+    --b-gray: rgb(47, 47, 47);
+    --b-brown: rgb(74, 50, 40);
+    --b-orange: rgb(92, 59, 35);
+    --b-yellow: rgb(86, 67, 40);
+    --b-green: rgb(36, 61, 48);
+    --b-blue: rgb(20, 58, 78);
+    --b-purple: rgb(60, 45, 73);
+    --b-pink: rgb(78, 44, 60);
+    --b-red: rgb(82, 46, 42);
+  }
+}

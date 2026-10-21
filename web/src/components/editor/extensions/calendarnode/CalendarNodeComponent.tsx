@@ -1,6 +1,6 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
-import { ChevronUp, ChevronDown, Edit3, Trash2, CalendarDays } from "lucide-react"
-import { useState, useRef, useEffect, useCallback } from "react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
+import { Edit3, CalendarDays } from "lucide-react"
+import { useState, useRef, useEffect } from "react"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 
 const MONTH_NAMES = [
@@ -51,7 +51,7 @@ function MiniCalendar({ date }: { date: string }) {
   )
 }
 
-const CalendarNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos }) => {
+const CalendarNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos }) => {
   const { date, title, description } = node.attrs
   const isEditable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
@@ -78,34 +78,10 @@ const CalendarNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes
     }
   }
 
-  const handleMoveUp = useCallback(() => {
-    const pos = getPos()
-    if (pos === undefined) return
-    const { state } = editor
-    const $pos = state.doc.resolve(pos)
-    if ($pos.index() === 0) return
-    const nodeBefore = $pos.nodeBefore
-    if (!nodeBefore) return
-    editor.view.dispatch(state.tr.replaceWith(pos - nodeBefore.nodeSize, pos + node.nodeSize, [node, nodeBefore]))
-  }, [editor, node, getPos])
 
-  const handleMoveDown = useCallback(() => {
-    const pos = getPos()
-    if (pos === undefined) return
-    const { state } = editor
-    const $pos = state.doc.resolve(pos)
-    if ($pos.index() >= $pos.parent.childCount - 1) return
-    const nodeAfterPos = pos + node.nodeSize
-    const nodeAfter = state.doc.resolve(nodeAfterPos).nodeAfter
-    if (!nodeAfter) return
-    editor.view.dispatch(state.tr.replaceWith(pos, nodeAfterPos + nodeAfter.nodeSize, [nodeAfter, node]))
-  }, [editor, node, getPos])
 
   const nodeActions = [
-    { label: 'Move up', icon: <ChevronUp size={14} />, onClick: handleMoveUp },
-    { label: 'Move down', icon: <ChevronDown size={14} />, onClick: handleMoveDown },
     { label: 'Edit', icon: <Edit3 size={14} />, onClick: () => { setInputDate(date ?? ''); setInputTitle(title ?? ''); setInputDescription(description ?? ''); setIsEditing(true) } },
-    { label: 'Delete', icon: <Trash2 size={14} />, onClick: deleteNode, variant: 'danger' as const },
   ]
 
   useDragMenu(getPos, () => nodeActions)

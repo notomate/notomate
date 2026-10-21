@@ -129,12 +129,14 @@ svg.lucide-icon{
   scrollbar-width: none;     /* Firefox */
 }
 
-[contenteditable][data-placeholder]:empty:before {
+/* Placeholders of plain contenteditable fields (e.g. EditableDiv). The block editor
+   shows its own, only on the focused block, so it is left out. */
+[contenteditable][data-placeholder]:empty:not(.ne-root *):before {
   content: attr(data-placeholder);
   pointer-events: none;
 }
 
-[contenteditable][data-placeholder]:empty:before {
+[contenteditable][data-placeholder]:empty:not(.ne-root *):before {
   @apply text-muted-foreground;
 }
 

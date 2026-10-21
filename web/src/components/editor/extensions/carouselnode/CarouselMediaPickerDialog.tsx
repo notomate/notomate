@@ -6,7 +6,7 @@ import { FileInfo } from "@/api/file"
 import { PendingUploads } from "@/components/upload/PendingUploads"
 import useUploadComplete from "@/hooks/use-upload-complete"
 import usePagedFiles from "@/hooks/use-paged-files"
-import { CarouselItem } from "./CarouselNode"
+import { CarouselItem } from "./types"
 import ProgressiveImage from "@/components/image/ProgressiveImage"
 
 interface CarouselMediaPickerDialogProps {

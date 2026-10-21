@@ -1,18 +1,17 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Map as GoogleMap, Polyline } from "@vis.gl/react-google-maps"
-import { ChevronDown, ChevronUp, Loader2, Navigation, Route as RouteIcon, Trash2, X } from "lucide-react"
-import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
+import { ChevronDown, ChevronUp, Loader2, Navigation, Route as RouteIcon, X } from "lucide-react"
+import { useDragMenu, NodeTouchMenu, type MenuAction } from "@/components/editor/DragMenuContext"
 import { PlaceSummary, TravelMode, computeGoogleRoutes, googleMapsErrorMessage, toLatLng } from "@/api/googleMaps"
 import { GoogleMapGate } from "./shared/GoogleMapGate"
 import { PlaceSearchBox } from "./shared/PlaceSearchBox"
 import { FitBounds, LabeledMarker, RouteSummary, StaticRouteMap } from "./shared/MapParts"
-import { useNodeMove } from "./shared/useNodeMove"
 import { CompactBody, DirectionsSummary, ExpandToggle, frameClass } from "./shared/CompactSummary"
 import { DEFAULT_CENTER, StoredRoute, TRAVEL_MODES, Waypoint, chooseRoute, newId, toStoredRoutes, waypointColor, waypointLabel } from "./shared/types"
 
-const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos, extension }) => {
+const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos, extension }) => {
   const { t, i18n } = useTranslation()
   const workspaceId: string = extension.options.workspaceId
   const waypoints: Waypoint[] = useMemo(() => node.attrs.waypoints ?? [], [node.attrs.waypoints])
@@ -22,7 +21,6 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
   const alternatives: StoredRoute[] | null = node.attrs.alternatives ?? null
   const editable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
-  const { moveUp, moveDown } = useNodeMove({ editor, node, getPos })
 
   // A directions node still being set up opens straight into editing.
   const [expanded, setExpanded] = useState(waypoints.length < 2)
@@ -75,10 +73,7 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
     }
   }
 
-  const nodeActions = [
-    { label: t("editor.moveUp"), icon: <ChevronUp size={14} />, onClick: moveUp },
-    { label: t("editor.moveDown"), icon: <ChevronDown size={14} />, onClick: moveDown },
-    { label: t("actions.delete"), icon: <Trash2 size={14} />, onClick: deleteNode, variant: "danger" as const },
+  const nodeActions: MenuAction[] = [
   ]
   useDragMenu(getPos, () => nodeActions)
 

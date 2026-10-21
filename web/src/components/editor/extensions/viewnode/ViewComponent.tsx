@@ -1,4 +1,4 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
 import { Map, CalendarDays, Kanban, PenTool, Sheet, ExternalLink, Loader2, Trash2 } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"

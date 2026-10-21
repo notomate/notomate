@@ -20,6 +20,7 @@
     "@dagrejs/dagre": "^3.1.1",
     "@fortune-sheet/react": "^1.0.4",
     "@hocuspocus/provider": "^3.4.4",
+    "@notomate/editor": "file:../packages/editor",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",

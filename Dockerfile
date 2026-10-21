@@ -1,6 +1,20 @@
+# ---------- Stage 0: build the block editor package (used by web and collab) ----------
+FROM node:20-alpine AS editor
+WORKDIR /app/packages/editor
+
+COPY packages/editor/package.json packages/editor/package-lock.json ./
+RUN npm ci
+
+COPY packages/editor/ .
+RUN npm run build
+
 # ---------- Stage 1: build frontend (SPA) ----------
 FROM node:20-alpine AS frontend
 WORKDIR /app/web
+
+# web depends on file:../packages/editor; only its build output and manifest are needed.
+COPY --from=editor /app/packages/editor/package.json /app/packages/editor/package.json
+COPY --from=editor /app/packages/editor/dist /app/packages/editor/dist
 
 # Accept version as build argument
 ARG VITE_APP_VERSION=dev
@@ -17,6 +31,9 @@ RUN npm run build
 FROM node:20-alpine AS collab-deps
 WORKDIR /app/collab
 
+# collab depends on file:../packages/editor (the TipTap converter in dist/convert.js).
+COPY --from=editor /app/packages/editor/package.json /app/packages/editor/package.json
+COPY --from=editor /app/packages/editor/dist /app/packages/editor/dist
 COPY collab/package*.json ./
 RUN npm install --omit=dev
 
@@ -88,6 +105,8 @@ ENV TZ="UTC"
 
 # Copy collab service
 COPY --from=collab-deps /app/collab/node_modules ./collab/node_modules
+# Target of the node_modules/@notomate/editor link.
+COPY --from=collab-deps /app/packages/editor ./packages/editor
 COPY collab/src ./collab/src
 COPY collab/package.json ./collab/package.json
 CMD ["node", "collab/src/index.js"]

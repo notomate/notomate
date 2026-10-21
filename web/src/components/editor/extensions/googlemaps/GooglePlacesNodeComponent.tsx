@@ -1,21 +1,19 @@
-import { NodeViewProps, NodeViewWrapper } from "@tiptap/react"
+import { NodeViewProps, NodeViewWrapper } from "@/components/noteeditor/nodeView"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { ChevronDown, ChevronUp, Edit3, Loader2, RefreshCw, Search, Star, Store, Trash2 } from "lucide-react"
+import { Edit3, Loader2, RefreshCw, Search, Star, Store } from "lucide-react"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 import { PlaceDetails, PlaceSummary, getGooglePlace, googleMapsErrorMessage, searchGooglePlaces } from "@/api/googleMaps"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
-import { useNodeMove } from "./shared/useNodeMove"
 import { CompactBody, ExpandToggle, MarkersSummary, frameClass } from "./shared/CompactSummary"
 import { placesToMarkers, trimPlace } from "./shared/types"
 
-const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, deleteNode, getPos, extension }) => {
+const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos, extension }) => {
   const { t, i18n } = useTranslation()
   const workspaceId: string = extension.options.workspaceId
   const places: PlaceDetails[] = node.attrs.places ?? []
   const editable = editor.isEditable
   const isTouchDevice = window.matchMedia("(pointer: coarse)").matches
-  const { moveUp, moveDown } = useNodeMove({ editor, node, getPos })
 
   const [isEditing, setIsEditingState] = useState(places.length === 0)
   const [expanded, setExpanded] = useState(places.length === 0)
@@ -89,10 +87,7 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
   }
 
   const nodeActions = [
-    { label: t("editor.moveUp"), icon: <ChevronUp size={14} />, onClick: moveUp },
-    { label: t("editor.moveDown"), icon: <ChevronDown size={14} />, onClick: moveDown },
     { label: t("googleMaps.editPlaces"), icon: <Edit3 size={14} />, onClick: () => setIsEditing(true) },
-    { label: t("actions.delete"), icon: <Trash2 size={14} />, onClick: deleteNode, variant: "danger" as const },
   ]
   useDragMenu(getPos, () => nodeActions)
 

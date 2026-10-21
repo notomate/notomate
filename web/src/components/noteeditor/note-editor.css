@@ -1,0 +1,117 @@
+/* Fit @notomate/editor into the note page, which already provides width and padding. */
+
+.ne-root.note-editor {
+  --bg: transparent;
+  min-height: 0;
+}
+
+.ne-root.note-editor .page-column {
+  max-width: none;
+  /* Room for the drag handle and "+" gutter. */
+  padding: 0 0 0 48px;
+}
+
+.ne-root.note-editor .page-bottom {
+  height: 8rem;
+}
+
+@media (max-width: 600px) {
+  .ne-root.note-editor .page-column {
+    padding: 0 0 0 36px;
+  }
+}
+
+.ne-root .text.h4 .editable { font-size: 1.125em; font-weight: 600; line-height: 1.4; }
+.ne-root .text.h5 .editable { font-size: 1em; font-weight: 600; line-height: 1.5; }
+.ne-root .text.h6 .editable { font-size: 0.875em; font-weight: 600; line-height: 1.5; color: var(--text-soft); }
+
+/* Node blocks keep their own Tailwind styling; give them the editor's text color. */
+.ne-root [data-node-view] {
+  color: var(--text);
+}
+
+/* ---------- table ---------- */
+
+.ne-root .note-table {
+  margin: 4px 0;
+}
+
+.ne-root .note-table-scroll {
+  overflow-x: auto;
+}
+
+.ne-root .note-table table {
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.ne-root .note-table th,
+.ne-root .note-table td {
+  min-width: 100px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.ne-root .note-table th {
+  background: var(--hover);
+  font-weight: 600;
+}
+
+.ne-root .table-cell-text {
+  min-height: 1.5em;
+  padding: 6px 10px;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+}
+
+.ne-root .table-cell-text:focus {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.ne-root .note-table-add {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.ne-root .note-table:hover .note-table-add,
+.ne-root .note-table:focus-within .note-table-add,
+.ne-root.coarse .note-table-add {
+  opacity: 1;
+}
+
+.ne-root .note-table-add button {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-soft);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ne-root .note-table-add button:hover {
+  background: var(--hover);
+}
+
+/* Loading placeholder in NoteDetailView: rows at the editor's text position and pitch
+   (31px: 1px row margin + 3px padding + 24px line + 3px padding). */
+.note-editor-skeleton {
+  padding-left: 50px; /* .page-column padding + .editable padding */
+}
+
+.note-editor-skeleton-row {
+  margin-top: 1px;
+  padding: 7px 0; /* 3px padding + 4px centering a 16px bar in the 24px line */
+}
+
+@media (max-width: 600px) {
+  .note-editor-skeleton {
+    padding-left: 38px;
+  }
+}
