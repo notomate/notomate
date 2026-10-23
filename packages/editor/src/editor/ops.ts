@@ -214,6 +214,15 @@ export function insertBlockAfter(afterId: string | null, type: BlockType = 'para
   return b.id;
 }
 
+/** Click below the last block: reuse a trailing empty paragraph, or add one. */
+export function extendPage() {
+  const d = doc();
+  const lastRoot = d.rootIds[d.rootIds.length - 1];
+  const b = d.blocks[lastRoot];
+  if (b && b.type === 'paragraph' && !b.html && !b.children.length) requestFocus(lastRoot, 'start');
+  else insertBlockAfter(lastRoot ?? null);
+}
+
 export function deleteBlocks(ids: string[]) {
   const d0 = doc();
   const top = topLevel(d0, ids);

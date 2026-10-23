@@ -1,7 +1,7 @@
 import { useEffect, type RefObject } from 'react';
 import { clearSelection, requestFocus, selectBlocks, useEditor } from '../model/store';
 import { isTextBlock } from '../model/types';
-import { insertBlockAfter } from '../ops';
+import { extendPage } from '../ops';
 import { blockIdOfRow, createAutoScroller, isMouse, rowsIn } from '../input/pointer';
 import { caretFromPoint } from '../inline/caret';
 
@@ -40,10 +40,7 @@ function clickAt(root: HTMLElement, x: number, y: number) {
   }
   const last = rows[rows.length - 1];
   if (last && y > last.getBoundingClientRect().bottom) {
-    const lastRoot = doc.rootIds[doc.rootIds.length - 1];
-    const b = doc.blocks[lastRoot];
-    if (b && b.type === 'paragraph' && !b.html && !b.children.length) requestFocus(lastRoot, 'start');
-    else insertBlockAfter(lastRoot ?? null);
+    extendPage();
     return;
   }
   (document.activeElement as HTMLElement | null)?.blur?.();

@@ -7,6 +7,7 @@ import {
   duplicateBlocks,
   fragmentOf,
   indentBlocks,
+  insertBlockAfter,
   insertFragment,
   outdentBlocks,
 } from '../ops';
@@ -83,8 +84,12 @@ export function onSinkKeyDown(e: KeyboardEvent) {
       return;
     case 'Enter': {
       e.preventDefault();
-      const first = topLevel(doc, ids)[0];
-      if (first && isTextBlock(doc.blocks[first])) requestFocus(first, 'end');
+      const top = topLevel(doc, ids);
+      const first = top[0];
+      if (!first) return;
+      // Text: edit it. Image / embed / table: start a paragraph below, like Notion.
+      if (isTextBlock(doc.blocks[first])) requestFocus(first, 'end');
+      else insertBlockAfter(top[top.length - 1]);
       return;
     }
     case 'Tab':
