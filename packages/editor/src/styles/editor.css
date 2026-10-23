@@ -1028,11 +1028,16 @@ body.ne-is-dragging * {
 }
 
 .ne-root .mobile-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
   width: 44px;
   height: 44px;
+  padding: 0;
   border: 0;
   background: none;
-  font-size: 18px;
+  color: var(--text);
 }
 
 .ne-root .mobile-toolbar button:active {

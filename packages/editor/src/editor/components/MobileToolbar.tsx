@@ -3,6 +3,7 @@ import { redo, selectBlocks, undo, useEditor } from '../model/store';
 import { indentBlocks, outdentBlocks } from '../ops';
 import { getSelectionOffsets } from '../inline/caret';
 import { msg } from '../messages';
+import { Icon, type IconName } from './icons';
 
 function focusedEditable(): HTMLElement | null {
   return (document.activeElement as HTMLElement | null)?.closest?.('[data-editable-id]') ?? null;
@@ -31,9 +32,9 @@ export function MobileToolbar() {
     const el = focusedEditable();
     return (el && getSelectionOffsets(el)?.start) ?? 0;
   };
-  const btn = (label: string, glyph: string, fn: () => void) => (
+  const btn = (label: string, icon: IconName, fn: () => void) => (
     <button type="button" aria-label={label} title={label} onClick={fn}>
-      {glyph}
+      <Icon name={icon} size={20} />
     </button>
   );
 
@@ -45,23 +46,23 @@ export function MobileToolbar() {
       role="toolbar"
       aria-label={msg().editTools}
     >
-      {btn(msg().insertBlock, '＋', () => {
+      {btn(msg().insertBlock, 'plus', () => {
         if (at() > 0) document.execCommand('insertText', false, ' ');
         document.execCommand('insertText', false, '/');
       })}
-      {btn(msg().indent, '⇥', () => indentBlocks([focusedId], { id: focusedId, at: at() }))}
-      {btn(msg().outdent, '⇤', () => outdentBlocks([focusedId], { id: focusedId, at: at() }))}
-      {btn(msg().selectBlock, '☐', () => {
+      {btn(msg().indent, 'indent', () => indentBlocks([focusedId], { id: focusedId, at: at() }))}
+      {btn(msg().outdent, 'outdent', () => outdentBlocks([focusedId], { id: focusedId, at: at() }))}
+      {btn(msg().selectBlock, 'select', () => {
         focusedEditable()?.blur();
         selectBlocks([focusedId]);
         const row = document.querySelector(`[data-block-id="${focusedId}"] .handle`);
         const r = row?.getBoundingClientRect();
         useEditor.setState({ blockMenu: { x: r?.left ?? 0, y: r?.bottom ?? 0 } });
       })}
-      {btn(msg().undo, '↶', undo)}
-      {btn(msg().redo, '↷', redo)}
+      {btn(msg().undo, 'undo', undo)}
+      {btn(msg().redo, 'redo', redo)}
       <span className="spacer" />
-      {btn(msg().done, '⌄', () => focusedEditable()?.blur())}
+      {btn(msg().done, 'chevronDown', () => focusedEditable()?.blur())}
     </div>
   );
 }
