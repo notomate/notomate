@@ -8,15 +8,17 @@ import (
 	"bytes"
 	"context"
 	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"log"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/disintegration/imaging"
 	"github.com/notomate/notomate/internal/model"
 	"github.com/notomate/notomate/internal/storage"
+	"golang.org/x/image/draw"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -148,19 +150,25 @@ func (s *Service) generate(workspaceID, name, ext string, width int) (*result, e
 	// Resize before rotating so only the small image is transformed;
 	// width is the displayed width, which is the stored height when the
 	// orientation rotates by 90°.
+	var scaled *image.NRGBA
 	if swapsAxes(orientation) {
-		img = imaging.Resize(img, 0, width, imaging.CatmullRom)
+		scaled = resizeToHeight(img, width)
 	} else {
-		img = imaging.Resize(img, width, 0, imaging.CatmullRom)
+		scaled = resizeToWidth(img, width)
 	}
-	img = applyOrientation(img, orientation)
+	img = applyOrientation(scaled, orientation)
 
-	out, format := ".jpg", imaging.JPEG
+	out := ".jpg"
 	if ext != ".jpg" && ext != ".jpeg" && !isOpaque(img) {
-		out, format = ".png", imaging.PNG
+		out = ".png"
 	}
 	var buf bytes.Buffer
-	if err := imaging.Encode(&buf, img, format, imaging.JPEGQuality(jpegQuality)); err != nil {
+	if out == ".png" {
+		err = png.Encode(&buf, img)
+	} else {
+		err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: jpegQuality})
+	}
+	if err != nil {
 		return nil, err
 	}
 	vname := variantName(name, width, out)
@@ -256,25 +264,60 @@ func isOpaque(img image.Image) bool {
 	return false
 }
 
+// resizeToWidth scales img to width pixels wide, keeping its aspect ratio.
+func resizeToWidth(img image.Image, width int) *image.NRGBA {
+	b := img.Bounds()
+	return scale(img, width, max(1, int(float64(width)*float64(b.Dy())/float64(b.Dx())+0.5)))
+}
+
+// resizeToHeight scales img to height pixels tall, keeping its aspect ratio.
+func resizeToHeight(img image.Image, height int) *image.NRGBA {
+	b := img.Bounds()
+	return scale(img, max(1, int(float64(height)*float64(b.Dx())/float64(b.Dy())+0.5)), height)
+}
+
+func scale(img image.Image, width, height int) *image.NRGBA {
+	dst := image.NewNRGBA(image.Rect(0, 0, width, height))
+	draw.CatmullRom.Scale(dst, dst.Bounds(), img, img.Bounds(), draw.Src, nil)
+	return dst
+}
+
 // applyOrientation turns stored pixels into the displayed orientation.
-func applyOrientation(img image.Image, orientation int) image.Image {
+func applyOrientation(img *image.NRGBA, orientation int) *image.NRGBA {
+	w, h := img.Bounds().Dx(), img.Bounds().Dy()
+	// src maps a destination pixel to the source pixel it is copied from.
+	var src func(x, y int) (int, int)
+	dw, dh := w, h
 	switch orientation {
-	case 2:
-		return imaging.FlipH(img)
-	case 3:
-		return imaging.Rotate180(img)
-	case 4:
-		return imaging.FlipV(img)
-	case 5:
-		return imaging.Transpose(img)
-	case 6:
-		return imaging.Rotate270(img)
-	case 7:
-		return imaging.Transverse(img)
-	case 8:
-		return imaging.Rotate90(img)
+	case 2: // mirrored horizontally
+		src = func(x, y int) (int, int) { return w - 1 - x, y }
+	case 3: // rotated 180°
+		src = func(x, y int) (int, int) { return w - 1 - x, h - 1 - y }
+	case 4: // mirrored vertically
+		src = func(x, y int) (int, int) { return x, h - 1 - y }
+	case 5: // transposed
+		src = func(x, y int) (int, int) { return y, x }
+	case 6: // rotated 90° clockwise
+		src = func(x, y int) (int, int) { return y, h - 1 - x }
+	case 7: // transversed
+		src = func(x, y int) (int, int) { return w - 1 - y, h - 1 - x }
+	case 8: // rotated 90° counter-clockwise
+		src = func(x, y int) (int, int) { return w - 1 - y, x }
+	default:
+		return img
 	}
-	return img
+	if swapsAxes(orientation) {
+		dw, dh = h, w
+	}
+	dst := image.NewNRGBA(image.Rect(0, 0, dw, dh))
+	for y := 0; y < dh; y++ {
+		for x := 0; x < dw; x++ {
+			sx, sy := src(x, y)
+			si := img.PixOffset(img.Rect.Min.X+sx, img.Rect.Min.Y+sy)
+			copy(dst.Pix[dst.PixOffset(x, y):dst.PixOffset(x, y)+4], img.Pix[si:si+4])
+		}
+	}
+	return dst
 }
 
 type nopCloser struct{ *bytes.Reader }
