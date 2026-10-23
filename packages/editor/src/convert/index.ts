@@ -23,6 +23,14 @@ const DEFAULT_CELL_ATTRS = { colspan: 1, rowspan: 1, colwidth: null };
 let counter = 0;
 const newId = () => Math.random().toString(36).slice(2, 10) + (counter++).toString(36);
 
+/**
+ * TipTap attr that carries a block's id through storage. A room re-seeded from the
+ * stored note must reuse the ids a still-open client holds, or merging that client's
+ * state back in leaves every block twice.
+ */
+export const BLOCK_ID_ATTR = 'blockId';
+const STORED_ID = /^[A-Za-z0-9-]{1,64}$/;
+
 export const EMPTY_TIPTAP: TipTapNode = { type: 'doc', content: [{ type: 'paragraph' }] };
 
 /** Drop empty text nodes, which ProseMirror rejects. */
@@ -71,16 +79,22 @@ export function parseTiptap(content: string | null | undefined): { doc: TipTapNo
 export function tiptapToDoc(json: TipTapNode, title = ''): Doc {
   const blocks: Record<string, Block> = {};
 
-  const add = (type: string, html: string, props: BlockProps, parentId: string | null): Block => {
-    const b: Block = { id: newId(), type, html, props, children: [], parentId };
+  /** The id stored on `src`, unless it is missing, malformed or already taken. */
+  const idOf = (src?: TipTapNode) => {
+    const id = src?.attrs?.[BLOCK_ID_ATTR];
+    return typeof id === 'string' && STORED_ID.test(id) && !blocks[id] ? id : newId();
+  };
+
+  const add = (type: string, html: string, props: BlockProps, parentId: string | null, src?: TipTapNode): Block => {
+    const b: Block = { id: idOf(src), type, html, props, children: [], parentId };
     blocks[b.id] = b;
     return b;
   };
 
   /** First paragraph becomes the block's text, the rest its children (list items, quotes). */
-  const container = (type: string, props: BlockProps, content: TipTapNode[] = [], parentId: string | null) => {
+  const container = (type: string, props: BlockProps, content: TipTapNode[] = [], parentId: string | null, src: TipTapNode) => {
     const [first, ...rest] = content;
-    const b = add(type, first?.type === 'paragraph' ? inlineToHtml(first.content) : '', props, parentId);
+    const b = add(type, first?.type === 'paragraph' ? inlineToHtml(first.content) : '', props, parentId, src);
     b.children = walk(first?.type === 'paragraph' ? rest : content, b.id);
     return b.id;
   };
@@ -96,29 +110,29 @@ export function tiptapToDoc(json: TipTapNode, title = ''): Doc {
           if (list.type === 'numbered' && i === 0 && typeof n.attrs?.start === 'number' && n.attrs.start !== 1) {
             props.start = n.attrs.start;
           }
-          ids.push(container(list.type, props, item.content, parentId));
+          ids.push(container(list.type, props, item.content, parentId, item));
         });
         continue;
       }
       switch (n.type) {
         case 'paragraph':
-          ids.push(add('paragraph', inlineToHtml(n.content), {}, parentId).id);
+          ids.push(add('paragraph', inlineToHtml(n.content), {}, parentId, n).id);
           break;
         case 'heading': {
           const level = Math.min(6, Math.max(1, Number(n.attrs?.level) || 1));
-          ids.push(add(`h${level}`, inlineToHtml(n.content), {}, parentId).id);
+          ids.push(add(`h${level}`, inlineToHtml(n.content), {}, parentId, n).id);
           break;
         }
         case 'blockquote':
-          ids.push(container('quote', {}, n.content, parentId));
+          ids.push(container('quote', {}, n.content, parentId, n));
           break;
         case 'codeBlock': {
           const text = (n.content ?? []).map((t) => t.text ?? '').join('');
-          ids.push(add('code', escapeText(text), { language: n.attrs?.language ?? null }, parentId).id);
+          ids.push(add('code', escapeText(text), { language: n.attrs?.language ?? null }, parentId, n).id);
           break;
         }
         case 'horizontalRule':
-          ids.push(add('divider', '', {}, parentId).id);
+          ids.push(add('divider', '', {}, parentId, n).id);
           break;
         case 'table': {
           const rows: TableCell[][] = (n.content ?? []).map((row) =>
@@ -128,7 +142,7 @@ export function tiptapToDoc(json: TipTapNode, title = ''): Doc {
               attrs: { ...DEFAULT_CELL_ATTRS, ...cell.attrs },
             })),
           );
-          ids.push(add('table', '', { rows }, parentId).id);
+          ids.push(add('table', '', { rows }, parentId, n).id);
           break;
         }
         case 'text':
@@ -139,9 +153,9 @@ export function tiptapToDoc(json: TipTapNode, title = ''): Doc {
           break;
         default: {
           // Custom atom nodes (image, embeds, maps…): attrs become props verbatim.
-          const props: BlockProps = { ...n.attrs };
+          const { [BLOCK_ID_ATTR]: _id, ...props }: BlockProps = { ...n.attrs };
           if (n.content?.length) props._content = n.content;
-          ids.push(add(n.type, '', props, parentId).id);
+          ids.push(add(n.type, '', props, parentId, n).id);
         }
       }
     }
@@ -160,6 +174,8 @@ const LIST_OF: Record<string, { list: string; item: string }> = {
   numbered: { list: 'orderedList', item: 'listItem' },
   todo: { list: 'taskList', item: 'taskItem' },
 };
+
+const withId = (node: TipTapNode, id: string): TipTapNode => ({ ...node, attrs: { ...node.attrs, [BLOCK_ID_ATTR]: id } });
 
 const paragraph = (html: string): TipTapNode => {
   const content = htmlToInline(html);
@@ -185,7 +201,7 @@ export function docToTiptap(doc: Doc): TipTapNode {
           const item = doc.blocks[ids[i]];
           const node: TipTapNode = { type: list.item, content: [paragraph(item.html), ...convert(item.children)] };
           if (b.type === 'todo') node.attrs = { checked: !!item.props.checked };
-          items.push(node);
+          items.push(withId(node, item.id));
         }
         const node: TipTapNode = { type: list.list, content: items };
         if (b.type === 'numbered') node.attrs = { start: typeof first.props.start === 'number' ? first.props.start : 1, type: null };
@@ -198,8 +214,14 @@ export function docToTiptap(doc: Doc): TipTapNode {
     return out;
   };
 
-  /** One block; paragraphs and headings cannot nest in TipTap, so their children follow them. */
+  /** One block, its own node first, tagged with its id. */
   const block = (b: Block): TipTapNode[] => {
+    const [node, ...rest] = blockNodes(b);
+    return [withId(node, b.id), ...rest];
+  };
+
+  /** Paragraphs and headings cannot nest in TipTap, so their children follow them. */
+  const blockNodes = (b: Block): TipTapNode[] => {
     const heading = /^h([1-6])$/.exec(b.type);
     if (heading) {
       const content = htmlToInline(b.html);
