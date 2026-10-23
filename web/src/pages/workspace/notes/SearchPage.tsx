@@ -86,7 +86,7 @@ const SearchPage = () => {
                             <NoteList
                                 notes={notes}
                                 getLinkTo={(note) => `/workspaces/${currentWorkspaceId}/notes/${note.id}`}
-                                maxNodes={8}
+                                maxNodes={100}
                                 workspaceId={currentWorkspaceId}
                                 showActions
                             />
