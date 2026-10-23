@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { docToTiptap, parseTiptap, tiptapToDoc } from './index';
+import { BLOCK_ID_ATTR, docToTiptap, parseTiptap, tiptapToDoc } from './index';
 import { htmlToInline, inlineToHtml } from './inline';
 import type { TipTapNode } from './types';
 
@@ -123,9 +123,45 @@ describe('inline', () => {
   });
 });
 
+/** `node` without the block ids `docToTiptap` stores. */
+const stripIds = (node: TipTapNode): TipTapNode => {
+  const out: TipTapNode = { ...node };
+  if (out.attrs && BLOCK_ID_ATTR in out.attrs) {
+    const { [BLOCK_ID_ATTR]: _id, ...attrs } = out.attrs;
+    if (Object.keys(attrs).length) out.attrs = attrs;
+    else delete out.attrs;
+  }
+  if (out.content) out.content = out.content.map(stripIds);
+  return out;
+};
+
 describe('tiptapToDoc / docToTiptap', () => {
   it('reproduces every node type the app stores', () => {
-    expect(docToTiptap(tiptapToDoc(FIXTURE))).toEqual(FIXTURE);
+    expect(stripIds(docToTiptap(tiptapToDoc(FIXTURE)))).toEqual(FIXTURE);
+  });
+
+  it('keeps block ids through storage', () => {
+    const doc = tiptapToDoc(FIXTURE);
+    const again = tiptapToDoc(docToTiptap(doc));
+    expect(again.rootIds).toEqual(doc.rootIds);
+    expect(again.blocks).toEqual(doc.blocks);
+  });
+
+  it('replaces missing, malformed and repeated block ids', () => {
+    const withId = (id: unknown, text: string): TipTapNode => ({ ...p(text), attrs: { [BLOCK_ID_ATTR]: id } });
+    const doc = tiptapToDoc({
+      type: 'doc',
+      content: [withId('keep', 'a'), withId('keep', 'b'), withId('__proto__', 'c'), withId(7, 'd'), p('e')],
+    });
+    expect(doc.rootIds[0]).toBe('keep');
+    expect(new Set(doc.rootIds).size).toBe(5);
+    expect(doc.rootIds.map((id) => doc.blocks[id].html)).toEqual(['a', 'b', 'c', 'd', 'e']);
+  });
+
+  it('does not leak the block id into atom props', () => {
+    const doc = tiptapToDoc({ type: 'doc', content: [{ type: 'tagsNode', attrs: { tags: ['x'], [BLOCK_ID_ATTR]: 'tags1' } }] });
+    expect(doc.rootIds).toEqual(['tags1']);
+    expect(doc.blocks.tags1.props).toEqual({ tags: ['x'] });
   });
 
   it('is stable on repeated conversion', () => {
@@ -158,18 +194,18 @@ describe('tiptapToDoc / docToTiptap', () => {
     const child = { ...parent, id: 'child', html: 'child', parentId: parent.id, children: [] };
     doc.blocks.child = child;
     doc.blocks[parent.id] = { ...parent, children: ['child'] };
-    expect(docToTiptap(doc).content).toEqual([p('parent'), p('child')]);
+    expect(stripIds(docToTiptap(doc)).content).toEqual([p('parent'), p('child')]);
   });
 
   it('produces a single empty paragraph for an empty document', () => {
     const doc = tiptapToDoc({ type: 'doc', content: [] });
     expect(doc.rootIds).toHaveLength(1);
-    expect(docToTiptap(doc)).toEqual({ type: 'doc', content: [{ type: 'paragraph' }] });
+    expect(stripIds(docToTiptap(doc))).toEqual({ type: 'doc', content: [{ type: 'paragraph' }] });
   });
 
   it('passes unknown container nodes through untouched', () => {
     const custom: TipTapNode = { type: 'doc', content: [{ type: 'columns', attrs: { n: 2 }, content: [p('x')] }] };
-    expect(docToTiptap(tiptapToDoc(custom))).toEqual(custom);
+    expect(stripIds(docToTiptap(tiptapToDoc(custom)))).toEqual(custom);
   });
 });
 
