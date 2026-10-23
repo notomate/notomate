@@ -62,6 +62,26 @@ const PATHS: Record<string, ReactNode> = {
       <path d="M8.5 9v5M11.5 9v5" />
     </>
   ),
+  plus: <path d="M10 4v12M4 10h12" />,
+  select: (
+    <>
+      <rect x="3" y="3" width="14" height="14" rx="3" strokeDasharray="3 2.2" />
+      <path d="M7 8h6M7 12h4" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M4 8h8.5a4 4 0 0 1 0 8H8" />
+      <path d="M7.5 4.5 4 8l3.5 3.5" />
+    </>
+  ),
+  redo: (
+    <>
+      <path d="M16 8H7.5a4 4 0 0 0 0 8H12" />
+      <path d="M12.5 4.5 16 8l-3.5 3.5" />
+    </>
+  ),
+  chevronDown: <path d="m5 8 5 5 5-5" />,
   chevronRight: <path d="m8 5 5 5-5 5" />,
   chevronLeft: <path d="m12 5-5 5 5 5" />,
   check: <path d="m4.5 10.5 3.5 3.5 7.5-8" />,
