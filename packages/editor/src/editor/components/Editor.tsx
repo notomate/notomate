@@ -16,9 +16,9 @@ import { useMarquee } from '../selection/useMarquee';
 import { useTextToBlockDrag } from '../selection/useTextToBlockDrag';
 import { onSinkCopy, onSinkKeyDown, onSinkPaste } from '../selection/blockKeyboard';
 import { placeCaretAtX, selectRange, setCaret } from '../inline/caret';
-import { insertBlockAfter } from '../ops';
+import { extendPage, insertBlockAfter } from '../ops';
 import { isTextBlock, type Doc } from '../model/types';
-import { isCoarsePointer } from '../input/pointer';
+import { isCoarsePointer, isMouse } from '../input/pointer';
 import { editorApi, getPlugins, setPlugins, type EditorPlugin } from '../plugins';
 import { msg, setMessages, type EditorMessages } from '../messages';
 
@@ -214,6 +214,7 @@ export function Editor({
   const dragging = useEditor((s) => s.dragging);
   const pageRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const tapRef = useRef(false);
   const [coarse, setCoarse] = useState(isCoarsePointer);
 
   useEffect(() => {
@@ -247,7 +248,16 @@ export function Editor({
             <BlockView key={id} id={id} depth={0} />
           ))}
         </div>
-        <div className="page-bottom" aria-hidden="true" />
+        <div
+          className="page-bottom"
+          aria-hidden="true"
+          onPointerDown={(e) => (tapRef.current = !isMouse(e))}
+          onClick={() => {
+            // Mouse clicks go through the marquee (`clickAt`); touch and pen never start one.
+            if (tapRef.current) extendPage();
+            tapRef.current = false;
+          }}
+        />
       </main>
       <div ref={boxRef} className="marquee" aria-hidden="true" />
       {getPlugins().map((p) => p.Overlay && <p.Overlay key={p.name} />)}
