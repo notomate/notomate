@@ -627,6 +627,16 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
         return <div className='text-red-500'>Error parsing content</div>
     }
 
+    /** A list or to-do item's own text (its first paragraph) and its nested blocks. */
+    const splitItem = (node: Node): [Node | null, Node[]] => {
+        const [first, ...rest] = node.content ?? []
+        return first?.type === 'paragraph' ? [first, rest] : [null, node.content ?? []]
+    }
+
+    /** Blocks nested under a list or to-do item, indented like the editor's children. */
+    const renderChildren = (nodes: Node[]) =>
+        nodes.length > 0 && <div className='pl-6'>{nodes.map((child, idx) => renderNode(child, idx))}</div>
+
     const renderNode = (node: Node, key?: React.Key): React.ReactNode => {
         if (!node) return null
 
@@ -646,19 +656,29 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 return <ol key={key} className="">{renderContent()}</ol>
             case 'taskList':
                 return <div key={key} className="list-none">{renderContent()}</div>
-            case 'taskItem':
-                return <div key={key} className='flex gap-1 items-start'>
-                     <input
+            case 'taskItem': {
+                const [text, children] = splitItem(node)
+                return <div key={key}>
+                    <div className='flex gap-1 items-start'>
+                        <input
                             type='checkbox'
                             className="size-4 rounded bg-white mt-1 shrink-0"
                             checked={node.attrs?.checked}
                             disabled={true}
                             aria-label='checkbox'
                         />
-                    {renderContent()}
+                        {text && renderNode(text)}
+                    </div>
+                    {renderChildren(children)}
                 </div>
-            case 'listItem':
-                return <li key={key} className="">{renderContent()}</li>
+            }
+            case 'listItem': {
+                const [text, children] = splitItem(node)
+                return <li key={key}>
+                    {text && renderNode(text)}
+                    {renderChildren(children)}
+                </li>
+            }
             case 'codeBlock':
                 return <div className='py-1' key={key}>
                     <ShikiHighlighter language={node.attrs?.language || 'text'} showLineNumbers={true} theme="ayu-dark">
