@@ -1,21 +1,25 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { createPortal } from 'react-dom';
 import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
 import NoteListSkeleton from '@/components/notecard/NoteListSkeleton';
 import AboutModal from '@/components/user/AboutModal';
+import UserMenu from '@/components/usermenu/UserMenu';
+import MobileTopBar from '@/components/mobiletopbar/MobileTopBar';
 import logo from '@/assets/app.svg';
-import { LogIn, ArrowLeft, Search, X, Trash2, Info } from 'lucide-react';
+import { LogIn, ArrowLeft, Search, Trash2, Info, Compass, PanelRight } from 'lucide-react';
 import { useCurrentUserStore } from '@/stores/current-user';
 import { useTranslation } from 'react-i18next';
 
 const PAGE_SIZE = 20;
 
+const navItemClass = "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:text-gray-700 dark:hover:text-gray-300";
+
 const ExplorePage: React.FC = () => {
     const { t } = useTranslation();
     const observerRef = useRef<IntersectionObserver | null>(null);
+    const scrollRef = useRef<HTMLDivElement | null>(null);
 
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -41,7 +45,7 @@ const ExplorePage: React.FC = () => {
         if (node && hasNextPage && !isFetchingNextPage) {
             observerRef.current = new IntersectionObserver(
                 (entries) => { if (entries[0].isIntersecting) fetchNextPage() },
-                { rootMargin: '200px', threshold: 0.1 }
+                { root: scrollRef.current, rootMargin: '200px', threshold: 0.1 }
             );
             observerRef.current.observe(node);
         }
@@ -49,189 +53,132 @@ const ExplorePage: React.FC = () => {
 
     const { user, fetchUser } = useCurrentUserStore();
     const [authChecked, setAuthChecked] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAboutOpen, setIsAboutOpen] = useState(false);
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
-    const mobileButtonRef = useRef<HTMLButtonElement>(null);
-    const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchUser().finally(() => setAuthChecked(true));
     }, []);
 
-    useEffect(() => {
-        if (isSearchOpen) searchInputRef.current?.focus();
-    }, [isSearchOpen]);
-
-    const menuContent = authChecked && (
-        <div className="flex flex-col p-1">
-            {user ? (
-                <Link
-                    to="/"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    title={t("pages.explore.backToWorkspace")}
-                >
-                    <ArrowLeft size={16} strokeWidth={2.5} />
-                    {t("pages.explore.backToWorkspace")}
-                </Link>
-            ) : (
-                <Link
-                    to="/signin"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    title={t("actions.signin")}
-                >
-                    <LogIn size={16} strokeWidth={2.5} />
-                    {t("actions.signin")}
-                </Link>
-            )}
-            <button
-                type="button"
-                onClick={() => {
-                    setIsMenuOpen(false);
-                    setIsAboutOpen(true);
-                }}
-                className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-            >
-                <Info size={16} strokeWidth={2.5} />
-                {t("menu.about")}
-            </button>
-        </div>
-    );
-
     return (
-        <div className="min-h-dvh lg:flex">
-            {/* Sidebar — desktop only */}
-            <aside className="hidden lg:flex flex-col w-56 shrink-0 fixed top-0 left-0 h-screen px-3 pt-6 pb-3">
-                <div className="flex items-center gap-3 select-none px-2">
-                    <img src={logo} className="w-9" alt="logo" />
+        <div className="flex h-svh">
+            {/* Sidebar */}
+            <div
+                className={`w-full lg:w-[240px] h-full flex flex-col shrink-0 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 ${isSidebarOpen ? "flex" : "hidden lg:flex"}`}
+            >
+                <div className="px-3 pt-3 pb-1 flex items-center gap-2">
+                    <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-1.5 select-none">
+                        <img src={logo} className="w-6 shrink-0" alt="logo" />
+                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">Notomate</span>
+                    </div>
+                    <button
+                        aria-label="close sidebar"
+                        className="lg:hidden shrink-0 p-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 text-muted-foreground"
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
+                        <PanelRight size={16} />
+                    </button>
                 </div>
-                <div className="mt-auto flex items-center gap-3">
+
+                <nav className="px-3 py-1 flex-1 overflow-auto">
+                    <Link
+                        to="/explore"
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 text-gray-900 dark:text-gray-100 font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    >
+                        <Compass className="shrink-0 size-4 lg:size-3.5" />
+                        <span className="leading-snug">{t("menu.explore")}</span>
+                    </Link>
                     {authChecked && (
                         user ? (
-                            <Link
-                                to="/"
-                                className="flex px-2 py-2.5 items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                title={t("pages.explore.backToWorkspace")}
-                                aria-label={t("pages.explore.backToWorkspace")}
-                            >
-                                <ArrowLeft size={16} strokeWidth={2.5} />
+                            <Link to="/" className={navItemClass}>
+                                <ArrowLeft className="shrink-0 size-4 lg:size-3.5" />
+                                <span className="leading-snug">{t("pages.explore.backToWorkspace")}</span>
                             </Link>
                         ) : (
-                            <Link
-                                to="/signin"
-                                className="flex px-2 py-2.5 items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                title={t("actions.signin")}
-                                aria-label={t("actions.signin")}
-                            >
-                                <LogIn size={16} strokeWidth={2.5} />
+                            <Link to="/signin" className={navItemClass}>
+                                <LogIn className="shrink-0 size-4 lg:size-3.5" />
+                                <span className="leading-snug">{t("actions.signin")}</span>
                             </Link>
                         )
                     )}
-                    <button
-                        type="button"
-                        onClick={() => setIsAboutOpen(true)}
-                        className="flex px-2 py-2.5 items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                        title={t("menu.about")}
-                        aria-label={t("menu.about")}
-                    >
-                        <Info size={16} strokeWidth={2.5} />
-                    </button>
-                </div>
-            </aside>
+                </nav>
 
-            {/* Main area */}
-            <div className="w-full">
-                {/* Header — mobile only */}
-                <header className="lg:hidden flex items-center justify-between px-4 py-3">
-                    <button
-                        ref={mobileButtonRef}
-                        onClick={() => setIsMenuOpen(prev => !prev)}
-                        className="flex items-center gap-3 select-none rounded-md p-1 -m-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                        title="Menu"
-                    >
-                        <img src={logo} className="w-8" alt="logo" />
-                        <span className="text-lg font-bold text-gray-900 dark:text-gray-100">Explore</span>
-                    </button>
-                    <button
-                        onClick={() => setIsSearchOpen(prev => !prev)}
-                        className="p-2 rounded-md text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                        title="Search"
-                        aria-pressed={isSearchOpen}
-                    >
-                        {isSearchOpen ? <X size={20} /> : <Search size={20} />}
-                    </button>
-                </header>
-
-                {/* Note list — full width on mobile, capped on desktop */}
-                <div className="lg:max-w-[600px] mx-auto pb-4 lg:py-4">
-                    {/* Search */}
-                    <div className={`px-2 mb-2 ${isSearchOpen ? 'block' : 'hidden'} lg:block`}>
-                        <div className="relative">
-                            <Search
-                                size={16}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-                            />
-                            <input
-                                ref={searchInputRef}
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder={t("pages.explore.searchPlaceholder")}
-                                className="w-full pl-9 pr-9 py-2 text-sm rounded-lg bg-neutral-100 dark:bg-neutral-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
-                            />
-                            {search && (
-                                <button
-                                    onClick={() => setSearch('')}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                    title="Clear search"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {isLoading ? (
-                        <NoteListSkeleton />
-                    ) : notes.length === 0 ? (
-                        <div className="text-center text-muted-foreground py-20">
-                            {debouncedSearch ? t("pages.explore.noSearchResults") : t("pages.explore.noPublicNotes")}
-                        </div>
+                <div className="shrink-0 p-2 border-t border-neutral-200 dark:border-neutral-700">
+                    {user ? (
+                        <UserMenu />
                     ) : (
-                        <>
-                            <NoteList notes={notes} showLink={false} commentsReadOnly maxNodes={100} />
-                            <div ref={loadMoreRef} className="h-px" />
-                            {isFetchingNextPage && (
-                                <div className="text-center text-muted-foreground py-4 text-sm">
-                                    Loading more…
-                                </div>
-                            )}
-                        </>
+                        <button
+                            type="button"
+                            onClick={() => { setIsSidebarOpen(false); setIsAboutOpen(true) }}
+                            className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left"
+                        >
+                            <Info size={16} />
+                            {t("menu.about")}
+                        </button>
                     )}
                 </div>
             </div>
 
-            <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} />
-
-            {isMenuOpen && createPortal(
-                <>
-                    <div
-                        className="fixed inset-0 bg-black/40 z-drawer-backdrop"
-                        onClick={() => setIsMenuOpen(false)}
-                    />
-                    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-2xl z-drawer shadow-xl">
-                        <div className="flex justify-center pt-3 pb-1">
-                            <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full" />
-                        </div>
-                        <div className="pb-2">
-                            {menuContent}
+            {/* Main area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                <MobileTopBar
+                    title={
+                        <span className="flex items-center gap-2 select-none">
+                            <img src={logo} className="w-6 shrink-0" alt="logo" />
+                            Notomate
+                        </span>
+                    }
+                    onOpenSidebar={() => setIsSidebarOpen(true)}
+                />
+                <div className="flex-1 overflow-hidden">
+                    <div className="h-full flex flex-col bg-neutral-50 dark:bg-neutral-950">
+                        <div ref={scrollRef} className="flex-1 overflow-auto">
+                            <div className="w-full lg:max-w-[600px] px-2 pt-2 xl:pt-4 pb-2 mx-auto">
+                                <div className="relative">
+                                    <Search
+                                        size={16}
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        placeholder={t("pages.explore.searchPlaceholder")}
+                                        className="w-full pl-9 pr-9 py-2.5 text-sm rounded-lg bg-neutral-50 dark:bg-neutral-950 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
+                                    />
+                                    {search && (
+                                        <button
+                                            onClick={() => setSearch('')}
+                                            title={t("common.clear")}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="w-full lg:max-w-[600px] mx-auto">
+                                {isLoading ? (
+                                    <NoteListSkeleton />
+                                ) : notes.length === 0 ? (
+                                    <div className="text-center text-muted-foreground py-16 text-sm">
+                                        {debouncedSearch ? t("pages.explore.noSearchResults") : t("pages.explore.noPublicNotes")}
+                                    </div>
+                                ) : (
+                                    <>
+                                        <NoteList notes={notes} showLink={false} commentsReadOnly maxNodes={100} />
+                                        <div ref={loadMoreRef} className="h-2" />
+                                        {isFetchingNextPage && <NoteListSkeleton count={3} />}
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </>,
-                document.body
-            )}
+                </div>
+            </div>
+
+            <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} />
         </div>
     );
 };

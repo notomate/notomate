@@ -2,7 +2,7 @@ import { ReactNode } from "react"
 import { Menu } from "lucide-react"
 
 interface MobileTopBarProps {
-    title: string
+    title: ReactNode
     onOpenSidebar: () => void
     rightActions?: ReactNode
 }
