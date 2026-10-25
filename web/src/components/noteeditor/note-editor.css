@@ -7,8 +7,10 @@
 
 .ne-root.note-editor .page-column {
   max-width: none;
-  /* Room for the drag handle and "+" gutter. */
-  padding: 0 0 0 48px;
+  /* The page's 16px side padding lives here rather than around the editor: .ne-root clips
+     horizontal overflow, so padding outside it would cut off the gutter's shadow.
+     The extra 48px on the left is room for the drag handle and "+" gutter. */
+  padding: 0 16px 0 64px;
 }
 
 .ne-root.note-editor .page-bottom {
@@ -18,7 +20,7 @@
 /* The gutter floats below the block here, so it needs no room on the left. */
 @media (max-width: 600px) {
   .ne-root.note-editor .page-column {
-    padding: 0;
+    padding: 0 16px;
   }
 }
 

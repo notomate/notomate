@@ -105,16 +105,16 @@ const NoteDetailView: FC<NoteDetailViewProps> = ({
                         <div className="lg:max-w-3xl w-full m-auto">
                             <div className="pb-32 lg:p-10 lg:pb-40">
                                 <div className="flex flex-col gap-2">
-                                    <div className="px-4">
-                                        {/* The editor reads its UI text on mount, so remount on a language switch;
-                                            content lives in the room and survives it. */}
-                                        <NoteEditor
-                                            key={`${note.id}:${i18n.language}`}
-                                            room={room}
-                                            workspaceId={currentWorkspaceId}
-                                            noteId={note.id!}
-                                        />
-                                    </div>
+                                    {/* No px-4 here: the editor pads itself, since it clips overflow at its own
+                                        edge and padding outside it would cut off the gutter's shadow. */}
+                                    {/* The editor reads its UI text on mount, so remount on a language switch;
+                                        content lives in the room and survives it. */}
+                                    <NoteEditor
+                                        key={`${note.id}:${i18n.language}`}
+                                        room={room}
+                                        workspaceId={currentWorkspaceId}
+                                        noteId={note.id!}
+                                    />
                                 </div>
                             </div>
                         </div>
