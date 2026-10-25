@@ -41,7 +41,13 @@ const FIXTURE: TipTapNode = {
           type: 'listItem',
           content: [p('Bullet 1'), { type: 'bulletList', content: [{ type: 'listItem', content: [p('Nested')] }] }],
         },
-        { type: 'listItem', content: [p('Bullet 2')] },
+        {
+          type: 'listItem',
+          content: [
+            p('Bullet 2'),
+            { type: 'details', attrs: { open: false }, content: [{ type: 'detailsSummary' }, { type: 'detailsContent' }] },
+          ],
+        },
       ],
     },
     {
@@ -60,6 +66,20 @@ const FIXTURE: TipTapNode = {
       ],
     },
     { type: 'blockquote', content: [p('Quote'), p('Second line')] },
+    {
+      type: 'details',
+      attrs: { open: true },
+      content: [
+        { type: 'detailsSummary', content: [{ type: 'text', text: 'Toggle' }] },
+        {
+          type: 'detailsContent',
+          content: [
+            p('Inside'),
+            { type: 'bulletList', content: [{ type: 'listItem', content: [p('Toggle bullet')] }] },
+          ],
+        },
+      ],
+    },
     { type: 'codeBlock', attrs: { language: 'javascript' }, content: [{ type: 'text', text: 'if (a < b) {\n  go();\n}' }] },
     { type: 'horizontalRule' },
     {
@@ -178,6 +198,16 @@ describe('tiptapToDoc / docToTiptap', () => {
     expect(nested).toMatchObject({ type: 'bullet', html: 'Nested', parentId: bullets[0].id });
     const todos = doc.rootIds.map((id) => doc.blocks[id]).filter((b) => b.type === 'todo');
     expect(todos.map((b) => b.props.checked)).toEqual([false, true]);
+  });
+
+  it('maps toggles to collapsible blocks with nested children', () => {
+    const doc = tiptapToDoc(FIXTURE);
+    const toggles = Object.values(doc.blocks).filter((b) => b.type === 'toggle');
+    expect(toggles.map((b) => [b.html, b.props.open])).toEqual([['', false], ['Toggle', true]]);
+    expect(doc.blocks[toggles[0].parentId!]).toMatchObject({ type: 'bullet', html: 'Bullet 2' });
+    const [inside, list] = toggles[1].children.map((id) => doc.blocks[id]);
+    expect(inside).toMatchObject({ type: 'paragraph', html: 'Inside', parentId: toggles[1].id });
+    expect(list).toMatchObject({ type: 'bullet', html: 'Toggle bullet', parentId: toggles[1].id });
   });
 
   it('keeps atom attrs as props and code as escaped plain text', () => {

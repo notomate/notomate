@@ -31,6 +31,7 @@ import {
   paragraph,
   quote,
   todoList,
+  toggleList,
   type BlockComponentProps,
   type BlockSpec,
 } from '@notomate/editor'
@@ -130,6 +131,7 @@ export function noteBlocks(t: TFunction, { googleMapsEnabled }: NoteBlockOptions
     bulletList,
     numberedList,
     todoList,
+    toggleList,
     quote,
     codeBlock,
     divider,

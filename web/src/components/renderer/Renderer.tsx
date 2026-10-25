@@ -679,6 +679,16 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                     {renderChildren(children)}
                 </li>
             }
+            case 'details': {
+                const summary = node.content?.find((c) => c.type === 'detailsSummary')
+                const body = node.content?.find((c) => c.type === 'detailsContent')
+                return <details key={key} open={!!node.attrs?.open} className='my-0'>
+                    <summary className='cursor-pointer leading-6'>
+                        {summary?.content?.map((child, idx) => renderNode(child, idx))}
+                    </summary>
+                    {renderChildren(body?.content ?? [])}
+                </details>
+            }
             case 'codeBlock':
                 return <div className='py-1' key={key}>
                     <ShikiHighlighter language={node.attrs?.language || 'text'} showLineNumbers={true} theme="ayu-dark">

@@ -126,6 +126,14 @@ export function tiptapToDoc(json: TipTapNode, title = ''): Doc {
         case 'blockquote':
           ids.push(container('quote', {}, n.content, parentId, n));
           break;
+        case 'details': {
+          const summary = n.content?.find((c) => c.type === 'detailsSummary');
+          const body = n.content?.find((c) => c.type === 'detailsContent');
+          const b = add('toggle', inlineToHtml(summary?.content), { open: !!n.attrs?.open }, parentId, n);
+          b.children = walk(body?.content, b.id);
+          ids.push(b.id);
+          break;
+        }
         case 'codeBlock': {
           const text = (n.content ?? []).map((t) => t.text ?? '').join('');
           ids.push(add('code', escapeText(text), { language: n.attrs?.language ?? null }, parentId, n).id);
@@ -234,6 +242,16 @@ export function docToTiptap(doc: Doc): TipTapNode {
         return [paragraph(b.html), ...convert(b.children)];
       case 'quote':
         return [{ type: 'blockquote', content: [paragraph(b.html), ...convert(b.children)] }];
+      case 'toggle': {
+        // TipTap's Details layout: the toggle's text is the summary, its children the content.
+        const summary: TipTapNode = { type: 'detailsSummary' };
+        const inline = htmlToInline(b.html);
+        if (inline.length) summary.content = inline;
+        const body: TipTapNode = { type: 'detailsContent' };
+        const children = convert(b.children);
+        if (children.length) body.content = children;
+        return [{ type: 'details', attrs: { open: !!b.props.open }, content: [summary, body] }];
+      }
       case 'code': {
         const text = htmlToPlain(b.html);
         const node: TipTapNode = { type: 'codeBlock', attrs: { language: b.props.language ?? null } };
