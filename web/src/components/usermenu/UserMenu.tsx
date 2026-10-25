@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from "react"
-import { createPortal } from "react-dom"
 import { Settings, Info, Compass } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
@@ -7,6 +6,8 @@ import { useCurrentUserStore } from "@/stores/current-user"
 import UserSettingsModal from "@/components/user/UserSettingsModal"
 import AboutModal from "@/components/user/AboutModal"
 import Avatar from "@/components/avatar/Avatar"
+import { BottomSheet } from "@/components/ui/bottom-sheet"
+import { useIsLg } from "@/hooks/use-media-query"
 
 const UserMenu = () => {
     const { t } = useTranslation()
@@ -14,16 +15,9 @@ const UserMenu = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
     const [isAboutModalOpen, setIsAboutModalOpen] = useState(false)
-    const [isLg, setIsLg] = useState(() => window.innerWidth >= 1024)
+    const isLg = useIsLg()
     const menuRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
-
-    useEffect(() => {
-        const mq = window.matchMedia("(min-width: 1024px)")
-        const handler = (e: MediaQueryListEvent) => setIsLg(e.matches)
-        mq.addEventListener("change", handler)
-        return () => mq.removeEventListener("change", handler)
-    }, [])
 
     useEffect(() => {
         if (!isLg || !isMenuOpen) return
@@ -87,23 +81,11 @@ const UserMenu = () => {
                 )}
             </div>
 
-            {!isLg && isMenuOpen && createPortal(
-                <>
-                    <div
-                        className="fixed inset-0 bg-black/40 dark:bg-black/70 z-drawer-backdrop"
-                        onClick={() => setIsMenuOpen(false)}
-                    />
-                    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-2xl dark:ring-1 dark:ring-white/10 z-drawer shadow-xl">
-                        <div className="flex justify-center pt-3 pb-1">
-                            <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full" />
-                        </div>
-                        <div className="pb-2">
-                            {menuContent}
-                        </div>
-                    </div>
-                </>,
-                document.body
-            )}
+            <BottomSheet open={!isLg && isMenuOpen} onOpenChange={setIsMenuOpen}>
+                <div className="pb-2">
+                    {menuContent}
+                </div>
+            </BottomSheet>
 
             <UserSettingsModal open={isUserSettingsOpen} onOpenChange={setIsUserSettingsOpen} />
             <AboutModal open={isAboutModalOpen} onOpenChange={setIsAboutModalOpen} />

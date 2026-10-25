@@ -11,6 +11,7 @@ import { useToastStore } from "@/stores/toast"
 import Avatar from "@/components/avatar/Avatar"
 import CommentEditor from "./CommentEditor"
 import { renderCommentBody } from "./commentMarkdown"
+import useMobileSheet from "@/hooks/use-mobile-sheet"
 
 interface CommentSidebarProps {
   workspaceId: string
@@ -50,12 +51,13 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   const [orphanedThreadIds, setOrphanedThreadIds] = useState<Set<string>>(new Set())
   const threadRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  // Mobile bottom-sheet state (below lg, the sidebar becomes a draggable bottom sheet).
-  const [shouldHideOnMobile, setShouldHideOnMobile] = useState(!open)
-  const [dragOffset, setDragOffset] = useState(0)
-  const [isDragging, setIsDragging] = useState(false)
-  const startYRef = useRef(0)
+  // Below lg, the sidebar becomes a draggable bottom sheet.
   const bodyRef = useRef<HTMLDivElement>(null)
+  const { isHidden, isDragging, dragStyle, dragHandleProps } = useMobileSheet({
+    open,
+    onClose: () => onOpenChange(false),
+    scrollRef: bodyRef,
+  })
 
   const queryKey = ["comments", workspaceId, noteId]
 
@@ -135,76 +137,6 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
     document.addEventListener(COMMENT_CLICK_EVENT, handler)
     return () => document.removeEventListener(COMMENT_CLICK_EVENT, handler)
   }, [onOpenChange])
-
-  // Keep the sheet mounted briefly after close so the mobile slide-down transition can play.
-  useEffect(() => {
-    if (open) {
-      setShouldHideOnMobile(false)
-    } else {
-      const timer = setTimeout(() => setShouldHideOnMobile(true), 300)
-      return () => clearTimeout(timer)
-    }
-  }, [open])
-
-  // Prevent background scroll while the mobile bottom sheet is open.
-  useEffect(() => {
-    if (open && window.innerWidth < 1024) {
-      const originalOverflow = document.body.style.overflow
-      document.body.style.overflow = "hidden"
-      return () => { document.body.style.overflow = originalOverflow }
-    }
-  }, [open])
-
-  useEffect(() => {
-    return () => {
-      if (window.innerWidth < 1024 && document.body.style.overflow === "hidden") {
-        document.body.style.overflow = ""
-      }
-    }
-  }, [])
-
-  const handleDragStart = (clientY: number) => {
-    if (window.innerWidth >= 1024) return
-    if (!open) return
-    if (bodyRef.current && bodyRef.current.scrollTop > 0) return
-    setIsDragging(true)
-    startYRef.current = clientY
-  }
-
-  const handleDragMove = (clientY: number) => {
-    if (!isDragging) return
-    const deltaY = clientY - startYRef.current
-    if (deltaY > 0) setDragOffset(deltaY)
-  }
-
-  const handleDragEnd = () => {
-    if (!isDragging) return
-    setIsDragging(false)
-    if (dragOffset > 100) onOpenChange(false)
-    setDragOffset(0)
-  }
-
-  const handleTouchStart = (e: React.TouchEvent) => handleDragStart(e.touches[0].clientY)
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (isDragging) {
-      e.preventDefault()
-      handleDragMove(e.touches[0].clientY)
-    }
-  }
-  const handleTouchEnd = () => handleDragEnd()
-  const handleMouseDown = (e: React.MouseEvent) => handleDragStart(e.clientY)
-
-  useEffect(() => {
-    if (!isDragging) return
-    const handleMouseMove = (e: MouseEvent) => handleDragMove(e.clientY)
-    const handleMouseUp = () => handleDragEnd()
-    window.addEventListener("mousemove", handleMouseMove)
-    window.addEventListener("mouseup", handleMouseUp)
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove)
-      window.removeEventListener("mouseup", handleMouseUp)
-    }
-  }, [isDragging, dragOffset])
 
   const createMutation = useMutation({
     mutationFn: (vars: { threadId?: string; body: string }) =>
@@ -359,7 +291,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
     </div>
   )
 
-  if (!open && shouldHideOnMobile) {
+  if (!open && isHidden) {
     return null
   }
 
@@ -375,14 +307,11 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
         ${isDragging ? "" : "transition-transform duration-300 ease-out"}
         lg:static lg:translate-y-0 lg:max-h-none lg:rounded-none lg:h-full lg:w-80 lg:shrink-0
         flex flex-col border-l dark:border-neutral-700 bg-white dark:bg-neutral-900 overflow-hidden`}
-        style={{ transform: isDragging ? `translateY(${dragOffset}px)` : undefined }}
+        style={dragStyle}
       >
         <div
           className="shrink-0 flex items-center justify-center py-2 cursor-grab active:cursor-grabbing lg:hidden touch-none"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onMouseDown={handleMouseDown}
+          {...dragHandleProps}
         >
           <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
         </div>

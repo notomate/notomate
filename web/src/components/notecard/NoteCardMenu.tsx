@@ -1,10 +1,11 @@
 import { FC, useRef, useState, useEffect } from "react"
-import { createPortal } from "react-dom"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { deleteNote, NoteData, updateNotePinned } from "@/api/note"
 import { useTranslation } from "react-i18next"
 import { Trash2, Ellipsis, Pin, PinOff } from "lucide-react"
 import { useToastStore } from "@/stores/toast"
+import { BottomSheet } from "@/components/ui/bottom-sheet"
+import { useIsLg } from "@/hooks/use-media-query"
 
 interface NoteCardMenuProps {
     note: NoteData
@@ -18,14 +19,7 @@ const NoteCardMenu: FC<NoteCardMenuProps> = ({ note, workspaceId }) => {
     const [isMenuOpened, setIsMenuOpened] = useState(false)
     const menuRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
-    const [isLg, setIsLg] = useState(() => window.innerWidth >= 1024)
-
-    useEffect(() => {
-        const mq = window.matchMedia('(min-width: 1024px)')
-        const handler = (e: MediaQueryListEvent) => setIsLg(e.matches)
-        mq.addEventListener('change', handler)
-        return () => mq.removeEventListener('change', handler)
-    }, [])
+    const isLg = useIsLg()
 
     const deleteNoteMutation = useMutation({
         mutationFn: () => {
@@ -138,23 +132,11 @@ const NoteCardMenu: FC<NoteCardMenuProps> = ({ note, workspaceId }) => {
                 )}
             </div>
 
-            {!isLg && isMenuOpened && createPortal(
-                <>
-                    <div
-                        className="fixed inset-0 bg-black/40 dark:bg-black/70 z-drawer-backdrop"
-                        onClick={() => setIsMenuOpened(false)}
-                    />
-                    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-2xl dark:ring-1 dark:ring-white/10 z-drawer shadow-xl">
-                        <div className="flex justify-center pt-3 pb-1">
-                            <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full" />
-                        </div>
-                        <div className="flex flex-col py-4 px-2 pb-8">
-                            {menuItems}
-                        </div>
-                    </div>
-                </>,
-                document.body
-            )}
+            <BottomSheet open={!isLg && isMenuOpened} onOpenChange={setIsMenuOpened}>
+                <div className="flex flex-col py-4 px-2 pb-8">
+                    {menuItems}
+                </div>
+            </BottomSheet>
         </>
     )
 }

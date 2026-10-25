@@ -3,13 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom"
 import { Hash, Plus } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { ChannelData, createChannel, deleteChannel, getChannels, updateChannel } from "@/api/channel"
 import { getWorkspaceMembers } from "@/api/workspace"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { useToastStore } from "@/stores/toast"
 import { Modal } from "@/components/ui/modal"
+import { BottomSheet } from "@/components/ui/bottom-sheet"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
+import { useIsLg } from "@/hooks/use-media-query"
 import ChannelView from "./ChannelView"
 
 const MessagingPage: FC = () => {
@@ -25,6 +26,7 @@ const MessagingPage: FC = () => {
   const [formName, setFormName] = useState("")
   const [formDescription, setFormDescription] = useState("")
   const [isChannelSheetOpen, setIsChannelSheetOpen] = useState(false)
+  const isLg = useIsLg()
 
   const channelsQueryKey = ["channels", currentWorkspaceId]
 
@@ -168,31 +170,13 @@ const MessagingPage: FC = () => {
       </div>
 
       {/* Mobile channel list bottom sheet */}
-      <div
-        className={cn(
-          "fixed inset-0 z-drawer lg:hidden",
-          isChannelSheetOpen ? "" : "pointer-events-none",
-        )}
+      <BottomSheet
+        open={!isLg && isChannelSheetOpen}
+        onOpenChange={setIsChannelSheetOpen}
+        className="max-h-[70vh] flex flex-col overflow-hidden"
       >
-        <div
-          className={cn(
-            "absolute inset-0 bg-black/50 dark:bg-black/70 transition-opacity duration-200",
-            isChannelSheetOpen ? "opacity-100" : "opacity-0",
-          )}
-          onClick={() => setIsChannelSheetOpen(false)}
-        />
-        <div
-          className={cn(
-            "absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl bg-white dark:bg-neutral-900 dark:ring-1 dark:ring-white/10 shadow-xl flex flex-col overflow-hidden transition-transform duration-200 ease-out",
-            isChannelSheetOpen ? "translate-y-0" : "translate-y-full",
-          )}
-        >
-          <div className="shrink-0 flex items-center justify-center py-2">
-            <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-neutral-600" />
-          </div>
-          {channelListContent}
-        </div>
-      </div>
+        {channelListContent}
+      </BottomSheet>
 
       <Modal
         open={dialogMode !== null}
