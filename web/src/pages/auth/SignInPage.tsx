@@ -59,8 +59,8 @@ const SignIn: React.FC = () => {
                     <BrandIcons className="w-[85%] max-w-xl aspect-square" />
                 </div>
                 <div className="relative z-10 flex flex-col items-center gap-6 text-center max-w-md">
-                    <div className="w-24 h-24 rounded-3xl bg-white shadow-lg ring-1 ring-black/5 flex items-center justify-center p-4">
-                        <img src={logo} className="w-full h-full object-contain" alt="Notomate" />
+                    <div className="w-24 h-24 rounded-3xl bg-white dark:bg-neutral-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10 flex items-center justify-center p-4">
+                        <img src={logo} className="w-full h-full object-contain dark:invert" alt="Notomate" />
                     </div>
                     <h1 className="text-4xl font-bold text-neutral-900 dark:text-white tracking-tight">Notomate</h1>
                 </div>
@@ -71,8 +71,8 @@ const SignIn: React.FC = () => {
                 <div className="w-full max-w-sm space-y-8">
                     {/* Mobile logo */}
                     <div className="flex flex-col items-center gap-3 lg:hidden">
-                        <div className="w-16 h-16 rounded-2xl bg-white shadow-md ring-1 ring-black/5 flex items-center justify-center p-2.5">
-                            <img src={logo} className="w-full h-full object-contain" alt="Notomate" />
+                        <div className="w-16 h-16 rounded-2xl bg-white dark:bg-neutral-900 shadow-md ring-1 ring-black/5 dark:ring-white/10 flex items-center justify-center p-2.5">
+                            <img src={logo} className="w-full h-full object-contain dark:invert" alt="Notomate" />
                         </div>
                         <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Notomate</h1>
                     </div>

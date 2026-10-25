@@ -20,7 +20,7 @@ const AboutModal = ({ open, onOpenChange }: AboutModalProps) => {
             <div className="space-y-3">
                 {/* App Logo/Name */}
                 <div className="flex items-center gap-3">
-                    <img src={logo} className="w-8 h-8" alt="logo" />
+                    <img src={logo} className="w-8 h-8 dark:invert" alt="logo" />
                     <div>
                         <div className="text-2xl font-bold text-primary dark:text-primary">
                             {appName}

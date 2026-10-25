@@ -68,7 +68,7 @@ const ExplorePage: React.FC = () => {
             >
                 <div className="px-3 pt-3 pb-1 flex items-center gap-2">
                     <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-1.5 select-none">
-                        <img src={logo} className="w-6 shrink-0" alt="logo" />
+                        <img src={logo} className="w-6 shrink-0 dark:invert" alt="logo" />
                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">Notomate</span>
                     </div>
                     <button
@@ -125,7 +125,7 @@ const ExplorePage: React.FC = () => {
                 <MobileTopBar
                     title={
                         <span className="flex items-center gap-2 select-none">
-                            <img src={logo} className="w-6 shrink-0" alt="logo" />
+                            <img src={logo} className="w-6 shrink-0 dark:invert" alt="logo" />
                             Notomate
                         </span>
                     }
