@@ -176,14 +176,14 @@ const MessagingPage: FC = () => {
       >
         <div
           className={cn(
-            "absolute inset-0 bg-black/50 transition-opacity duration-200",
+            "absolute inset-0 bg-black/50 dark:bg-black/70 transition-opacity duration-200",
             isChannelSheetOpen ? "opacity-100" : "opacity-0",
           )}
           onClick={() => setIsChannelSheetOpen(false)}
         />
         <div
           className={cn(
-            "absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl bg-white dark:bg-neutral-900 shadow-xl flex flex-col overflow-hidden transition-transform duration-200 ease-out",
+            "absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-2xl bg-white dark:bg-neutral-900 dark:ring-1 dark:ring-white/10 shadow-xl flex flex-col overflow-hidden transition-transform duration-200 ease-out",
             isChannelSheetOpen ? "translate-y-0" : "translate-y-full",
           )}
         >

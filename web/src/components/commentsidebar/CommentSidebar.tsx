@@ -366,10 +366,10 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   return (
     <>
       {open && (
-        <div className="fixed inset-0 bg-black/50 z-drawer-backdrop lg:hidden" onClick={() => onOpenChange(false)} />
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 z-drawer-backdrop lg:hidden" onClick={() => onOpenChange(false)} />
       )}
       <aside
-        className={`fixed bottom-0 left-0 right-0 z-drawer max-h-[85vh] rounded-t-2xl
+        className={`fixed bottom-0 left-0 right-0 z-drawer max-h-[85vh] rounded-t-2xl dark:max-lg:ring-1 dark:max-lg:ring-white/10
         ${open ? "translate-y-0" : "translate-y-full lg:translate-y-0"}
         ${open ? "" : "lg:hidden"}
         ${isDragging ? "" : "transition-transform duration-300 ease-out"}
