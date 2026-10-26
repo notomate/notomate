@@ -177,6 +177,12 @@ export interface EditorProps {
   messages?: Partial<EditorMessages>;
   /** Extra class on the editor root, for layout overrides such as `.page-column` padding. */
   className?: string;
+  /**
+   * Viewport width (px) at or below which the editor goes compact: the block gutter floats
+   * below each block instead of sitting in the left margin, and the page padding shrinks.
+   * Default 600.
+   */
+  compactWidth?: number;
 }
 
 let mounted = 0;
@@ -194,6 +200,7 @@ export function Editor({
   theme = 'inherit',
   messages,
   className = '',
+  compactWidth = 600,
 }: EditorProps) {
   // Install before the first store read below so the initial render uses them.
   useState(() => {
@@ -224,6 +231,16 @@ export function Editor({
     return () => mq.removeEventListener('change', on);
   }, []);
 
+  const compactQuery = `(max-width: ${compactWidth}px)`;
+  const [compact, setCompact] = useState(() => window.matchMedia?.(compactQuery).matches === true);
+  useEffect(() => {
+    const mq = window.matchMedia(compactQuery);
+    const on = () => setCompact(mq.matches);
+    on();
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, [compactQuery]);
+
   useFocusRequests();
   useOnChange(onChange);
   useHistoryKeys();
@@ -238,7 +255,7 @@ export function Editor({
   return (
     <div
       ref={pageRef}
-      className={`ne-root ${coarse ? 'coarse' : 'fine'} ${dragging ? 'dragging' : ''} ${className}`}
+      className={`ne-root ${coarse ? 'coarse' : 'fine'} ${compact ? 'compact' : ''} ${dragging ? 'dragging' : ''} ${className}`}
       data-theme={theme}
     >
       <main className="page-column">

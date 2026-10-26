@@ -18,10 +18,8 @@
 }
 
 /* The gutter floats below the block here, so it needs no room on the left. */
-@media (max-width: 600px) {
-  .ne-root.note-editor .page-column {
-    padding: 0 16px;
-  }
+.ne-root.note-editor.compact .page-column {
+  padding: 0 16px;
 }
 
 .ne-root .text.h4 .editable { font-size: 1.125em; font-weight: 600; line-height: 1.4; }
@@ -113,7 +111,8 @@
   padding: 7px 0; /* 3px padding + 4px centering a 16px bar in the 24px line */
 }
 
-@media (max-width: 600px) {
+/* Keep in step with NoteEditor's compactWidth. */
+@media (max-width: 1024px) {
   .note-editor-skeleton {
     padding-left: 2px;
   }

@@ -115,7 +115,7 @@ const NoteEditor: FC<Props> = ({ room, workspaceId, noteId }) => {
           if (threadId) document.dispatchEvent(new CustomEvent(COMMENT_CLICK_EVENT, { detail: { threadId } }))
         }}
       >
-        <Editor {...setup} showTitle={false} className="note-editor" />
+        <Editor {...setup} showTitle={false} className="note-editor" compactWidth={1024} />
       </div>
     </NodeOptionsContext.Provider>
   )
