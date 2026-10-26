@@ -163,7 +163,7 @@ const WorkflowEditForm = () => {
     return <OneColumn>
         <div className="w-full px-4 xl:px-4">
             <div className="flex flex-col min-h-full pb-6">
-                <div className="py-2.5 flex items-center justify-between gap-2 flex-wrap">
+                <div className="py-2.5 flex items-center justify-between gap-2">
                     <div className="flex gap-3 items-center sm:text-xl font-semibold h-10 min-w-0">
                         <Link to=".." relative="path" className="hover:underline shrink-0">
                             {t("pages.workflows.title")}
@@ -171,24 +171,25 @@ const WorkflowEditForm = () => {
                         <span className="opacity-40 shrink-0">/</span>
                         <span className="truncate">{isNew ? t("pages.workflows.newWorkflow") : workflow?.name}</span>
                     </div>
-                    <div className="flex items-center gap-1 flex-wrap [&_button]:whitespace-nowrap [&_a]:whitespace-nowrap">
+                    <div className="flex items-center gap-1 shrink-0 [&_button]:whitespace-nowrap [&_a]:whitespace-nowrap">
                         {!isNew && (
                             <>
                                 <Link
                                     to="runs"
-                                    className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                                    title={t("pages.workflows.runs")}
+                                    className="p-2 sm:px-3 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                                 >
                                     <History size={16} />
-                                    {t("pages.workflows.runs")}
+                                    <span className="hidden sm:inline">{t("pages.workflows.runs")}</span>
                                 </Link>
                                 <button
                                     onClick={() => setShowDispatch(true)}
                                     disabled={!ready || busy || dirty}
-                                    title={dirty ? t("pages.workflows.saveBeforeRun") : undefined}
-                                    className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
+                                    title={dirty ? t("pages.workflows.saveBeforeRun") : t("pages.workflows.dispatch")}
+                                    className="p-2 sm:px-3 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                                 >
                                     <Play size={16} />
-                                    {t("pages.workflows.dispatch")}
+                                    <span className="hidden sm:inline">{t("pages.workflows.dispatch")}</span>
                                 </button>
                                 <button
                                     onClick={() => {
@@ -196,7 +197,7 @@ const WorkflowEditForm = () => {
                                     }}
                                     disabled={!ready || busy}
                                     aria-label={t("actions.delete")}
-                                    className="px-3 py-2 flex gap-2 items-center text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
+                                    className="p-2 sm:px-3 flex gap-2 items-center text-red-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded disabled:opacity-50"
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -205,7 +206,7 @@ const WorkflowEditForm = () => {
                         <button
                             onClick={save}
                             disabled={!canSave}
-                            className="px-4 py-2 flex gap-2 items-center bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-3 sm:px-4 py-2 flex gap-2 items-center bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {saveMutation.isPending ? <Loader size={16} className="animate-spin" /> : <Save size={16} />}
                             {t("actions.save")}

@@ -40,33 +40,36 @@ const WorkflowsPage = () => {
     return <OneColumn>
         <div className="w-full px-4 xl:px-4">
             <div className="flex flex-col min-h-screen">
-                <div className="py-2.5 flex items-center justify-between">
-                    <div className="flex gap-3 items-center sm:text-xl font-semibold h-10">
-                        {t("pages.workflows.title")}
+                <div className="py-2.5 flex items-center justify-between gap-2">
+                    <div className="flex gap-3 items-center sm:text-xl font-semibold h-10 min-w-0">
+                        <span className="truncate">{t("pages.workflows.title")}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 shrink-0">
                         <Link
                             to="marketplace"
-                            className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                            title={t("pages.workflows.marketplace.title")}
+                            className="shrink-0 p-2 sm:px-3 flex gap-2 items-center whitespace-nowrap text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                         >
                             <Store size={16} />
-                            {t("pages.workflows.marketplace.title")}
+                            <span className="hidden sm:inline">{t("pages.workflows.marketplace.title")}</span>
                         </Link>
                         {isOwnerOrAdmin && (
                             <>
                                 <Link
                                     to="settings"
-                                    className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                                    title={t("pages.workflows.settingsTitle")}
+                                    className="shrink-0 p-2 sm:px-3 flex gap-2 items-center whitespace-nowrap text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                                 >
                                     <Settings size={16} />
-                                    {t("pages.workflows.settingsTitle")}
+                                    <span className="hidden sm:inline">{t("pages.workflows.settingsTitle")}</span>
                                 </Link>
                                 <button
                                     onClick={() => navigate("new")}
-                                    className="px-3 py-2 flex gap-2 items-center text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                                    title={t("pages.workflows.newWorkflow")}
+                                    className="shrink-0 p-2 sm:px-3 flex gap-2 items-center whitespace-nowrap text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                                 >
                                     <Plus size={16} />
-                                    {t("pages.workflows.newWorkflow")}
+                                    <span className="hidden sm:inline">{t("pages.workflows.newWorkflow")}</span>
                                 </button>
                             </>
                         )}
@@ -92,10 +95,11 @@ const WorkflowsPage = () => {
                                     </div>
                                     <Link
                                         to={`${wf.id}/runs`}
-                                        className="p-2 flex gap-1.5 items-center text-sm text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
+                                        title={t("pages.workflows.runs")}
+                                        className="shrink-0 p-2 flex gap-1.5 items-center whitespace-nowrap text-sm text-muted-foreground dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
                                     >
                                         <History size={15} />
-                                        {t("pages.workflows.runs")}
+                                        <span className="hidden sm:inline">{t("pages.workflows.runs")}</span>
                                     </Link>
                                     {isOwnerOrAdmin && (
                                         <button
