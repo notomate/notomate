@@ -838,6 +838,13 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                                     </a>
                                 )
                                 break
+                            case 'textColor': {
+                                const color = mark.attrs?.color
+                                if (typeof color === 'string' && /^[a-z_]+$/.test(color)) {
+                                    text = <span data-color={color}>{text}</span>
+                                }
+                                break
+                            }
                             default:
                                 break
                         }
@@ -892,7 +899,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 return null
             }}
         >
-            <div className='prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl max-w-full overflow-x-auto text-neutral-800 dark:text-muted-foreground'>
+            <div className='note-renderer prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl max-w-full overflow-x-auto text-neutral-800 dark:text-muted-foreground'>
                 {nodesToRender.map((node, idx) => renderNode(node, idx))}
                 {hasHiddenNodes && (
                     <button

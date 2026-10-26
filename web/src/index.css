@@ -362,3 +362,65 @@ ul[data-type="taskList"] > li{
 .PhotoView-Portal {
   z-index: theme('zIndex.lightbox') !important;
 }
+
+/* Text colors from the note editor's color menu; values mirror packages/editor/src/styles/tokens.css */
+.note-renderer {
+  --c-gray: rgb(120, 119, 116);
+  --c-brown: rgb(159, 107, 83);
+  --c-orange: rgb(217, 115, 13);
+  --c-yellow: rgb(203, 145, 47);
+  --c-green: rgb(68, 131, 97);
+  --c-blue: rgb(51, 126, 169);
+  --c-purple: rgb(144, 101, 176);
+  --c-pink: rgb(193, 76, 138);
+  --c-red: rgb(212, 76, 71);
+  --b-gray: rgb(241, 241, 239);
+  --b-brown: rgb(244, 238, 238);
+  --b-orange: rgb(251, 236, 221);
+  --b-yellow: rgb(251, 243, 219);
+  --b-green: rgb(237, 243, 236);
+  --b-blue: rgb(231, 243, 248);
+  --b-purple: rgba(244, 240, 247, 0.8);
+  --b-pink: rgba(249, 238, 243, 0.8);
+  --b-red: rgb(253, 235, 236);
+}
+
+.dark .note-renderer {
+  --c-gray: rgb(155, 155, 155);
+  --c-brown: rgb(186, 133, 111);
+  --c-orange: rgb(199, 125, 72);
+  --c-yellow: rgb(202, 152, 73);
+  --c-green: rgb(82, 158, 114);
+  --c-blue: rgb(94, 135, 201);
+  --c-purple: rgb(157, 104, 211);
+  --c-pink: rgb(209, 87, 150);
+  --c-red: rgb(223, 84, 82);
+  --b-gray: rgb(47, 47, 47);
+  --b-brown: rgb(74, 50, 40);
+  --b-orange: rgb(92, 59, 35);
+  --b-yellow: rgb(86, 67, 40);
+  --b-green: rgb(36, 61, 48);
+  --b-blue: rgb(20, 58, 78);
+  --b-purple: rgb(60, 45, 73);
+  --b-pink: rgb(78, 44, 60);
+  --b-red: rgb(82, 46, 42);
+}
+
+.note-renderer [data-color='gray'] { color: var(--c-gray); }
+.note-renderer [data-color='brown'] { color: var(--c-brown); }
+.note-renderer [data-color='orange'] { color: var(--c-orange); }
+.note-renderer [data-color='yellow'] { color: var(--c-yellow); }
+.note-renderer [data-color='green'] { color: var(--c-green); }
+.note-renderer [data-color='blue'] { color: var(--c-blue); }
+.note-renderer [data-color='purple'] { color: var(--c-purple); }
+.note-renderer [data-color='pink'] { color: var(--c-pink); }
+.note-renderer [data-color='red'] { color: var(--c-red); }
+.note-renderer [data-color='gray_bg'] { background: var(--b-gray); }
+.note-renderer [data-color='brown_bg'] { background: var(--b-brown); }
+.note-renderer [data-color='orange_bg'] { background: var(--b-orange); }
+.note-renderer [data-color='yellow_bg'] { background: var(--b-yellow); }
+.note-renderer [data-color='green_bg'] { background: var(--b-green); }
+.note-renderer [data-color='blue_bg'] { background: var(--b-blue); }
+.note-renderer [data-color='purple_bg'] { background: var(--b-purple); }
+.note-renderer [data-color='pink_bg'] { background: var(--b-pink); }
+.note-renderer [data-color='red_bg'] { background: var(--b-red); }
