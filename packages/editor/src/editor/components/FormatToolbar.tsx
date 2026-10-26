@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { create } from 'zustand';
 import { useEditor } from '../model/store';
 import { contentOf } from '../blocks/registry';
@@ -78,6 +78,7 @@ export function FormatToolbar() {
   const [, force] = useState(0);
   const [colorsOpen, setColorsOpen] = useState(false);
   const elRef = useRef<HTMLElement | null>(null);
+  const boxRef = useRef<HTMLElement | null>(null);
   const pressed = useRef(false);
   const link = useLinkEditor();
   const [url, setUrl] = useState('');
@@ -129,12 +130,32 @@ export function FormatToolbar() {
 
   const saved = link.saved;
   const anchorRect = link.open && saved ? saved.range.getBoundingClientRect() : rect;
+
+  // Keep the whole bar (and its color menu) on screen; the centered position alone
+  // spills off the edges on narrow viewports.
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    if (!box || !anchorRect) return;
+    const vw = document.documentElement.clientWidth;
+    const half = box.offsetWidth / 2;
+    const center = anchorRect.left + anchorRect.width / 2;
+    box.style.left = `${Math.max(8 + half, Math.min(center, vw - 8 - half))}px`;
+    const menu = box.querySelector<HTMLElement>('.color-menu');
+    if (menu) {
+      menu.classList.remove('up');
+      const r = menu.getBoundingClientRect();
+      if (r.bottom > window.innerHeight - 8 && box.getBoundingClientRect().top > window.innerHeight - r.bottom) {
+        menu.classList.add('up');
+      }
+    }
+  });
+
   if (!anchorRect || (!link.open && !elRef.current)) return null;
 
   // Touch: sit below the selection so the OS selection menu above stays usable.
   const below = coarse || anchorRect.top < 56;
   const style = {
-    left: Math.max(8, Math.min(anchorRect.left + anchorRect.width / 2, window.innerWidth - 8)),
+    left: anchorRect.left + anchorRect.width / 2,
     top: below ? anchorRect.bottom + (coarse ? 36 : 8) : anchorRect.top - 8,
   };
 
@@ -148,6 +169,9 @@ export function FormatToolbar() {
     };
     return (
       <form
+        ref={(n) => {
+          boxRef.current = n;
+        }}
         noValidate
         className={`ui-layer format-toolbar link-editor ${below ? 'below' : ''}`}
         style={style}
@@ -203,6 +227,9 @@ export function FormatToolbar() {
   const el = elRef.current!;
   return (
     <div
+      ref={(n) => {
+        boxRef.current = n;
+      }}
       className={`ui-layer format-toolbar ${below ? 'below' : ''}`}
       style={style}
       onPointerDown={(e) => e.preventDefault()}

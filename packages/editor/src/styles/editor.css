@@ -909,6 +909,7 @@ body.ne-is-dragging * {
   border-radius: 6px;
   background: var(--toolbar-bg);
   box-shadow: var(--menu-shadow);
+  max-width: calc(100vw - 16px);
   transform: translate(-50%, -100%);
   user-select: none;
 }
@@ -972,14 +973,20 @@ body.ne-is-dragging * {
   width: 200px;
 }
 
+.ne-root .color-menu.up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
 .ne-root .link-editor {
   gap: 6px;
   padding: 0 4px 0 8px;
 }
 
 .ne-root .link-editor input {
+  flex: 1 1 auto;
   width: 240px;
-  max-width: 60vw;
+  min-width: 0;
   border: 0;
   outline: none;
   background: none;
