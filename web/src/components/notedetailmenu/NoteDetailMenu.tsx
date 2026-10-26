@@ -8,6 +8,7 @@ import { useToastStore } from "@/stores/toast"
 import { Visibility } from "@/types/visibility"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
+import { menuIconClass, menuItemClass, menuListClass, menuSurfaceClass } from "@/components/ui/menu"
 import { useIsLg } from "@/hooks/use-media-query"
 
 interface NoteDetailMenuProps {
@@ -107,54 +108,41 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
             }
         }
 
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
+        document.addEventListener('pointerdown', handleClickOutside, true)
+        return () => document.removeEventListener('pointerdown', handleClickOutside, true)
     }, [isMenuOpened, isLg])
+
+    const sheet = !isLg
 
     const menuItems = workspaceId && (
         <>
             {isCreator && (
-                <button
-                    className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    onClick={handleTogglePin}
-                >
-                    {note.pinned ? <PinOff size={16} /> : <Pin size={16} />}
+                <button className={menuItemClass(sheet)} onClick={handleTogglePin}>
+                    <span className={menuIconClass()}>{note.pinned ? <PinOff size={16} /> : <Pin size={16} />}</span>
                     {note.pinned ? t("actions.unpin") : t("actions.pin")}
                 </button>
             )}
             {isCreator && note.visibility !== "private" && (
-                <button
-                    className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    onClick={() => handleUpdateVisibility("private")}
-                >
-                    <Lock size={16} />
+                <button className={menuItemClass(sheet)} onClick={() => handleUpdateVisibility("private")}>
+                    <span className={menuIconClass()}><Lock size={16} /></span>
                     {t("actions.makePrivate")}
                 </button>
             )}
             {isCreator && note.visibility !== "workspace" && (
-                <button
-                    className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    onClick={() => handleUpdateVisibility("workspace")}
-                >
-                    <Building size={16} />
+                <button className={menuItemClass(sheet)} onClick={() => handleUpdateVisibility("workspace")}>
+                    <span className={menuIconClass()}><Building size={16} /></span>
                     {t("actions.makeWorkspace")}
                 </button>
             )}
             {isCreator && note.visibility !== "public" && (
-                <button
-                    className="px-3 py-2 flex items-center gap-3 w-full text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                    onClick={() => handleUpdateVisibility("public")}
-                >
-                    <Globe2 size={16} />
+                <button className={menuItemClass(sheet)} onClick={() => handleUpdateVisibility("public")}>
+                    <span className={menuIconClass()}><Globe2 size={16} /></span>
                     {t("actions.makePublic")}
                 </button>
             )}
-            <button
-                onClick={handleDelete}
-                className="px-3 py-2 flex items-center gap-3 w-full text-left text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-            >
-                <Trash2 size={16} />
-                <span>{t('actions.delete')}</span>
+            <button className={menuItemClass(sheet, true)} onClick={handleDelete}>
+                <span className={menuIconClass(true)}><Trash2 size={16} /></span>
+                {t('actions.delete')}
             </button>
         </>
     )
@@ -168,9 +156,9 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
                 {isLg && isMenuOpened && (
                     <div
                         ref={menuRef}
-                        className="absolute top-full right-0 min-w-[240px] overflow-y-auto bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border dark:border-neutral-700 rounded-lg shadow-lg z-dropdown"
+                        className={`absolute top-full right-0 min-w-[240px] overflow-y-auto z-dropdown ${menuSurfaceClass}`}
                     >
-                        <div className="flex flex-col p-2">
+                        <div className={menuListClass}>
                             {menuItems}
                         </div>
                     </div>
@@ -178,7 +166,7 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
             </div>
 
             <BottomSheet open={!isLg && isMenuOpened} onOpenChange={setIsMenuOpened}>
-                <div className="flex flex-col py-4 px-2 pb-8">
+                <div className={menuListClass}>
                     {menuItems}
                 </div>
             </BottomSheet>

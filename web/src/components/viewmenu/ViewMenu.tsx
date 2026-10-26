@@ -8,6 +8,7 @@ import { createView, getViews, deleteView } from "@/api/view"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import { useToastStore } from "@/stores/toast"
+import { menuIconClass, menuItemClass } from "@/components/ui/menu"
 
 interface ViewMenuProps {
     viewType: ViewType
@@ -146,7 +147,7 @@ const ViewMenu = ({ viewType, currentViewId }: ViewMenuProps) => {
                     </>
                 }
             >
-            <div className="px-2 pb-2">
+            <div className="px-2 pt-2 pb-1">
                 <input
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -154,38 +155,34 @@ const ViewMenu = ({ viewType, currentViewId }: ViewMenuProps) => {
                     placeholder={getSearchPlaceholder()}
                 />
             </div>
-            <div className="overflow-y-auto pb-2 max-h-64">
+            <div className="overflow-y-auto pb-1.5 max-h-64 flex flex-col">
                 {filteredViews.map((v: any) => (
-                    <div key={v.id} className="px-2 text-sm text-ellipsis group">
-                        <div className="flex items-center gap-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                            <button
-                                className="px-3 py-2 flex-1 text-left truncate"
-                                onClick={() => handleViewClick(v.id)}
-                            >
-                                {v.name}
-                            </button>
-                            <button
-                                onClick={(e) => handleDeleteView(e, v.id)}
-                                className="p-2 opacity-0 group-hover:opacity-100 hover:text-red-600 dark:hover:text-red-400 transition-opacity"
-                                title={t('actions.delete')}
-                                disabled={deleteMutation.isPending}
-                            >
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
+                    <div key={v.id} className={`group pr-1 ${menuItemClass(false)}`}>
+                        <button
+                            className="flex-1 min-w-0 text-left truncate self-stretch"
+                            onClick={() => handleViewClick(v.id)}
+                        >
+                            {v.name}
+                        </button>
+                        <button
+                            onClick={(e) => handleDeleteView(e, v.id)}
+                            className={`opacity-0 group-hover:opacity-100 hover:text-red-600 dark:hover:text-red-400 transition-opacity ${menuIconClass()}`}
+                            title={t('actions.delete')}
+                            disabled={deleteMutation.isPending}
+                        >
+                            <Trash2 size={14} />
+                        </button>
                     </div>
                 ))}
                 {keyword.length > 0 && (
-                    <div className="px-2 text-sm whitespace-nowrap overflow-x-auto">
-                        <button
-                            onClick={handleNewViewClick}
-                            disabled={createMutation.isPending}
-                            className="p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center w-full gap-2 disabled:opacity-50"
-                        >
-                            <Plus size={16} />
-                            {getCreateText(keyword)}
-                        </button>
-                    </div>
+                    <button
+                        onClick={handleNewViewClick}
+                        disabled={createMutation.isPending}
+                        className={`disabled:opacity-50 ${menuItemClass(false)}`}
+                    >
+                        <span className={menuIconClass()}><Plus size={16} /></span>
+                        <span className="min-w-0 truncate">{getCreateText(keyword)}</span>
+                    </button>
                 )}
             </div>
 

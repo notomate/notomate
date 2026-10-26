@@ -7,6 +7,7 @@ import UserSettingsModal from "@/components/user/UserSettingsModal"
 import AboutModal from "@/components/user/AboutModal"
 import Avatar from "@/components/avatar/Avatar"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
+import { menuIconClass, menuItemClass, menuListClass, menuSurfaceClass } from "@/components/ui/menu"
 import { useIsLg } from "@/hooks/use-media-query"
 
 const UserMenu = () => {
@@ -27,34 +28,34 @@ const UserMenu = () => {
                 setIsMenuOpen(false)
             }
         }
-        document.addEventListener("mousedown", handleClickOutside)
-        return () => document.removeEventListener("mousedown", handleClickOutside)
+        document.addEventListener("pointerdown", handleClickOutside, true)
+        return () => document.removeEventListener("pointerdown", handleClickOutside, true)
     }, [isMenuOpen, isLg])
 
     if (!user) return null
 
     const menuContent = (
-        <div className="flex flex-col p-1">
+        <div className={menuListClass}>
             <button
                 onClick={() => { setIsUserSettingsOpen(true); setIsMenuOpen(false) }}
-                className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                className={menuItemClass(!isLg)}
             >
-                <Settings size={16} />
+                <span className={menuIconClass()}><Settings size={16} /></span>
                 {t("menu.settings")}
             </button>
             <button
                 onClick={() => { setIsAboutModalOpen(true); setIsMenuOpen(false) }}
-                className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                className={menuItemClass(!isLg)}
             >
-                <Info size={16} />
+                <span className={menuIconClass()}><Info size={16} /></span>
                 {t("menu.about")}
             </button>
             <Link
                 to="/explore"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex gap-3 px-3 py-2.5 items-center w-full text-sm text-left rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                className={menuItemClass(!isLg)}
             >
-                <Compass size={16} />
+                <span className={menuIconClass()}><Compass size={16} /></span>
                 {t("menu.explore")}
             </Link>
         </div>
@@ -74,7 +75,7 @@ const UserMenu = () => {
                 {isLg && isMenuOpen && (
                     <div
                         ref={menuRef}
-                        className="absolute bottom-full left-0 mb-2 w-52 bg-white dark:bg-neutral-700 text-gray-900 dark:text-gray-100 rounded-md shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)] overflow-hidden z-dropdown"
+                        className={`absolute bottom-full left-0 mb-2 w-52 overflow-hidden z-dropdown ${menuSurfaceClass}`}
                     >
                         {menuContent}
                     </div>
@@ -82,9 +83,7 @@ const UserMenu = () => {
             </div>
 
             <BottomSheet open={!isLg && isMenuOpen} onOpenChange={setIsMenuOpen}>
-                <div className="pb-2">
-                    {menuContent}
-                </div>
+                {menuContent}
             </BottomSheet>
 
             <UserSettingsModal open={isUserSettingsOpen} onOpenChange={setIsUserSettingsOpen} />

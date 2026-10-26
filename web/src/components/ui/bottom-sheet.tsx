@@ -55,13 +55,13 @@ export function BottomSheet({ open, onOpenChange, children, className }: BottomS
       />
       <div
         className={cn(
-          "fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-2xl dark:ring-1 dark:ring-white/10 z-drawer shadow-xl transition-transform duration-200 ease-out",
+          "fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-xl pb-[calc(4px+env(safe-area-inset-bottom))] dark:ring-1 dark:ring-white/10 z-drawer shadow-xl transition-transform duration-200 ease-out",
           visible ? "translate-y-0" : "translate-y-full",
           className,
         )}
       >
-        <div className="shrink-0 flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full" />
+        <div className="shrink-0 flex justify-center pt-2.5 pb-0.5">
+          <div className="w-9 h-1 bg-neutral-300 dark:bg-neutral-600 rounded-full" />
         </div>
         {children}
       </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, FC } from 'react';
 import { twMerge } from 'tailwind-merge';
 import { useSidebar } from '../sidebar/SidebarProvider';
 import { Tooltip } from 'radix-ui';
+import { menuSurfaceClass } from '@/components/ui/menu';
 
 type DropdownProps = {
   children: React.ReactNode;
@@ -27,9 +28,9 @@ const Dropdown:FC<DropdownProps> = ({ children, className, buttonClassName, butt
   };
 
   useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('pointerdown', handleClickOutside, true);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('pointerdown', handleClickOutside, true);
     };
   }, []);
 
@@ -58,7 +59,7 @@ const Dropdown:FC<DropdownProps> = ({ children, className, buttonClassName, butt
       </Tooltip.Root>
       {isOpen && (
         <div
-          className={twMerge(isCollapse ? "left-[calc(100%+8px)] -top-1" : " top-[calc(100%+4px)] ", "absolute z-dropdown w-[228px] bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border dark:border-none rounded-lg py-2 flex flex-col shadow-lg mt-1 max-h-[calc(100dvh-160px)]")}
+          className={twMerge(isCollapse ? "left-[calc(100%+8px)] -top-1" : " top-[calc(100%+4px)] ", "absolute z-dropdown w-[228px] flex flex-col mt-1 max-h-[calc(100dvh-160px)]", menuSurfaceClass)}
         >
           {children}
         </div>

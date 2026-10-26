@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { createWorkspace } from "@/api/workspace"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
+import { menuIconClass, menuItemClass, menuSurfaceClass } from "@/components/ui/menu"
 import { useIsLg } from "@/hooks/use-media-query"
 
 const WorkspaceMenu = () => {
@@ -26,8 +27,8 @@ const WorkspaceMenu = () => {
                 setIsMenuOpen(false)
             }
         }
-        document.addEventListener("mousedown", handleClickOutside)
-        return () => document.removeEventListener("mousedown", handleClickOutside)
+        document.addEventListener("pointerdown", handleClickOutside, true)
+        return () => document.removeEventListener("pointerdown", handleClickOutside, true)
     }, [isMenuOpen, isLg])
 
     const handleWorkspaceButtonClick = (id: string) => {
@@ -60,7 +61,7 @@ const WorkspaceMenu = () => {
 
     const menuContent = (
         <>
-            <div className="p-2">
+            <div className="px-2 pt-2 pb-1">
                 <input
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
@@ -68,24 +69,24 @@ const WorkspaceMenu = () => {
                     placeholder={t("placeholder.searchWorkspace")}
                 />
             </div>
-            <div className="overflow-y-auto max-h-[40dvh] px-2 pb-2 flex flex-col">
+            <div className="overflow-y-auto max-h-[40dvh] pb-1.5 flex flex-col">
                 {filteredWorkspaces && filteredWorkspaces.map(w => (
                     <button
                         key={w.id}
-                        className="shrink-0 px-3 py-2 rounded w-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-left text-sm truncate"
+                        className={`shrink-0 ${menuItemClass(!isLg)}`}
                         onClick={() => handleWorkspaceButtonClick(w.id)}
                     >
-                        {w.name}
+                        <span className="min-w-0 truncate">{w.name}</span>
                     </button>
                 ))}
                 {keyword.length > 0 && (
                     <button
                         onClick={handleNewWorkspaceButtonClick}
                         title="new workspace"
-                        className="shrink-0 p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center w-full gap-2 text-sm"
+                        className={`shrink-0 ${menuItemClass(!isLg)}`}
                     >
-                        <Plus size={16} />
-                        {keyword ? t("menu.createWithName", { name: keyword }) : t("menu.addNew")}
+                        <span className={menuIconClass()}><Plus size={16} /></span>
+                        <span className="min-w-0 truncate">{keyword ? t("menu.createWithName", { name: keyword }) : t("menu.addNew")}</span>
                     </button>
                 )}
             </div>
@@ -109,7 +110,7 @@ const WorkspaceMenu = () => {
                 {isLg && isMenuOpen && (
                     <div
                         ref={menuRef}
-                        className="absolute top-full left-0 mt-2 w-full min-w-[228px] bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border dark:border-none rounded-lg shadow-[0px_10px_38px_-10px_rgba(22,23,24,0.35),0px_10px_20px_-15px_rgba(22,23,24,0.2)] overflow-hidden z-dropdown"
+                        className={`absolute top-full left-0 mt-2 w-full min-w-[228px] overflow-hidden z-dropdown ${menuSurfaceClass}`}
                     >
                         {menuContent}
                     </div>
@@ -117,9 +118,7 @@ const WorkspaceMenu = () => {
             </div>
 
             <BottomSheet open={!isLg && isMenuOpen} onOpenChange={setIsMenuOpen}>
-                <div className="pb-2">
-                    {menuContent}
-                </div>
+                {menuContent}
             </BottomSheet>
         </>
     )
