@@ -1,14 +1,20 @@
 package workflow
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/robfig/cron/v3"
 
 	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/model"
+	"gorm.io/gorm"
 )
+
+const fireAttempts = 3
 
 // Scheduler fires schedule-triggered workflows. Reload rebuilds the whole
 // cron table from the database; with a single API instance an in-process
@@ -65,21 +71,44 @@ func (s *Scheduler) Stop() {
 	}
 }
 
+// fire creates a run for a scheduled workflow. Database errors (e.g. a
+// locked SQLite file while other schedules fire in the same minute) are
+// retried, so a tick isn't silently lost.
 func (s *Scheduler) fire(workflowID string) {
-	// Re-fetch: the workflow may have been edited or disabled since Reload.
+	for attempt := 1; ; attempt++ {
+		err := s.tryFire(workflowID)
+		if err == nil {
+			return
+		}
+		if attempt == fireAttempts {
+			log.Printf("[workflow] scheduled run for %s failed after %d attempts: %v", workflowID, attempt, err)
+			return
+		}
+		log.Printf("[workflow] scheduled run for %s (attempt %d): %v; retrying", workflowID, attempt, err)
+		time.Sleep(time.Duration(attempt) * 2 * time.Second)
+	}
+}
+
+func (s *Scheduler) tryFire(workflowID string) error {
+	// Re-fetch: the workflow may have been edited, disabled or deleted since Reload.
 	wf, err := s.db.FindWorkflow(model.Workflow{ID: workflowID})
-	if err != nil || !wf.Enabled {
-		return
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("load workflow: %w", err)
+	}
+	if !wf.Enabled {
+		return nil
 	}
 	spec, errs := ParseAndValidate(wf.Definition)
 	if len(errs) > 0 || !spec.HasSchedule() {
-		return
+		return nil
 	}
 
 	workspace, err := s.db.FindWorkspaceByID(wf.WorkspaceID)
 	if err != nil {
-		log.Printf("[workflow] load workspace for scheduled run of %s: %v", workflowID, err)
-		return
+		return fmt.Errorf("load workspace: %w", err)
 	}
 
 	payload := EventPayload{
@@ -87,9 +116,9 @@ func (s *Scheduler) fire(workflowID string) {
 		Workspace: PayloadWorkspace{ID: workspace.ID, Name: workspace.Name},
 	}
 	if _, err := CreateRun(s.db, wf, spec, model.WorkflowEventSchedule, payload, ""); err != nil {
-		log.Printf("[workflow] create scheduled run for %s: %v", workflowID, err)
-		return
+		return fmt.Errorf("create run: %w", err)
 	}
 
 	s.queue.Wake()
+	return nil
 }
