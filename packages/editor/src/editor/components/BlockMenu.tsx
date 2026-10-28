@@ -106,6 +106,14 @@ export function BlockMenu() {
       )}
       {item('duplicate', msg().duplicate, run(() => duplicateBlocks(ids)), { kbd: 'Ctrl+D' })}
       {item('copy', msg().copy, run(() => void copyToClipboard(ids)), { kbd: 'Ctrl+C' })}
+      {/* The sheet has these in its button grid below. */}
+      {!sheet && (
+        <>
+          <div className="menu-sep" />
+          {item('moveUp', msg().moveUp, run(() => moveSelection(ids, -1)), { kbd: 'Ctrl+Shift+↑' })}
+          {item('moveDown', msg().moveDown, run(() => moveSelection(ids, 1)), { kbd: 'Ctrl+Shift+↓' })}
+        </>
+      )}
       {sheet && (
         <>
           <div className="menu-sep" />
