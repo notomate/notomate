@@ -14,6 +14,7 @@ type DB interface {
 	ChannelRepository
 	MessageRepository
 	FileRepository
+	NoteFileRepository
 	WorkspaceRepository
 	WorkspaceUserRepository
 	ViewRepository
@@ -73,6 +74,25 @@ type MessageRepository interface {
 	FindMessage(m model.Message) (model.Message, error)
 	FindMessages(f model.MessageFilter) ([]model.Message, error)
 }
+// NoteFileRepository tracks which notes (and their comments) use which
+// workspace files; see internal/notefile.
+type NoteFileRepository interface {
+	// ReplaceNoteFiles sets the files used by a note's content (commentID "")
+	// or by one of its comments.
+	ReplaceNoteFiles(workspaceID, noteID, commentID string, fileNames []string) error
+	DeleteNoteFiles(noteID string) error
+	DeleteCommentFiles(commentID string) error
+	// FindNotesUsingFile returns the notes using a file, in their content or
+	// in a comment that still exists.
+	FindNotesUsingFile(workspaceID, fileName string) ([]model.Note, error)
+	// IsFileInPublicNote reports whether a public note uses the file.
+	IsFileInPublicNote(workspaceID, fileName string) (bool, error)
+	FindNotesAfter(afterID string, limit int) ([]model.Note, error)
+	FindCommentsAfter(afterID string, limit int) ([]model.Comment, error)
+	IsBackfillDone(name string) (bool, error)
+	MarkBackfillDone(name string) error
+}
+
 type FileRepository interface {
 	CreateFile(u model.File) error
 	FindFiles(f model.FileFilter) ([]model.File, error)

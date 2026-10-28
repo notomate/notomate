@@ -408,6 +408,8 @@ export default {
     image_pending: "画像をアップロード中…"
   },
   files: {
+    used_in_notes: "このファイルを使用しているノート",
+    not_used: "このファイルを使用しているノートはありません",
     drag_drop: "ファイルをここにドラッグしてドロップするか、クリックして選択してください",
     select_files: "ファイルを選択",
     upload_success: "ファイルが正常にアップロードされました",

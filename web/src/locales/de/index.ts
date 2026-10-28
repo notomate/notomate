@@ -408,6 +408,8 @@ export default {
     image_pending: "Bild wird hochgeladen…"
   },
   files: {
+    used_in_notes: "Verwendet in Notizen",
+    not_used: "In keiner Notiz verwendet",
     drag_drop: "Dateien hier ablegen oder klicken zum Auswählen",
     select_files: "Dateien auswählen",
     upload_success: "Datei erfolgreich hochgeladen",

@@ -575,6 +575,8 @@ export default {
     image_pending: "Uploading image…"
   },
   files: {
+    used_in_notes: "Used in notes",
+    not_used: "Not used in any note",
     drag_drop: "Drag and drop files here or click to select",
     select_files: "Select Files",
     upload_success: "File uploaded successfully",

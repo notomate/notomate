@@ -408,6 +408,8 @@ export default {
     image_pending: "이미지 업로드 중…"
   },
   files: {
+    used_in_notes: "이 파일을 사용하는 노트",
+    not_used: "이 파일을 사용하는 노트가 없습니다",
     drag_drop: "여기에 파일을 드래그 앤 드롭하거나 클릭하여 선택",
     select_files: "파일 선택",
     upload_success: "파일이 성공적으로 업로드되었습니다",

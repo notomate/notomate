@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/notefile"
 	"github.com/notomate/notomate/internal/util"
 
 	"github.com/labstack/echo/v4"
@@ -334,6 +335,7 @@ func (h Handler) CreateNote(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	notefile.SyncNote(h.db, n)
 	h.notifyNoteEvent(model.WorkflowEventNoteCreated, n, user.ID)
 
 	return c.JSON(http.StatusCreated, n)
@@ -362,6 +364,7 @@ func (h Handler) DeleteNote(c echo.Context) error {
 	if err := h.db.DeleteNote(Note); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	notefile.RemoveNote(h.db, existingNote.ID)
 
 	h.notifyNoteEvent(model.WorkflowEventNoteDeleted, existingNote, user.ID)
 
@@ -439,6 +442,7 @@ func (h Handler) UpdateNote(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	notefile.SyncNote(h.db, n)
 	h.notifyNoteEvent(model.WorkflowEventNoteUpdated, n, user.ID)
 
 	return c.JSON(http.StatusOK, existingNote)

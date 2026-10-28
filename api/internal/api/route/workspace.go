@@ -57,6 +57,7 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 	g.DELETE("/:workspaceId/notes/:noteId/comments/:id", h.DeleteComment)
 
 	g.GET("/:workspaceId/files/:id", h.Download)
+	g.GET("/:workspaceId/files/:id/notes", h.GetFileNotes)
 	g.GET("/:workspaceId/files", h.List)
 	g.POST("/:workspaceId/files", h.Upload)
 	g.PATCH("/:workspaceId/files/:id", h.RenameFile)

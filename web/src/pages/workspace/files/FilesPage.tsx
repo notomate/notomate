@@ -3,13 +3,14 @@ import { useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-q
 import useUploadComplete from '@/hooks/use-upload-complete';
 import { deleteFile, FileInfo, getFileDownloadUrl, listFiles, renameFile, uploadFile } from '../../../api/file';
 import { useToastStore } from '../../../stores/toast';
-import { Download, FileIcon, Trash2, Edit2, X, Check, Search, Filter, Eye, FileText, Copy, Upload } from 'lucide-react';
+import { Download, FileIcon, Trash2, Edit2, X, Check, Search, Filter, Eye, FileText, Copy, Upload, NotebookText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { Tooltip } from 'radix-ui';
 import FilesGridSkeleton from '@/components/skeletons/FilesGridSkeleton';
 import ProgressiveImage from "@/components/image/ProgressiveImage"
+import FileNotesDialog from "./FileNotesDialog"
 
 const PAGE_SIZE = 20;
 
@@ -23,6 +24,7 @@ const FilesPage = () => {
     const [editingFileId, setEditingFileId] = useState<string | null>(null);
     const [editingFileName, setEditingFileName] = useState('');
     const [previewFile, setPreviewFile] = useState<FileInfo | null>(null);
+    const [usageFile, setUsageFile] = useState<FileInfo | null>(null);
     const queryClient = useQueryClient();
     const { addToast } = useToastStore();
     const observerRef = useRef<IntersectionObserver | null>(null);
@@ -406,6 +408,13 @@ const FilesPage = () => {
                                                         <Edit2 size={14} />
                                                     </button>
                                                     <button
+                                                        onClick={() => setUsageFile(file)}
+                                                        className="flex-1 p-1.5 text-xs text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors flex items-center justify-center gap-1"
+                                                        title={t('files.used_in_notes')}
+                                                    >
+                                                        <NotebookText size={14} />
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleCopyUrl(file)}
                                                         className="flex-1 p-1.5 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors flex items-center justify-center gap-1"
                                                         title={t('files.copy_url')}
@@ -488,6 +497,16 @@ const FilesPage = () => {
                             </div>
                         </motion.div>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {usageFile && (
+                    <FileNotesDialog
+                        workspaceId={currentWorkspaceId!}
+                        file={usageFile}
+                        onClose={() => setUsageFile(null)}
+                    />
                 )}
             </AnimatePresence>
         </div>

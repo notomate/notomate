@@ -16,6 +16,7 @@ import (
 
 	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/notefile"
 	"github.com/notomate/notomate/internal/storage"
 	"github.com/notomate/notomate/internal/util"
 	"github.com/notomate/notomate/internal/workflow"
@@ -306,6 +307,7 @@ func (s *collabServer) UpdateNote(ctx context.Context, req *UpdateNoteRequest) (
 	if err := s.db.UpdateNote(note); err != nil {
 		return nil, status.Errorf(codes.Internal, "update note: %v", err)
 	}
+	notefile.SyncNote(s.db, note)
 	if s.engine != nil {
 		s.engine.NotifyNoteEvent(model.WorkflowEventNoteUpdated, note, req.UpdatedBy)
 	}

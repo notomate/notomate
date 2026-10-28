@@ -3,6 +3,7 @@ package handler
 import (
 	"bufio"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/notomate/notomate/internal/imagevariant"
 	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/notefile"
 	"github.com/notomate/notomate/internal/util"
 )
 
@@ -105,6 +107,11 @@ func (h Handler) Download(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Workspace id and filename are required")
 	}
 
+	public, allowed := h.fileAccess(c, workspaceId, filename)
+	if !allowed {
+		return echo.NewHTTPError(http.StatusNotFound, "file not found")
+	}
+
 	// ?w= asks for a downscaled copy of an image.
 	var (
 		f   io.ReadSeekCloser
@@ -121,9 +128,68 @@ func (h Handler) Download(c echo.Context) error {
 	}
 	defer f.Close()
 
-	setImmutableCache(c)
+	if public {
+		setImmutableCache(c)
+	} else {
+		// Members-only: shared caches (a CDN in front) must not keep a copy.
+		c.Response().Header().Set("Cache-Control", "private, max-age=31536000, immutable")
+	}
 	http.ServeContent(c.Response(), c.Request(), servedName, time.Time{}, f)
 	return nil
+}
+
+// fileAccess reports whether a public note uses the file, and whether the
+// requester may read it: anyone may read files shown in public notes (their
+// content or comments), workspace members may read every workspace file.
+// Until the note_files backfill has finished, every file stays readable.
+func (h Handler) fileAccess(c echo.Context, workspaceID, fileName string) (public, allowed bool) {
+	if !notefile.Complete() {
+		return true, true
+	}
+	public, err := h.db.IsFileInPublicNote(workspaceID, fileName)
+	if err != nil {
+		log.Printf("check public use of file %s/%s: %v", workspaceID, fileName, err)
+	}
+	if public {
+		return true, true
+	}
+	user, ok := c.Get("user").(model.User)
+	return false, ok && h.isUserWorkspaceMember(user.ID, workspaceID)
+}
+
+type FileNoteResponse struct {
+	ID         string `json:"id"`
+	Title      string `json:"title"`
+	Visibility string `json:"visibility"`
+}
+
+// GetFileNotes lists the notes a file appears in (content or comments) that
+// the requester can see.
+func (h Handler) GetFileNotes(c echo.Context) error {
+	workspaceId := c.Param("workspaceId")
+	user, ok := c.Get("user").(model.User)
+	if !ok || !h.isUserWorkspaceMember(user.ID, workspaceId) {
+		return echo.NewHTTPError(http.StatusForbidden, "you do not have permission to see this file")
+	}
+
+	f, err := h.db.FindFileByID(c.Param("id"))
+	if err != nil || f.WorkspaceID != workspaceId {
+		return echo.NewHTTPError(http.StatusNotFound, "file not found")
+	}
+
+	notes, err := h.db.FindNotesUsingFile(workspaceId, f.Name)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	res := make([]FileNoteResponse, 0, len(notes))
+	for _, n := range notes {
+		if n.Visibility == "private" && n.CreatedBy != user.ID {
+			continue
+		}
+		res = append(res, FileNoteResponse{ID: n.ID, Title: n.Title, Visibility: n.Visibility})
+	}
+	return c.JSON(http.StatusOK, res)
 }
 
 // setImmutableCache lets browsers keep a stored file for good: stored names

@@ -62,6 +62,20 @@ export const renameFile = async (workspaceId: string, fileId: string, originalFi
     return response.data;
 };
 
+export interface FileNote {
+    id: string;
+    title: string;
+    visibility: string;
+}
+
+/** Notes the file appears in (content or comments) that the user can see. */
+export const getFileNotes = async (workspaceId: string, fileId: string): Promise<FileNote[]> => {
+    const response = await axios.get(`/api/v1/workspaces/${workspaceId}/files/${fileId}/notes`, {
+        withCredentials: true,
+    });
+    return response.data;
+};
+
 export const getFileDownloadUrl = (workspaceId: string, fileName: string) => {
     return `/api/v1/workspaces/${workspaceId}/files/${fileName}`;
 };

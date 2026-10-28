@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/notomate/notomate/internal/model"
+	"github.com/notomate/notomate/internal/notefile"
 	"github.com/notomate/notomate/internal/util"
 
 	"github.com/labstack/echo/v4"
@@ -153,6 +154,7 @@ func (h Handler) CreateComment(c echo.Context) error {
 	if err := h.db.CreateComment(comment); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	notefile.SyncComment(h.db, comment)
 
 	h.notifyCommentEvent(model.WorkflowEventCommentCreated, comment, user.ID)
 
@@ -200,6 +202,7 @@ func (h Handler) UpdateComment(c echo.Context) error {
 	if err := h.db.UpdateComment(existingComment); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
+	notefile.SyncComment(h.db, existingComment)
 
 	h.notifyCommentEvent(model.WorkflowEventCommentUpdated, existingComment, user.ID)
 
@@ -231,6 +234,7 @@ func (h Handler) DeleteComment(c echo.Context) error {
 	if err := h.db.DeleteComment(existingComment); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	notefile.RemoveComment(h.db, existingComment.ID)
 
 	h.notifyCommentEvent(model.WorkflowEventCommentDeleted, existingComment, user.ID)
 

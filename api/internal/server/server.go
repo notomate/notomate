@@ -13,6 +13,7 @@ import (
 	"github.com/notomate/notomate/internal/api/validate"
 	"github.com/notomate/notomate/internal/config"
 	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/notefile"
 	"github.com/notomate/notomate/internal/storage"
 	"github.com/notomate/notomate/internal/workflow"
 )
@@ -60,6 +61,7 @@ func New(db db.DB, storage storage.Storage, engine *workflow.Engine) (*echo.Echo
 
 	handler.GoogleMaps().StartJanitor(context.Background(), time.Hour)
 	handler.Images().StartBackfill(context.Background())
+	notefile.StartBackfill(context.Background(), db)
 
 	return e, nil
 }

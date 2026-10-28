@@ -574,6 +574,8 @@ export default {
     image_pending: "图片上传中…"
   },
   files: {
+    used_in_notes: "使用此文件的笔记",
+    not_used: "没有笔记使用此文件",
     drag_drop: "将文件拖到此处或点击选择",
     select_files: "选择文件",
     upload_success: "文件上传成功",

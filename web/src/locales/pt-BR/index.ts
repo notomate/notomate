@@ -408,6 +408,8 @@ export default {
     image_pending: "Enviando imagem…"
   },
   files: {
+    used_in_notes: "Usado em notas",
+    not_used: "Não usado em nenhuma nota",
     drag_drop: "Arraste e solte arquivos aqui ou clique para selecionar",
     select_files: "Selecionar Arquivos",
     upload_success: "Arquivo enviado com sucesso",

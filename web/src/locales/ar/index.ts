@@ -408,6 +408,8 @@ export default {
     image_pending: "جارٍ رفع الصورة…"
   },
   files: {
+    used_in_notes: "مستخدم في الملاحظات",
+    not_used: "غير مستخدم في أي ملاحظة",
     drag_drop: "اسحب الملفات هنا أو انقر للاختيار",
     select_files: "اختر الملفات",
     upload_success: "تم تحميل الملف بنجاح",
