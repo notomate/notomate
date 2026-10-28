@@ -175,7 +175,7 @@ const ExplorePage: React.FC = () => {
                                             getLinkTo={(note) => `/explore/notes/${note.id}`}
                                             linkKind="open"
                                             commentsReadOnly
-                                            maxNodes={100}
+                                            maxNodes={15}
                                         />
                                         <div ref={loadMoreRef} className="h-2" />
                                         {isFetchingNextPage && <NoteListSkeleton count={3} />}
