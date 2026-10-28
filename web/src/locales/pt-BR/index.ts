@@ -190,6 +190,7 @@ export default {
     }
   },
   actions: {
+    reload: "Recarregar",
     signin: "Fazer login",
     signup: "Cadastrar",
     signout: "Sair",
@@ -226,6 +227,7 @@ export default {
     moveBackward: "Mover para Trás",
   },
   messages: {
+    appCrashed: "Algo deu errado. Recarregue a página.",
     signInFailed: "Falha no login, verifique seu e-mail e senha",
     signUpFailed: "Falha no cadastro, {{error}}",
     accountDisabled: "A conta foi desativada. Entre em contato com o administrador.",

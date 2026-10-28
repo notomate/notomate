@@ -33,6 +33,7 @@ import SpreadsheetPage from './pages/workspace/spreadsheet/SpreadsheetPage';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import useScrollToTop from '@/hooks/use-scrolltotop';
+import useResumeRepaint from '@/hooks/use-resume-repaint';
 import { useAuth } from '@/hooks/use-auth';
 import { LoaderCircle } from 'lucide-react';
 
@@ -44,6 +45,7 @@ function App() {
   const { isLoading } = useAuth();
 
   useScrollToTop();
+  useResumeRepaint();
 
   useEffect(() => {
     const rtlLanguages = ['ar'];

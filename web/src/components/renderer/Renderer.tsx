@@ -743,7 +743,7 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 } catch { /* ignore */ }
                 if (!videoId) return null
                 return <div key={key} className="w-full aspect-video rounded overflow-hidden">
-                    <iframe className="w-full h-full" src={`https://www.youtube.com/embed/${videoId}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="YouTube video" />
+                    <iframe className="w-full h-full" loading="lazy" src={`https://www.youtube.com/embed/${videoId}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="YouTube video" />
                 </div>
             }
             case 'threadsEmbed':
@@ -786,12 +786,12 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 return <SubPageRendererBlock key={key} noteId={node.attrs.noteId} title={node.attrs?.title || ''} workspaceId={workspaceIdProp} />
             case 'video':
                 return <div key={key} className="w-full rounded overflow-hidden">
-                    <video className="w-full max-h-[620px]" src={node.attrs?.src} controls />
+                    <video className="w-full max-h-[620px]" src={node.attrs?.src} controls preload="metadata" />
                 </div>
             case 'audio':
                 return <div key={key} className="w-full rounded p-2 border dark:border-neutral-700 bg-gray-100 dark:bg-neutral-800">
                     {node.attrs?.name && <div className="text-sm text-gray-700 dark:text-gray-300 mb-2 truncate">{node.attrs.name}</div>}
-                    <audio className="w-full max-w-full" src={node.attrs?.src} controls />
+                    <audio className="w-full max-w-full" src={node.attrs?.src} controls preload="metadata" />
                 </div>
             case 'carouselNode': {
                 const items: Array<{ src: string; name: string; type: 'image' | 'video' }> = node.attrs?.items || []

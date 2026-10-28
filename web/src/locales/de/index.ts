@@ -190,6 +190,7 @@ export default {
     }
   },
   actions: {
+    reload: "Neu laden",
     signin: "Anmelden",
     signup: "Registrieren",
     signout: "Abmelden",
@@ -226,6 +227,7 @@ export default {
     moveBackward: "Rückwärts bewegen",
   },
   messages: {
+    appCrashed: "Etwas ist schiefgelaufen. Bitte lade die Seite neu.",
     signInFailed: "Anmeldung fehlgeschlagen, bitte überprüfen Sie Ihre E-Mail und Ihr Passwort",
     signUpFailed: "Registrierung fehlgeschlagen, {{error}}",
     accountDisabled: "Das Konto wurde deaktiviert. Bitte kontaktieren Sie den Administrator.",

@@ -357,6 +357,7 @@ export default {
     }
   },
   actions: {
+    reload: "重新載入",
     signin: "登入",
     signup: "註冊",
     signout: "登出",
@@ -393,6 +394,7 @@ export default {
     moveBackward: "向後移動",
   },
   messages: {
+    appCrashed: "頁面發生錯誤，請重新載入。",
     signInFailed: "登入失敗，請檢查你的電子郵件和密碼",
     signUpFailed: "註冊失敗，{{error}}",
     accountDisabled: "帳號已被停用，請聯絡管理員。",

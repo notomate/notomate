@@ -190,6 +190,7 @@ export default {
     }
   },
   actions: {
+    reload: "Перезагрузить",
     signin: "Войти",
     signup: "Зарегистрироваться",
     signout: "Выйти",
@@ -226,6 +227,7 @@ export default {
     moveBackward: "Переместить назад",
   },
   messages: {
+    appCrashed: "Что-то пошло не так. Перезагрузите страницу.",
     signInFailed: "Вход не выполнен, пожалуйста, проверьте email и пароль",
     signUpFailed: "Регистрация не выполнена, {{error}}",
     accountDisabled: "Учётная запись отключена. Пожалуйста, свяжитесь с администратором.",

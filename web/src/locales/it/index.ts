@@ -190,6 +190,7 @@ export default {
     }
   },
   actions: {
+    reload: "Ricarica",
     signin: "Accedi",
     signup: "Registrati",
     signout: "Esci",
@@ -226,6 +227,7 @@ export default {
     moveBackward: "Sposta indietro",
   },
   messages: {
+    appCrashed: "Qualcosa è andato storto. Ricarica la pagina.",
     signInFailed: "Accesso non riuscito, controlla email e password",
     signUpFailed: "Registrazione non riuscita, {{error}}",
     accountDisabled: "L'account è stato disabilitato. Contatta l'amministratore.",

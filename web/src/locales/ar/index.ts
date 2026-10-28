@@ -190,6 +190,7 @@ export default {
     }
   },
   actions: {
+    reload: "إعادة التحميل",
     signin: "تسجيل الدخول",
     signup: "إنشاء حساب",
     signout: "تسجيل الخروج",
@@ -226,6 +227,7 @@ export default {
     moveBackward: "نقل للخلف",
   },
   messages: {
+    appCrashed: "حدث خطأ ما. يرجى إعادة تحميل الصفحة.",
     signInFailed: "فشل تسجيل الدخول، يرجى التحقق من البريد الإلكتروني وكلمة المرور",
     signUpFailed: "فشل إنشاء الحساب، {{error}}",
     accountDisabled: "تم تعطيل الحساب. يرجى الاتصال بالمسؤول.",

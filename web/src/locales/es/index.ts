@@ -190,6 +190,7 @@ export default {
     }
   },
   actions: {
+    reload: "Recargar",
     signin: "Iniciar Sesión",
     signup: "Registrarse",
     signout: "Cerrar Sesión",
@@ -226,6 +227,7 @@ export default {
     moveBackward: "Mover Atrás",
   },
   messages: {
+    appCrashed: "Algo salió mal. Vuelve a cargar la página.",
     signInFailed: "Error al iniciar sesión, por favor verifica tu correo electrónico y contraseña",
     signUpFailed: "Error al registrarse, {{error}}",
     accountDisabled: "La cuenta ha sido deshabilitada. Por favor contacta al administrador.",

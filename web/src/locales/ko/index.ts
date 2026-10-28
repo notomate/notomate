@@ -190,6 +190,7 @@ export default {
     }
   },
   actions: {
+    reload: "새로고침",
     signin: "로그인",
     signup: "회원가입",
     signout: "로그아웃",
@@ -226,6 +227,7 @@ export default {
     moveBackward: "뒤로 이동",
   },
   messages: {
+    appCrashed: "문제가 발생했습니다. 페이지를 새로고침해 주세요.",
     signInFailed: "로그인 실패, 이메일과 비밀번호를 확인해주세요",
     signUpFailed: "회원가입 실패, {{error}}",
     accountDisabled: "계정이 비활성화되었습니다. 관리자에게 문의해주세요.",

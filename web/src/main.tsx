@@ -7,6 +7,7 @@ import './i18n'
 import './lib/axios'
 import { Toast, Tooltip } from "radix-ui";
 import App from './App.tsx'
+import ErrorBoundary from './components/errorboundary/ErrorBoundary'
 import { UploadPanel } from './components/upload/UploadPanel'
 import { SidebarProvider } from './components/sidebar/SidebarProvider.tsx';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -31,7 +32,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <React.StrictMode>
             <BrowserRouter>
               <SidebarProvider>
-                <App />
+                <ErrorBoundary>
+                  <App />
+                </ErrorBoundary>
               </SidebarProvider>
             </BrowserRouter>
           </React.StrictMode>

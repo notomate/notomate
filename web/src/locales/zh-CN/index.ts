@@ -356,6 +356,7 @@ export default {
     }
   },
   actions: {
+    reload: "重新加载",
     signin: "登录",
     signup: "注册",
     signout: "退出登录",
@@ -392,6 +393,7 @@ export default {
     moveBackward: "向后移动",
   },
   messages: {
+    appCrashed: "页面发生错误，请重新加载。",
     signInFailed: "登录失败，请检查你的电子邮件和密码",
     signUpFailed: "注册失败，{{error}}",
     accountDisabled: "账户已被禁用。请联系管理员。",

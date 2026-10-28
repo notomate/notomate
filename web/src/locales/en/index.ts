@@ -357,6 +357,7 @@ export default {
     }
   },
   actions: {
+    reload: "Reload",
     signin: "Sign in",
     signup: "Sign up",
     signout: "Sign out",
@@ -393,6 +394,7 @@ export default {
     moveBackward: "Move Backward",
   },
   messages: {
+    appCrashed: "Something went wrong. Please reload the page.",
     signInFailed: "Sign in failed, please check your email and password",
     signUpFailed: "Sign up failed, {{error}}",
     accountDisabled: "Account has been disabled. Please contact the administrator.",

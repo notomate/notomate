@@ -190,6 +190,7 @@ export default {
     }
   },
   actions: {
+    reload: "再読み込み",
     signin: "サインイン",
     signup: "サインアップ",
     signout: "サインアウト",
@@ -226,6 +227,7 @@ export default {
     moveBackward: "後ろに移動",
   },
   messages: {
+    appCrashed: "問題が発生しました。ページを再読み込みしてください。",
     signInFailed: "サインインに失敗しました。メールアドレスとパスワードを確認してください",
     signUpFailed: "サインアップに失敗しました。{{error}}",
     accountDisabled: "アカウントが無効化されています。管理者に連絡してください。",
