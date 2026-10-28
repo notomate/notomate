@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Outlet, useParams } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
@@ -18,6 +18,7 @@ const navItemClass = "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2
 
 const ExplorePage: React.FC = () => {
     const { t } = useTranslation();
+    const { noteId } = useParams<{ noteId?: string }>();
     const observerRef = useRef<IntersectionObserver | null>(null);
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -132,7 +133,9 @@ const ExplorePage: React.FC = () => {
                     onOpenSidebar={() => setIsSidebarOpen(true)}
                 />
                 <div className="flex-1 overflow-hidden">
-                    <div className="h-full flex flex-col bg-neutral-50 dark:bg-neutral-950">
+                    {noteId && <Outlet />}
+                    {/* Kept mounted while a note is open so going back restores the search and scroll position. */}
+                    <div className={`h-full flex-col bg-neutral-50 dark:bg-neutral-950 ${noteId ? "hidden" : "flex"}`}>
                         <div ref={scrollRef} className="flex-1 overflow-auto">
                             <div className="w-full lg:max-w-[600px] px-2 pt-2 xl:pt-4 pb-2 mx-auto">
                                 <div className="relative">
@@ -167,7 +170,13 @@ const ExplorePage: React.FC = () => {
                                     </div>
                                 ) : (
                                     <>
-                                        <NoteList notes={notes} showLink={false} commentsReadOnly maxNodes={100} />
+                                        <NoteList
+                                            notes={notes}
+                                            getLinkTo={(note) => `/explore/notes/${note.id}`}
+                                            linkKind="open"
+                                            commentsReadOnly
+                                            maxNodes={100}
+                                        />
                                         <div ref={loadMoreRef} className="h-2" />
                                         {isFetchingNextPage && <NoteListSkeleton count={3} />}
                                     </>

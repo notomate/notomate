@@ -64,7 +64,8 @@ export default {
       searchPlaceholder: "بحث في الملاحظات العامة…",
       noPublicNotes: "لا توجد ملاحظات عامة بعد.",
       noSearchResults: "لا توجد ملاحظات تطابق بحثك.",
-      backToWorkspace: "العودة إلى مساحة العمل"
+      backToWorkspace: "العودة إلى مساحة العمل",
+      noteNotFound: "هذه الملاحظة غير موجودة أو ليست عامة."
     },
     settings: {
       runners: "Runners",
@@ -190,6 +191,7 @@ export default {
     }
   },
   actions: {
+    openNote: "فتح",
     reload: "إعادة التحميل",
     signin: "تسجيل الدخول",
     signup: "إنشاء حساب",

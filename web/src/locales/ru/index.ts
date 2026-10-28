@@ -64,7 +64,8 @@ export default {
       searchPlaceholder: "Поиск публичных заметок…",
       noPublicNotes: "Публичных заметок пока нет.",
       noSearchResults: "Нет заметок, соответствующих запросу.",
-      backToWorkspace: "Вернуться в рабочее пространство"
+      backToWorkspace: "Вернуться в рабочее пространство",
+      noteNotFound: "Эта заметка не существует или не является публичной."
     },
     settings: {
       runners: "Runners",
@@ -190,6 +191,7 @@ export default {
     }
   },
   actions: {
+    openNote: "Открыть",
     reload: "Перезагрузить",
     signin: "Войти",
     signup: "Зарегистрироваться",

@@ -64,7 +64,8 @@ export default {
       searchPlaceholder: "Öffentliche Notizen durchsuchen…",
       noPublicNotes: "Noch keine öffentlichen Notizen.",
       noSearchResults: "Keine Notizen entsprechen Ihrer Suche.",
-      backToWorkspace: "Zurück zum Arbeitsbereich"
+      backToWorkspace: "Zurück zum Arbeitsbereich",
+      noteNotFound: "Diese Notiz existiert nicht oder ist nicht öffentlich."
     },
     settings: {
       runners: "Runners",
@@ -190,6 +191,7 @@ export default {
     }
   },
   actions: {
+    openNote: "Öffnen",
     reload: "Neu laden",
     signin: "Anmelden",
     signup: "Registrieren",

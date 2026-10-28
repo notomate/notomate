@@ -12,4 +12,5 @@ func RegisterAuth(g *echo.Group, h handler.Handler) {
 	g.POST("/signup", h.SignUp)
 	g.GET("/me", h.GetUserInfo)
 	g.GET("/explore/notes", h.GetPublicNotes)
+	g.GET("/explore/notes/:id", h.GetPublicNote)
 }

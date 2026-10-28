@@ -226,7 +226,8 @@ export default {
       searchPlaceholder: "搜索公开笔记…",
       noPublicNotes: "目前还没有公开笔记。",
       noSearchResults: "没有符合搜索条件的笔记。",
-      backToWorkspace: "返回工作区"
+      backToWorkspace: "返回工作区",
+      noteNotFound: "这篇笔记不存在或未公开。"
     },
     settings: {
       runners: "Runners",
@@ -356,6 +357,7 @@ export default {
     }
   },
   actions: {
+    openNote: "打开",
     reload: "重新加载",
     signin: "登录",
     signup: "注册",

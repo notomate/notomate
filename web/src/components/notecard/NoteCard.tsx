@@ -7,12 +7,14 @@ import Renderer from "@/components/renderer/Renderer"
 import Avatar from "@/components/avatar/Avatar"
 import NoteCardComments from "@/components/commentsidebar/NoteCardComments"
 import NoteCardMenu from "./NoteCardMenu"
-import { SquarePen, CornerDownRight } from "lucide-react"
+import { SquarePen, CornerDownRight, ArrowUpRight } from "lucide-react"
 
 interface NoteCardProps {
     note: NoteData
     linkTo?: string
     showLink?: boolean
+    /** Whether the link edits the note or just opens it on its own page. */
+    linkKind?: "edit" | "open"
     maxNodes?: number
     parentNoteTitle?: string
     parentNoteLinkTo?: string
@@ -21,7 +23,7 @@ interface NoteCardProps {
     showActions?: boolean
 }
 
-const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, parentNoteTitle, parentNoteLinkTo, workspaceId, commentsReadOnly, showActions = false }) => {
+const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, linkKind = "edit", maxNodes, parentNoteTitle, parentNoteLinkTo, workspaceId, commentsReadOnly, showActions = false }) => {
     const { t } = useTranslation()
     const commentsWorkspaceId = workspaceId || note.workspace_id
     return (
@@ -30,8 +32,8 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, maxNodes, 
                 {(showLink || (showActions && workspaceId && note.id)) && (
                     <div className="absolute top-4 right-4 flex items-center gap-1.5 p-1">
                         {showLink && (
-                            <Link to={linkTo || ""} title={t("actions.edit")} className="p-1 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md">
-                                <SquarePen size={16} />
+                            <Link to={linkTo || ""} title={linkKind === "open" ? t("actions.openNote") : t("actions.edit")} className="p-1 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md">
+                                {linkKind === "open" ? <ArrowUpRight size={16} /> : <SquarePen size={16} />}
                             </Link>
                         )}
                         {showActions && workspaceId && note.id && (

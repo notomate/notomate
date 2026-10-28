@@ -64,7 +64,8 @@ export default {
       searchPlaceholder: "공개 노트 검색…",
       noPublicNotes: "아직 공개된 노트가 없습니다.",
       noSearchResults: "검색 조건에 맞는 노트가 없습니다.",
-      backToWorkspace: "워크스페이스로 돌아가기"
+      backToWorkspace: "워크스페이스로 돌아가기",
+      noteNotFound: "이 노트가 없거나 공개되지 않았습니다."
     },
     settings: {
       runners: "Runners",
@@ -190,6 +191,7 @@ export default {
     }
   },
   actions: {
+    openNote: "열기",
     reload: "새로고침",
     signin: "로그인",
     signup: "회원가입",

@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import SignIn from './pages/auth/SignInPage';
 import SignUp from './pages/auth/SignUpPage';
 import ExplorePage from './pages/explore/ExplorePage';
+import ExploreNotePage from './pages/explore/ExploreNotePage';
 import NotFound from './pages/errors/NotFoundPage';
 import RequireAuth from './components/requireauth/RequireAuth';
 import NotesLayout from './pages/workspace/notes/NotesLayout';
@@ -69,7 +70,9 @@ function App() {
       <Routes location={location}>
         <Route path='signin' element={<SignIn />}></Route>
         <Route path='signup' element={<SignUp />}></Route>
-        <Route path='explore' element={<ExplorePage />}></Route>
+        <Route path='explore' element={<ExplorePage />}>
+          <Route path='notes/:noteId' element={<ExploreNotePage />} />
+        </Route>
         <Route path='/' element={<RequireAuth />}>
           <Route index element={<Navigate to="/workspaces" replace />} />
           <Route path='/workspace-setup' element={<Setup />} />

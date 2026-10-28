@@ -227,7 +227,8 @@ export default {
       searchPlaceholder: "Search public notes…",
       noPublicNotes: "No public notes yet.",
       noSearchResults: "No notes match your search.",
-      backToWorkspace: "Back to workspace"
+      backToWorkspace: "Back to workspace",
+      noteNotFound: "This note doesn't exist or isn't public."
     },
     settings: {
       runners: "Runners",
@@ -357,6 +358,7 @@ export default {
     }
   },
   actions: {
+    openNote: "Open",
     reload: "Reload",
     signin: "Sign in",
     signup: "Sign up",

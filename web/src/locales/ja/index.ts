@@ -64,7 +64,8 @@ export default {
       searchPlaceholder: "公開ノートを検索…",
       noPublicNotes: "公開ノートはまだありません。",
       noSearchResults: "検索条件に一致するノートがありません。",
-      backToWorkspace: "ワークスペースに戻る"
+      backToWorkspace: "ワークスペースに戻る",
+      noteNotFound: "このノートは存在しないか、公開されていません。"
     },
     settings: {
       runners: "Runners",
@@ -190,6 +191,7 @@ export default {
     }
   },
   actions: {
+    openNote: "開く",
     reload: "再読み込み",
     signin: "サインイン",
     signup: "サインアップ",

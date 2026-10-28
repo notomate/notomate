@@ -64,7 +64,8 @@ export default {
       searchPlaceholder: "Buscar notas públicas…",
       noPublicNotes: "Aún no hay notas públicas.",
       noSearchResults: "Ninguna nota coincide con tu búsqueda.",
-      backToWorkspace: "Volver al espacio de trabajo"
+      backToWorkspace: "Volver al espacio de trabajo",
+      noteNotFound: "Esta nota no existe o no es pública."
     },
     settings: {
       runners: "Runners",
@@ -190,6 +191,7 @@ export default {
     }
   },
   actions: {
+    openNote: "Abrir",
     reload: "Recargar",
     signin: "Iniciar Sesión",
     signup: "Registrarse",

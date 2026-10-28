@@ -138,6 +138,39 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
+// GetPublicNote returns a single public note to anyone, signed in or not.
+// Non-public notes answer 404 so their existence isn't revealed.
+func (h Handler) GetPublicNote(c echo.Context) error {
+	id := c.Param("id")
+	if id == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Note id is required")
+	}
+
+	b, err := h.db.FindNote(model.Note{ID: id})
+	if err != nil || b.Visibility != "public" {
+		return echo.NewHTTPError(http.StatusNotFound, "Note not found")
+	}
+
+	createdByName, createdByAvatarUrl := h.getUserInfoByID(b.CreatedBy)
+	res := GetNoteResponse{
+		ID:                 b.ID,
+		WorkspaceID:        b.WorkspaceID,
+		ParentID:           b.ParentID,
+		Visibility:         b.Visibility,
+		Pinned:             b.Pinned,
+		Title:              b.Title,
+		Content:            b.Content,
+		CreatedAt:          b.CreatedAt,
+		CreatedBy:          createdByName,
+		CreatedByID:        b.CreatedBy,
+		CreatedByAvatarUrl: createdByAvatarUrl,
+		UpdatedAt:          b.UpdatedAt,
+		UpdatedBy:          h.getUserNameByID(b.UpdatedBy),
+	}
+
+	return c.JSON(http.StatusOK, res)
+}
+
 func (h Handler) GetNotes(c echo.Context) error {
 	workspaceId := c.Param("workspaceId")
 	pageSize := 20

@@ -227,7 +227,8 @@ export default {
       searchPlaceholder: "搜尋公開筆記…",
       noPublicNotes: "目前還沒有公開筆記。",
       noSearchResults: "沒有符合搜尋條件的筆記。",
-      backToWorkspace: "回到工作區"
+      backToWorkspace: "回到工作區",
+      noteNotFound: "這篇筆記不存在或未公開。"
     },
     settings: {
       runners: "Runners",
@@ -357,6 +358,7 @@ export default {
     }
   },
   actions: {
+    openNote: "開啟",
     reload: "重新載入",
     signin: "登入",
     signup: "註冊",

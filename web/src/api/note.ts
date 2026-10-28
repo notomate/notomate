@@ -25,6 +25,11 @@ export const getPublicNotes = async (pageNum: number, pageSize: number, query = 
   return response.data;
 };
 
+export const getPublicNote = async (id: string) => {
+  const response = await axios.get(`/api/v1/explore/notes/${id}`);
+  return response.data;
+};
+
 export const getNotes = async (workspaceId: string, pageNum: number, pageSize: number, query: string, sort?: string, parentId?: string, pinnedOnly?: boolean) => {
   const params = new URLSearchParams({ pageSize: String(pageSize), pageNumber: String(pageNum), query });
   if (sort) params.set('sort', sort);

@@ -18,6 +18,8 @@ interface CommentSidebarProps {
   noteId: string
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Only list comments: no composer, replies or edit menu (e.g. a public note on Explore). */
+  readOnly?: boolean
 }
 
 function formatRelativeTime(t: (key: string, opts?: any) => string, dateString?: string) {
@@ -33,7 +35,7 @@ function formatRelativeTime(t: (key: string, opts?: any) => string, dateString?:
   return y === now.getFullYear() ? t("time.date_md", { month: m, day: d }) : t("time.date_ymd", { year: y, month: m, day: d })
 }
 
-const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, onOpenChange }) => {
+const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, onOpenChange, readOnly = false }) => {
   const { t } = useTranslation()
   const { user } = useCurrentUserStore()
   const { addToast } = useToastStore()
@@ -70,7 +72,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   const { data: members = [] } = useQuery({
     queryKey: ["workspaceMembers", workspaceId],
     queryFn: () => getWorkspaceMembers(workspaceId),
-    enabled: !!workspaceId,
+    enabled: !!workspaceId && !readOnly,
   })
 
   const threads = useMemo(() => {
@@ -89,7 +91,9 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   // synced Y.js doc once collaboration is ready), so the marked span may not exist in the
   // DOM yet the moment `threads` first resolves. A MutationObserver keeps this in sync with
   // however/whenever the editor's content actually settles, instead of computing it once.
+  // Read-only pages show the note through the renderer, which draws no anchor marks.
   useEffect(() => {
+    if (readOnly) return
     let timeout: ReturnType<typeof setTimeout> | null = null
     const recompute = () => {
       const orphaned = new Set<string>()
@@ -120,7 +124,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
       if (timeout) clearTimeout(timeout)
       observer.disconnect()
     }
-  }, [threads])
+  }, [threads, readOnly])
 
   // Clicking a highlighted comment span in the editor scrolls/highlights the matching thread.
   useEffect(() => {
@@ -228,7 +232,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{comment.created_by_name}</span>
           <span className="text-xs text-muted-foreground">{formatRelativeTime(t, comment.created_at)}</span>
           {comment.edited && <span className="text-xs text-muted-foreground">{t("comments.edited")}</span>}
-          {user?.id === comment.created_by && editingId !== comment.id && (
+          {!readOnly && user?.id === comment.created_by && editingId !== comment.id && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button className="ml-auto p-0.5 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-200 shrink-0">
@@ -323,7 +327,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
           </button>
         </div>
 
-        <div className="p-3 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 shrink-0">
+        {!readOnly && <div className="p-3 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 shrink-0">
           {composerExpanded ? (
             <>
               <div className="flex gap-2 items-start">
@@ -366,7 +370,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
               </span>
             </button>
           )}
-        </div>
+        </div>}
 
         <div ref={bodyRef} className="flex-1 overflow-y-auto">
         {threads.map(thread => {
@@ -408,7 +412,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
                 </div>
               )}
 
-              {expandedReplyThreads.has(anchor.thread_id) ? (
+              {readOnly ? null : expandedReplyThreads.has(anchor.thread_id) ? (
                 <div className="mt-3 flex gap-2 items-start ml-8 border-l-2 border-transparent">
                   <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={20} />
                   <div className="flex-1 min-w-0">
