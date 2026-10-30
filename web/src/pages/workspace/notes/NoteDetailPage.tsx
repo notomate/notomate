@@ -91,7 +91,7 @@ const NoteDetailPage = () => {
     }, [wsTitle, currentWorkspaceId, queryClient])
 
     return (
-        <div className="flex bg-white dark:bg-neutral-800 xl:w-full h-full min-w-0">
+        <div className="flex bg-white dark:bg-[#191919] xl:w-full h-full min-w-0">
             <NoteDetailView
                 note={note}
                 menu={note ? (
