@@ -20,15 +20,39 @@ Write anything, anywhere — from a quick memo to a full blog post. The block-ba
 
 ```yaml
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: notomate-mysql
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: notomate
+      MYSQL_USER: notomate
+      # Change these before deploying
+      MYSQL_PASSWORD: notomate_password
+      MYSQL_ROOT_PASSWORD: notomate_root_password
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
   api:
     image: notomate/notomate-api
     container_name: notomate-api
     volumes:
       - notomate_data:/usr/local/app/bin
     environment:
+      DB_DRIVER: mysql
+      DB_DSN: notomate:notomate_password@tcp(notomate-mysql:3306)/notomate?charset=utf8mb4
       MESSAGING_ADDR: http://notomate-messaging:4000
       # APP_SECRET: your-secret-key
       # APP_DISABLE_SIGNUP: true
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
 
   collab:
@@ -63,6 +87,8 @@ services:
     restart: unless-stopped
 
 volumes:
+  mysql_data:
+    driver: local
   notomate_data:
     driver: local
 ```
@@ -73,7 +99,9 @@ docker compose up -d
 
 The app will be available at `http://localhost`. See [`.env.example`](./.env.example) for configuration options.
 
-All four services are required — `collab` backs the realtime editor and `messaging` backs channel chat, and nginx proxies to both. Two things to keep in mind:
+MySQL is the default database; PostgreSQL and SQLite are also supported via `DB_DRIVER` / `DB_DSN` (see [`.env.example`](./.env.example)).
+
+The four app services are all required — `collab` backs the realtime editor and `messaging` backs channel chat, and nginx proxies to both. Two things to keep in mind:
 
 - **`APP_SECRET` must be identical on `api`, `collab` and `messaging`.** It signs the session JWT that all three verify, and authenticates the api → messaging broadcast call.
 - **Don't rename the containers.** nginx resolves `notomate-api`, `notomate-collab` and `notomate-messaging` by name, and `MESSAGING_ADDR` / `GRPC_ADDR` point at those same names.
@@ -90,7 +118,7 @@ flowchart LR
         api["<b>api</b> — Go<br/>REST :8080<br/>gRPC :50051"]
         collab["<b>collab</b> — Node<br/>Hocuspocus / Yjs :3000"]
         messaging["<b>messaging</b> — Node<br/>Socket.IO :4000"]
-        db[("SQLite<br/>or PostgreSQL")]
+        db[("MySQL / PostgreSQL<br/>or SQLite")]
         store[("Local disk<br/>or S3 / MinIO")]
     end
 

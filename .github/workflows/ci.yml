@@ -11,6 +11,19 @@ jobs:
     name: Backend Build & Test
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,6 +45,8 @@ jobs:
 
       - name: Run go test
         working-directory: ./api
+        env:
+          NOTOMATE_TEST_MYSQL_DSN: root:root@tcp(127.0.0.1:3306)/
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Build api

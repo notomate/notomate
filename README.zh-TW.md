@@ -20,15 +20,39 @@
 
 ```yaml
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: notomate-mysql
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: notomate
+      MYSQL_USER: notomate
+      # 部署前請修改這些密碼
+      MYSQL_PASSWORD: notomate_password
+      MYSQL_ROOT_PASSWORD: notomate_root_password
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
   api:
     image: notomate/notomate-api
     container_name: notomate-api
     volumes:
       - notomate_data:/usr/local/app/bin
     environment:
+      DB_DRIVER: mysql
+      DB_DSN: notomate:notomate_password@tcp(notomate-mysql:3306)/notomate?charset=utf8mb4
       MESSAGING_ADDR: http://notomate-messaging:4000
       # APP_SECRET: your-secret-key
       # APP_DISABLE_SIGNUP: true
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
 
   collab:
@@ -63,6 +87,8 @@ services:
     restart: unless-stopped
 
 volumes:
+  mysql_data:
+    driver: local
   notomate_data:
     driver: local
 ```
@@ -73,7 +99,9 @@ docker compose up -d
 
 啟動後即可於 `http://localhost` 存取應用程式。設定選項請參閱 [`.env.example`](./.env.example)。
 
-四個服務都是必要的 —— `collab` 支撐即時協作編輯器，`messaging` 支撐頻道聊天，nginx 會同時反向代理到這兩者。有兩點要注意：
+預設資料庫為 MySQL，也可透過 `DB_DRIVER` / `DB_DSN` 改用 PostgreSQL 或 SQLite（請參閱 [`.env.example`](./.env.example)）。
+
+四個應用服務都是必要的 —— `collab` 支撐即時協作編輯器，`messaging` 支撐頻道聊天，nginx 會同時反向代理到這兩者。有兩點要注意：
 
 - **`APP_SECRET` 在 `api`、`collab`、`messaging` 上必須一致。** 它用來簽發三者都要驗證的 session JWT，也用來驗證 api → messaging 的廣播呼叫。
 - **不要更改 container 名稱。** nginx 以 `notomate-api`、`notomate-collab`、`notomate-messaging` 這些名稱解析服務，`MESSAGING_ADDR` 與 `GRPC_ADDR` 也指向同樣的名稱。
@@ -90,7 +118,7 @@ flowchart LR
         api["<b>api</b> — Go<br/>REST :8080<br/>gRPC :50051"]
         collab["<b>collab</b> — Node<br/>Hocuspocus / Yjs :3000"]
         messaging["<b>messaging</b> — Node<br/>Socket.IO :4000"]
-        db[("SQLite<br/>或 PostgreSQL")]
+        db[("MySQL / PostgreSQL<br/>或 SQLite")]
         store[("本機磁碟<br/>或 S3 / MinIO")]
     end
 

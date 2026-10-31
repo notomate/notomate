@@ -1,0 +1,46 @@
+services:
+  notomate-nginx:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: nginx-runtime
+    image: notomate/notomate-nginx:local
+    container_name: notomate-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - notomate-api
+      - notomate-collab
+    restart: unless-stopped
+
+  notomate-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: api-runtime
+    image: notomate/notomate-api:local
+    container_name: notomate-api
+    volumes:
+      - ../bin:/usr/local/app/bin
+    environment:
+      - PORT=8080
+      - DB_DRIVER=sqlite3
+      - DB_DSN=/usr/local/app/bin/notomate.db
+      - APP_DISABLE_SIGNUP=${APP_DISABLE_SIGNUP}
+      - APP_SECRET=${APP_SECRET}
+    restart: unless-stopped
+
+  notomate-collab:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: collab-runtime
+    image: notomate/notomate-collab:local
+    container_name: notomate-collab
+    environment:
+      - PORT=3000
+      - APP_SECRET=${APP_SECRET}
+      - GRPC_ADDR=notomate-api:50051
+    depends_on:
+      - notomate-api
+    restart: unless-stopped

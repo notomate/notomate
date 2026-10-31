@@ -1,0 +1,1 @@
+ALTER TABLE views DROP COLUMN note_id;

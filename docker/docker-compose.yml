@@ -1,4 +1,24 @@
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: notomate-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: notomate
+      MYSQL_USER: notomate
+      MYSQL_PASSWORD: notomate_password
+      MYSQL_ROOT_PASSWORD: notomate_root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   notomate-nginx:
     build:
       context: ..
@@ -24,10 +44,13 @@ services:
       - ../bin:/usr/local/app/bin
     environment:
       - PORT=8080
-      - DB_DRIVER=sqlite3
-      - DB_DSN=/usr/local/app/bin/notomate.db
+      - DB_DRIVER=mysql
+      - DB_DSN=notomate:notomate_password@tcp(mysql:3306)/notomate?charset=utf8mb4
       - APP_DISABLE_SIGNUP=${APP_DISABLE_SIGNUP}
       - APP_SECRET=${APP_SECRET}
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
 
   notomate-collab:
@@ -44,3 +67,7 @@ services:
     depends_on:
       - notomate-api
     restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local

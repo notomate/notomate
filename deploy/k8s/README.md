@@ -135,8 +135,8 @@ For private packages add `pullSecret: pullsecret:argocd/<secret>` to the
 ## Notes
 
 - The API defaults to SQLite + local uploads on the `notomate-api-data` PVC,
-  hence a single replica with `Recreate`. Switching to Postgres/S3 (see
-  `docker/docker-compose.postgres.yml`, `docker/docker-compose.minio.yml`)
+  hence a single replica with `Recreate`. Switching to MySQL/Postgres/S3 (see
+  `docker/docker-compose.yml`, `docker/docker-compose.postgres.yml`, `docker/docker-compose.minio.yml`)
   is what it would take to scale it out.
 - Images are built for `linux/amd64` only (the Go build in `Dockerfile`
   hardcodes `GOARCH=amd64`).

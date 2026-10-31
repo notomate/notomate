@@ -1,4 +1,24 @@
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: notomate-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: notomate
+      MYSQL_USER: notomate
+      MYSQL_PASSWORD: notomate_password
+      MYSQL_ROOT_PASSWORD: notomate_root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   minio:
     image: minio/minio:latest
     container_name: notomate-minio
@@ -54,16 +74,12 @@ services:
     image: notomate/notomate-collab:local
     container_name: notomate-collab
     restart: unless-stopped
-    volumes:
-      - ../bin:/usr/local/app/bin
     environment:
       PORT: 3000
-      DB_DRIVER: sqlite3
-      DB_DSN: /usr/local/app/bin/notomate.db
       APP_SECRET: ${APP_SECRET}
+      GRPC_ADDR: notomate-api:50051
     depends_on:
-      minio:
-        condition: service_healthy
+      - notomate-api
 
   notomate-api:
     build:
@@ -76,6 +92,8 @@ services:
     volumes:
       - ../bin:/usr/local/app/bin
     environment:
+      DB_DRIVER: mysql
+      DB_DSN: "notomate:notomate_password@tcp(mysql:3306)/notomate?charset=utf8mb4"
       STORAGE_TYPE: s3
       STORAGE_S3_ENDPOINT: minio:9000
       STORAGE_S3_ACCESS_KEY: minioadmin
@@ -86,11 +104,13 @@ services:
       APP_DISABLE_SIGNUP: ${APP_DISABLE_SIGNUP}
       APP_SECRET: ${APP_SECRET}
     depends_on:
+      mysql:
+        condition: service_healthy
       minio:
         condition: service_healthy
-      notomate-collab:
-        condition: service_started
 
 volumes:
+  mysql_data:
+    driver: local
   minio_data:
     driver: local

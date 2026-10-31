@@ -1,4 +1,22 @@
 services:
+  notomate-mysql:
+    image: mysql:8.4
+    container_name: notomate-mysql
+    environment:
+      - MYSQL_DATABASE=notomate
+      - MYSQL_USER=notomate
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-notomate_password}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-notomate_root_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
   notomate-nginx:
     build:
       context: .
@@ -24,6 +42,8 @@ services:
     volumes:
       - "./bin:/usr/local/app/bin"
     environment:
+      - DB_DRIVER=mysql
+      - DB_DSN=notomate:${MYSQL_PASSWORD:-notomate_password}@tcp(notomate-mysql:3306)/notomate?charset=utf8mb4
       - APP_DISABLE_SIGNUP=${APP_DISABLE_SIGNUP}
       - APP_SECRET=${APP_SECRET}
       - MESSAGING_ADDR=http://notomate-messaging:4000
@@ -33,6 +53,9 @@ services:
       # name. Bound to localhost only: the runner protocol has token auth
       # but no TLS.
       - "127.0.0.1:50051:50051"
+    depends_on:
+      notomate-mysql:
+        condition: service_healthy
     restart: unless-stopped
 
   notomate-collab:
@@ -64,3 +87,6 @@ services:
     depends_on:
       - notomate-api
     restart: unless-stopped
+
+volumes:
+  mysql_data:

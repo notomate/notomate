@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS backfills;
+DROP TABLE IF EXISTS note_files;

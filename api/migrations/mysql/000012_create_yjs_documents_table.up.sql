@@ -1,0 +1,5 @@
+CREATE TABLE yjs_documents (
+    name VARCHAR(255) PRIMARY KEY,
+    data LONGBLOB NOT NULL,
+    updated_at TEXT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

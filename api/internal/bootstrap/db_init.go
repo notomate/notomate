@@ -5,6 +5,7 @@ import (
 
 	"github.com/notomate/notomate/internal/config"
 	"github.com/notomate/notomate/internal/db"
+	"github.com/notomate/notomate/internal/db/mysqldb"
 	"github.com/notomate/notomate/internal/db/postgresdb"
 	"github.com/notomate/notomate/internal/db/sqlitedb"
 )
@@ -16,6 +17,8 @@ func NewDB() (db.DB, error) {
 		return sqlitedb.NewSqliteDB()
 	case "postgres":
 		return postgresdb.NewPostgresDB()
+	case "mysql":
+		return mysqldb.NewMySQLDB()
 	}
 
 	return nil, fmt.Errorf("unsupported database driver: %s", driver)
