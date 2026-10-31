@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Loader2, Search, Star } from "lucide-react"
-import { LatLng, PlaceSummary, googleMapsErrorMessage, searchGooglePlaces } from "@/api/googleMaps"
+import { LatLng, PlaceSummary, googleMapsErrorMessage, parseLatLng, searchGooglePlaces, searchNearbyGooglePlaces } from "@/api/googleMaps"
 
 interface Props {
   workspaceId: string
@@ -41,20 +41,25 @@ export const PlaceSearchBox = ({ workspaceId, bias, placeholder, autoFocus, onSe
     setIsSearching(true)
     setError("")
     try {
-      const places = await searchGooglePlaces(workspaceId, {
-        query: q,
-        languageCode: i18n.language,
-        bias: bias ?? undefined,
-      })
+      // A coordinate looks up the places at that spot instead of matching text.
+      const coords = parseLatLng(q)
+      const places = coords
+        ? await searchNearbyGooglePlaces(workspaceId, { ...coords, languageCode: i18n.language })
+        : await searchGooglePlaces(workspaceId, {
+          query: q,
+          languageCode: i18n.language,
+          bias: bias ?? undefined,
+        })
       if (request !== requestRef.current) return
       setResults(places)
+      if (coords && places.length === 0) setError(t("googleMaps.noNearbyPlaces"))
     } catch (e) {
       if (request !== requestRef.current) return
       setError(googleMapsErrorMessage(e))
     } finally {
       if (request === requestRef.current) setIsSearching(false)
     }
-  }, [workspaceId, i18n.language, bias])
+  }, [workspaceId, i18n.language, bias, t])
 
   const handleChange = (value: string) => {
     setQuery(value)

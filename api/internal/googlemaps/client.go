@@ -81,6 +81,28 @@ type SearchRequest struct {
 	BiasRadius float64 `json:"biasRadius,omitempty"`
 }
 
+// NearbyRequest looks up the places closest to a coordinate.
+type NearbyRequest struct {
+	Lat          float64 `json:"lat"`
+	Lng          float64 `json:"lng"`
+	LanguageCode string  `json:"languageCode,omitempty"`
+	// Radius is in meters.
+	Radius float64 `json:"radius,omitempty"`
+}
+
+// Validate checks the coordinate and clamps the radius to the Places API
+// limit.
+func (r *NearbyRequest) Validate() error {
+	if r.Lat < -90 || r.Lat > 90 || r.Lng < -180 || r.Lng > 180 {
+		return fmt.Errorf("coordinates are out of range")
+	}
+	if r.Radius <= 0 {
+		r.Radius = 300
+	}
+	r.Radius = min(r.Radius, 50000)
+	return nil
+}
+
 type Waypoint struct {
 	PlaceID string  `json:"placeId,omitempty"`
 	Lat     float64 `json:"lat,omitempty"`
@@ -147,6 +169,24 @@ func (c *Client) SearchText(ctx context.Context, apiKey string, req SearchReques
 		}
 	}
 	return c.postJSON(ctx, c.PlacesBaseURL+"/places:searchText", apiKey, searchFieldMask, body)
+}
+
+// SearchNearby returns the places around a coordinate, closest first.
+func (c *Client) SearchNearby(ctx context.Context, apiKey string, req NearbyRequest) ([]byte, error) {
+	body := map[string]any{
+		"maxResultCount": 20,
+		"rankPreference": "DISTANCE",
+		"locationRestriction": map[string]any{
+			"circle": map[string]any{
+				"center": map[string]float64{"latitude": req.Lat, "longitude": req.Lng},
+				"radius": req.Radius,
+			},
+		},
+	}
+	if req.LanguageCode != "" {
+		body["languageCode"] = req.LanguageCode
+	}
+	return c.postJSON(ctx, c.PlacesBaseURL+"/places:searchNearby", apiKey, searchFieldMask, body)
 }
 
 func (c *Client) PlaceDetails(ctx context.Context, apiKey, placeID, languageCode string) ([]byte, error) {

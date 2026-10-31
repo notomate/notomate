@@ -39,6 +39,7 @@ func RegisterGoogleMaps(api *echo.Group, h handler.Handler, authMiddleware middl
 
 	g.GET("/:workspaceId/google-maps/browser-key", h.GetGoogleMapsBrowserKey, member)
 	g.POST("/:workspaceId/google-maps/places/search", h.SearchGooglePlaces, member)
+	g.POST("/:workspaceId/google-maps/places/nearby", h.SearchNearbyGooglePlaces, member)
 	g.GET("/:workspaceId/google-maps/places/:placeId", h.GetGooglePlace, member)
 	g.POST("/:workspaceId/google-maps/routes", h.ComputeGoogleRoutes, member)
 	g.GET("/:workspaceId/google-maps/photos", h.GetGooglePlacePhoto)

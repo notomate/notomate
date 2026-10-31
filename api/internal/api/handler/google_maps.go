@@ -122,6 +122,19 @@ func (h Handler) SearchGooglePlaces(c echo.Context) error {
 	return c.JSONBlob(http.StatusOK, res)
 }
 
+func (h Handler) SearchNearbyGooglePlaces(c echo.Context) error {
+	var req googlemaps.NearbyRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	res, err := h.googleMaps.SearchNearby(c.Request().Context(), c.Param("workspaceId"), req)
+	if err != nil {
+		return googleMapsError(err)
+	}
+	return c.JSONBlob(http.StatusOK, res)
+}
+
 func (h Handler) GetGooglePlace(c echo.Context) error {
 	res, err := h.googleMaps.PlaceDetails(c.Request().Context(), c.Param("workspaceId"), c.Param("placeId"), c.QueryParam("lang"))
 	if err != nil {

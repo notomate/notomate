@@ -1090,7 +1090,7 @@ export default {
     fullscreen: "全螢幕",
     exitFullscreen: "結束全螢幕",
     notConfigured: "Google 地圖目前無法使用，請工作區管理員至工作區設定加入 API 金鑰。",
-    searchPlaceholder: "搜尋 Google 地圖",
+    searchPlaceholder: "搜尋 Google 地圖或輸入座標",
     search: "搜尋",
     reviews: "評論",
     openNow: "營業中",
@@ -1123,7 +1123,8 @@ export default {
       TWO_WHEELER: "機車",
       TRANSIT: "大眾運輸"
     },
-    placesQueryPlaceholder: "例如：台北車站附近的拉麵",
+    placesQueryPlaceholder: "例如：台北車站附近的拉麵，或座標 25.0478, 121.5170",
+    noNearbyPlaces: "這個座標附近找不到地點。",
     fetchPlaces: "抓取詳細資料（{{count}}）",
     fetchedAt: "更新於 {{date}}",
     refresh: "重新整理",

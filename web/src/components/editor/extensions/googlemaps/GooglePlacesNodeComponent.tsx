@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Edit3, Loader2, RefreshCw, Search, Star, Store } from "lucide-react"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
-import { PlaceDetails, PlaceSummary, getGooglePlace, googleMapsErrorMessage, searchGooglePlaces } from "@/api/googleMaps"
+import { PlaceDetails, PlaceSummary, getGooglePlace, googleMapsErrorMessage, parseLatLng, searchGooglePlaces, searchNearbyGooglePlaces } from "@/api/googleMaps"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
 import { CompactBody, ExpandToggle, MarkersSummary, frameClass } from "./shared/CompactSummary"
 import { placesTitle, placesToMarkers, trimPlace } from "./shared/types"
@@ -38,7 +38,13 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
     setBusy("search")
     setError("")
     try {
-      setResults(await searchGooglePlaces(workspaceId, { query, languageCode: i18n.language }))
+      // A coordinate looks up the places at that spot instead of matching text.
+      const coords = parseLatLng(query)
+      const found = coords
+        ? await searchNearbyGooglePlaces(workspaceId, { ...coords, languageCode: i18n.language })
+        : await searchGooglePlaces(workspaceId, { query, languageCode: i18n.language })
+      setResults(found)
+      if (coords && found.length === 0) setError(t("googleMaps.noNearbyPlaces"))
     } catch (e) {
       setError(googleMapsErrorMessage(e))
     } finally {

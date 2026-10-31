@@ -167,6 +167,26 @@ export const searchGooglePlaces = async (
   return ((response.data?.places ?? []) as PlaceSummary[]);
 };
 
+// Returns the places closest to a coordinate, nearest first.
+export const searchNearbyGooglePlaces = async (
+  workspaceId: string,
+  data: { lat: number; lng: number; languageCode?: string; radius?: number }
+) => {
+  const response = await axios.post(`${base(workspaceId)}/google-maps/places/nearby`, data, { withCredentials: true });
+  return ((response.data?.places ?? []) as PlaceSummary[]);
+};
+
+// Parses "lat, lng" (as copied from Google Maps), or null when the text is
+// not a coordinate.
+export const parseLatLng = (text: string): LatLng | null => {
+  const m = text.trim().match(/^\(?\s*(-?\d{1,3}(?:\.\d+)?)\s*[,\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*\)?$/);
+  if (!m) return null;
+  const lat = Number(m[1]);
+  const lng = Number(m[2]);
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  return { lat, lng };
+};
+
 export const getGooglePlace = async (workspaceId: string, placeId: string, lang?: string) => {
   const response = await axios.get(`${base(workspaceId)}/google-maps/places/${encodeURIComponent(placeId)}`, {
     withCredentials: true,

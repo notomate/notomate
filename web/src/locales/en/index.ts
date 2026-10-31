@@ -1014,7 +1014,7 @@ export default {
     fullscreen: "Fullscreen",
     exitFullscreen: "Exit fullscreen",
     notConfigured: "Google Maps is not available. A workspace admin can add an API key in Workspace Settings.",
-    searchPlaceholder: "Search Google Maps",
+    searchPlaceholder: "Search Google Maps or enter coordinates",
     search: "Search",
     reviews: "Reviews",
     openNow: "Open now",
@@ -1047,7 +1047,8 @@ export default {
       TWO_WHEELER: "Motorcycle",
       TRANSIT: "Transit"
     },
-    placesQueryPlaceholder: "e.g. ramen near Taipei Main Station",
+    placesQueryPlaceholder: "e.g. ramen near Taipei Main Station, or coordinates 25.0478, 121.5170",
+    noNearbyPlaces: "No places found near these coordinates.",
     fetchPlaces: "Fetch details ({{count}})",
     fetchedAt: "Updated {{date}}",
     refresh: "Refresh",

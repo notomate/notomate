@@ -1019,7 +1019,7 @@ export default {
     fullscreen: "全屏",
     exitFullscreen: "退出全屏",
     notConfigured: "Google 地图当前不可用，请工作区管理员在工作区设置中添加 API 密钥。",
-    searchPlaceholder: "搜索 Google 地图",
+    searchPlaceholder: "搜索 Google 地图或输入坐标",
     search: "搜索",
     reviews: "评论",
     openNow: "营业中",
@@ -1052,7 +1052,8 @@ export default {
       TWO_WHEELER: "摩托车",
       TRANSIT: "公共交通"
     },
-    placesQueryPlaceholder: "例如：台北车站附近的拉面",
+    placesQueryPlaceholder: "例如：台北车站附近的拉面，或坐标 25.0478, 121.5170",
+    noNearbyPlaces: "这个坐标附近找不到地点。",
     fetchPlaces: "获取详细信息（{{count}}）",
     fetchedAt: "更新于 {{date}}",
     refresh: "刷新",

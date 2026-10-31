@@ -149,6 +149,23 @@ func (s *Service) SearchText(ctx context.Context, workspaceID string, req Search
 	})
 }
 
+func (s *Service) SearchNearby(ctx context.Context, workspaceID string, req NearbyRequest) (json.RawMessage, error) {
+	if err := req.Validate(); err != nil {
+		return nil, &APIError{StatusCode: 400, Message: err.Error()}
+	}
+	// ~1 m at 5 decimals; finer precision only splits the cache.
+	req.Lat, req.Lng = round(req.Lat, 5), round(req.Lng, 5)
+	// Search and nearby responses share the search kind; the marker keeps
+	// their cache keys apart.
+	keyReq := struct {
+		NearbyRequest
+		Nearby bool `json:"nearby"`
+	}{req, true}
+	return s.cachedJSON(ctx, workspaceID, KindSearch, "", keyReq, SearchTTL, func(key string) ([]byte, error) {
+		return s.client.SearchNearby(ctx, key, req)
+	})
+}
+
 func (s *Service) PlaceDetails(ctx context.Context, workspaceID, placeID, languageCode string) (json.RawMessage, error) {
 	if !placeIDPattern.MatchString(placeID) {
 		return nil, &APIError{StatusCode: 400, Message: "invalid place id"}

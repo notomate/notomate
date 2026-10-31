@@ -45,6 +45,52 @@ func TestSearchTextSendsKeyFieldMaskAndBias(t *testing.T) {
 	}
 }
 
+func TestSearchNearbyRanksByDistance(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/places:searchNearby" {
+			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
+		}
+		var body struct {
+			RankPreference      string `json:"rankPreference"`
+			LanguageCode        string `json:"languageCode"`
+			LocationRestriction struct {
+				Circle struct {
+					Center struct{ Latitude, Longitude float64 }
+					Radius float64
+				}
+			} `json:"locationRestriction"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		c := body.LocationRestriction.Circle
+		if body.RankPreference != "DISTANCE" || body.LanguageCode != "zh-TW" ||
+			c.Center.Latitude != 25.0478 || c.Center.Longitude != 121.517 || c.Radius != 300 {
+			t.Errorf("body = %+v", body)
+		}
+		w.Write([]byte(`{"places":[]}`))
+	}))
+	defer srv.Close()
+
+	req := NearbyRequest{Lat: 25.0478, Lng: 121.517, LanguageCode: "zh-TW"}
+	if err := req.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := newTestClient(srv).SearchNearby(context.Background(), "k1", req); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestNearbyRequestValidate(t *testing.T) {
+	for _, r := range []NearbyRequest{{Lat: 91}, {Lat: -91}, {Lng: 181}, {Lng: -181}} {
+		if err := r.Validate(); err == nil {
+			t.Errorf("%+v: expected error", r)
+		}
+	}
+	r := NearbyRequest{Lat: 1, Lng: 1, Radius: 1e6}
+	if err := r.Validate(); err != nil || r.Radius != 50000 {
+		t.Errorf("radius = %v, err = %v", r.Radius, err)
+	}
+}
+
 func TestComputeRoutesBuildsWaypoints(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/directions/v2:computeRoutes" {
