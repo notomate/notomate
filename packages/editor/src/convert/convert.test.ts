@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { BLOCK_ID_ATTR, docToTiptap, parseTiptap, tiptapToDoc } from './index';
-import { htmlToInline, inlineToHtml } from './inline';
+import { htmlToInline, htmlToPlain, inlineToHtml } from './inline';
 import type { TipTapNode } from './types';
 
 const p = (text: string, marks?: TipTapNode['marks']): TipTapNode => ({
@@ -225,6 +225,12 @@ describe('tiptapToDoc / docToTiptap', () => {
     doc.blocks.child = child;
     doc.blocks[parent.id] = { ...parent, children: ['child'] };
     expect(stripIds(docToTiptap(doc)).content).toEqual([p('parent'), p('child')]);
+  });
+
+  it('reads lines Chrome wrapped in <div> as code newlines', () => {
+    expect(htmlToPlain('a<div>b</div><div><br></div><div>c</div>')).toBe('a\nb\n\nc');
+    expect(htmlToPlain('<div>a</div><div>b</div>')).toBe('a\nb');
+    expect(htmlToPlain('a<br>b\nc')).toBe('a\nb\nc');
   });
 
   it('produces a single empty paragraph for an empty document', () => {

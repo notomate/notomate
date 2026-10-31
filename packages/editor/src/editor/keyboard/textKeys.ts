@@ -118,7 +118,9 @@ export function onTextKeyDown(e: KeyboardEvent<HTMLElement>, id: string) {
       }
       if (isCode && !e.shiftKey) {
         e.preventDefault();
-        document.execCommand('insertText', false, '\n');
+        // insertText('\n') acts like insertParagraph in Chrome and wraps the line in a <div>;
+        // insertLineBreak under white-space: pre inserts a literal newline.
+        document.execCommand('insertLineBreak');
         return;
       }
       if (e.shiftKey) {

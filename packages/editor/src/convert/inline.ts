@@ -197,5 +197,7 @@ export function htmlToInline(html: string): TipTapNode[] {
 
 /** Plain text of inline HTML (`<br>` becomes a newline). */
 export function htmlToPlain(html: string): string {
-  return decodeEntities(html.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, ''));
+  // Lines Chrome wrapped in <div> (`a<div>b</div>`, `a<div><br></div>`) start on a new line.
+  const lines = html.replace(/<div[^>]*>(?:<br\s*\/?>)?/gi, (_m, at: number) => (at ? '\n' : ''));
+  return decodeEntities(lines.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, ''));
 }

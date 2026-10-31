@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useId, useCallback } from 'react'
 import { PhotoProvider } from 'react-photo-view'
-import ShikiHighlighter from "react-shiki"
 import { useTranslation } from 'react-i18next'
 import { FileText, ChevronDown, LoaderCircle, CalendarDays, ExternalLink, Star, Map, MapPin, Navigation, Store, Kanban, PenTool, Sheet } from 'lucide-react'
 import { useParams } from 'react-router-dom'
@@ -690,10 +689,12 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 </details>
             }
             case 'codeBlock':
-                return <div className='py-1' key={key}>
-                    <ShikiHighlighter language={node.attrs?.language || 'text'} showLineNumbers={true} theme="ayu-dark">
-                        {node.content?.map(d => d.text).join('') ?? ""}
-                    </ShikiHighlighter>
+                // Mirrors the editor's code block (.code-wrap / .editable.code in @notomate/editor).
+                return <div className='not-prose relative my-1 rounded bg-[rgb(247,246,243)] dark:bg-white/5' key={key}>
+                    <span className='absolute top-1.5 left-3 text-xs text-[rgba(55,53,47,0.65)] dark:text-white/55 select-none'>Code</span>
+                    <pre className="m-0 pt-8 px-4 pb-4 font-[SFMono-Regular,Menlo,Consolas,'PT_Mono','Liberation_Mono',Courier,monospace] text-[85%] leading-[1.6] whitespace-pre overflow-x-auto [tab-size:2]">
+                        {node.content?.map(d => d.text ?? '').join('') ?? ''}
+                    </pre>
                 </div>
             case 'blockquote':
                 return <div className='py-1' key={key}>
