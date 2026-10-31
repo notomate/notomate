@@ -1,7 +1,13 @@
 import { useState, useEffect, useImperativeHandle, forwardRef, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import Avatar from '@/components/avatar/Avatar'
-import { MentionItem } from './suggestion'
+
+export interface MentionItem {
+  id: string
+  label: string
+  email: string
+  avatarUrl?: string
+}
 
 interface Props {
   items: MentionItem[]

@@ -140,20 +140,6 @@ svg.lucide-icon{
   @apply text-muted-foreground;
 }
 
-/* Target the placeholder for an empty paragraph */
-p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder); /* Displays the placeholder text defined in the extension */
-  float: left; /* Ensures the placeholder appears at the beginning of the line */
-  color: var(--muted-foreground);
-  pointer-events: none; /* Prevents the placeholder from interfering with editor interactions */
-  height: 0; /* Prevents the placeholder from taking up vertical space */
-}
-
-
-.ProseMirror-selectednode {
-  @apply rounded
-}
-
 .note-comment-mark {
   @apply bg-primary-lighter dark:bg-primary-light rounded-sm cursor-pointer;
 }
@@ -226,20 +212,6 @@ p.is-editor-empty:first-child::before {
   @apply truncate max-w-[160px];
 }
 
-.note-comment-body .note-comment-attachment-chip {
-  @apply inline-flex items-center align-middle;
-}
-
-.note-comment-body .note-comment-attachment-chip img {
-  @apply max-w-[120px] max-h-[80px] rounded border dark:border-neutral-700 align-middle;
-}
-
-.note-comment-body .note-comment-attachment-chip span {
-  @apply inline-flex items-center gap-1 px-2 py-1 rounded border dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-xs text-muted-foreground dark:text-gray-300;
-}
-p[data-placeholder] :not(.ProseMirror-trailingBreak) {
-  display: none;
-}
 
 div[contenteditable=true] {
   outline: none;
@@ -247,50 +219,6 @@ div[contenteditable=true] {
 
 li > p {
   @apply inline-block
-}
-
-ul[data-type="taskList"] > li input[type=checkbox]{
-   @apply transform mr-2 
-}
-
-ul[data-type="taskList"] > li{
-   @apply flex 
-}
-
-.tiptap table {
-  @apply w-full table-fixed
-}
-/* Table container */
-.tiptap table {
-  @apply w-full border border-gray-200 dark:border-neutral-700 border-collapse
-         text-sm text-gray-800 dark:text-gray-200;
-}
-
-/* Header */
-.tiptap th {
-  @apply bg-gray-100 dark:bg-neutral-800;
-}
-
-.tiptap th {
-  @apply border border-gray-300 dark:border-neutral-600 px-3 py-2
-         text-left font-semibold text-gray-700 dark:text-gray-300
-         whitespace-nowrap;
-}
-
-/* Body cells */
-.tiptap td {
-  @apply border border-gray-200 dark:border-neutral-700 px-3 py-2
-         align-top;
-}
-
-/* Zebra striping */
-.tiptap tbody tr:nth-child(odd) td {
-  @apply bg-gray-50 dark:bg-neutral-900;
-}
-
-/* Hover */
-.tiptap tbody tr:hover td {
-  @apply bg-gray-100 dark:bg-neutral-800;
 }
 
 /* Leaflet map z-index fix to prevent covering modals */
