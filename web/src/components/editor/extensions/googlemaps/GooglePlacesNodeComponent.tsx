@@ -6,7 +6,7 @@ import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 import { PlaceDetails, PlaceSummary, getGooglePlace, googleMapsErrorMessage, searchGooglePlaces } from "@/api/googleMaps"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
 import { CompactBody, ExpandToggle, MarkersSummary, frameClass } from "./shared/CompactSummary"
-import { placesToMarkers, trimPlace } from "./shared/types"
+import { placesTitle, placesToMarkers, trimPlace } from "./shared/types"
 
 const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos, extension }) => {
   const { t, i18n } = useTranslation()
@@ -92,6 +92,7 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
   useDragMenu(getPos, () => nodeActions)
 
   const markers = placesToMarkers(places)
+  const title = placesTitle(places, node.attrs.query)
 
   const framed = expanded || (editable && isEditing)
 
@@ -103,7 +104,7 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
       {framed && (
         <div className="flex items-center gap-2 px-3 py-2 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
           <Store size={15} className="text-muted-foreground shrink-0" />
-          <span className="flex-1 text-sm font-medium truncate">{node.attrs.query || t("editor.GooglePlacesNode")}</span>
+          <span className="flex-1 text-sm font-medium truncate">{title || t("editor.GooglePlacesNode")}</span>
           {node.attrs.fetchedAt && (
             <span className="text-[11px] text-muted-foreground shrink-0">
               {t("googleMaps.fetchedAt", { date: new Date(node.attrs.fetchedAt).toLocaleString() })}
@@ -188,7 +189,7 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
           {error && <p className="px-3 pt-2 text-xs text-red-500">{error}</p>}
           {markers.length === 0
             ? <p className="p-3 text-xs text-muted-foreground">{t("googleMaps.noPlaces")}</p>
-            : <GoogleMapSnapshot title={node.attrs.query} markers={markers} workspaceId={workspaceId} embedded hideList defaultOpen />}
+            : <GoogleMapSnapshot title={title}markers={markers} workspaceId={workspaceId} embedded hideList defaultOpen />}
         </>
       )}
       {isTouchDevice && editable && <NodeTouchMenu visible={selected} actions={nodeActions} />}

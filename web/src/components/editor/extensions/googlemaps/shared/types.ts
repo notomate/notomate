@@ -96,6 +96,11 @@ export const placesToMarkers = (places: PlaceDetails[]): MapMarker[] =>
       details: p,
     }))
 
+// Google Places node title: the chosen places' names, falling back to the
+// search query.
+export const placesTitle = (places: PlaceDetails[], query?: string): string =>
+  places.map(p => p.displayName?.text).filter(Boolean).join(', ') || query || ''
+
 export const trimPlace =(p: PlaceDetails): PlaceDetails => {
   const { reviews, ...rest } = p as PlaceDetails & { reviews?: unknown }
   void reviews

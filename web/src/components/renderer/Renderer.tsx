@@ -23,7 +23,7 @@ import { MapInlinePreview, CalendarInlinePreview, KanbanInlinePreview } from '@/
 import { StaticRouteMap, RouteSummary } from '@/components/editor/extensions/googlemaps/shared/MapParts'
 import { useRouteChoice } from '@/components/editor/extensions/googlemaps/shared/useRouteChoice'
 import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/shared/GoogleMapSnapshot'
-import { MapMarker, StoredRoute, placesToMarkers, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
+import { MapMarker, StoredRoute, placesTitle, placesToMarkers, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
 import { CompactBody, CompactFrame, DirectionsSummary, MarkersSummary } from '@/components/editor/extensions/googlemaps/shared/CompactSummary'
 import type { PlaceDetails, TravelMode } from '@/api/googleMaps'
 import ProgressiveImage from "@/components/image/ProgressiveImage"
@@ -336,7 +336,7 @@ const GooglePlacesRenderer: React.FC<{ query?: string; places: PlaceDetails[]; w
     const workspaceId = workspaceIdProp || workspaceIdParam
     const [expanded, setExpanded] = useState(false)
     const markers = placesToMarkers(places)
-    const title = query || t('editor.GooglePlacesNode')
+    const title = placesTitle(places, query) || t('editor.GooglePlacesNode')
     return (
         <CompactFrame icon={<Store size={15} />} title={title} expanded={expanded} onToggle={() => setExpanded(v => !v)} framed={expanded}>
             {expanded
