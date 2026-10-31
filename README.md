@@ -106,6 +106,19 @@ The four app services are all required — `collab` backs the realtime editor an
 - **`APP_SECRET` must be identical on `api`, `collab` and `messaging`.** It signs the session JWT that all three verify, and authenticates the api → messaging broadcast call.
 - **Don't rename the containers.** nginx resolves `notomate-api`, `notomate-collab` and `notomate-messaging` by name, and `MESSAGING_ADDR` / `GRPC_ADDR` point at those same names.
 
+### Moving data to another database
+
+`cli migrate-db` copies all data from one database type to another (any of `sqlite3`, `postgres`, `mysql`). It migrates the target to the latest schema, refuses a target that already holds data, and copies everything in one transaction. For example, to move an existing SQLite install onto the MySQL service from `docker-compose.yml`:
+
+```bash
+docker compose up -d notomate-mysql
+docker compose stop notomate-api
+docker compose run --rm --no-deps notomate-api ./cli migrate-db   --from-driver sqlite3 --from-dsn /usr/local/app/bin/notomate.db   --to-driver mysql --to-dsn 'notomate:notomate_password@tcp(notomate-mysql:3306)/notomate?charset=utf8mb4'
+docker compose up -d
+```
+
+The source must be on the same schema version as the CLI, so start the new version against it once before copying. Rows SQLite kept for already-deleted parents (e.g. notes of a deleted workspace) are skipped and reported, since MySQL and PostgreSQL enforce foreign keys.
+
 ## Architecture
 
 ```mermaid

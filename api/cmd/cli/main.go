@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/notomate/notomate/internal/bootstrap"
 	"github.com/notomate/notomate/internal/config"
+	"github.com/notomate/notomate/internal/dbcopy"
 	"github.com/notomate/notomate/internal/model"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
@@ -32,6 +34,8 @@ func main() {
 	switch command {
 	case "reset-password":
 		resetPassword()
+	case "migrate-db":
+		migrateDB(os.Args[2:])
 	case "help", "--help", "-h":
 		printUsage()
 	default:
@@ -49,6 +53,7 @@ func printUsage() {
 	fmt.Println()
 	fmt.Println("Available commands:")
 	fmt.Println("  reset-password    Reset user password interactively")
+	fmt.Println("  migrate-db        Copy all data to a database of another type (e.g. sqlite3 to mysql)")
 	fmt.Println("  help              Show this help message")
 	fmt.Println()
 }
@@ -139,4 +144,46 @@ func resetPassword() {
 
 	fmt.Println()
 	fmt.Printf("✓ Password successfully reset for user: %s\n", user.Name)
+}
+
+func migrateDB(args []string) {
+	config.Init()
+
+	fs := flag.NewFlagSet("migrate-db", flag.ExitOnError)
+	fromDriver := fs.String("from-driver", config.C.GetString(config.DB_DRIVER), "source driver: sqlite3, postgres or mysql (default: DB_DRIVER)")
+	fromDSN := fs.String("from-dsn", config.C.GetString(config.DB_DSN), "source DSN (default: DB_DSN)")
+	toDriver := fs.String("to-driver", "", "target driver: sqlite3, postgres or mysql")
+	toDSN := fs.String("to-dsn", "", "target DSN; the database must exist and hold no data")
+	fs.Usage = func() {
+		fmt.Println("Usage: cli migrate-db --to-driver <driver> --to-dsn <dsn> [--from-driver <driver> --from-dsn <dsn>]")
+		fmt.Println()
+		fmt.Println("Copies every row from the source database into the target, after applying")
+		fmt.Println("the migrations to the target. Stop Notomate first so nothing is written")
+		fmt.Println("to the source during the copy.")
+		fmt.Println()
+		fmt.Println("Example:")
+		fmt.Println("  cli migrate-db --from-driver sqlite3 --from-dsn bin/notomate.db \\")
+		fmt.Println("    --to-driver mysql --to-dsn 'notomate:notomate_password@tcp(localhost:3306)/notomate?charset=utf8mb4'")
+		fmt.Println()
+		fs.PrintDefaults()
+	}
+	fs.Parse(args)
+
+	if *toDriver == "" || *toDSN == "" || *fromDriver == "" || *fromDSN == "" {
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	fmt.Printf("Copying %s database into %s database...\n", *fromDriver, *toDriver)
+	err := dbcopy.Copy(
+		dbcopy.Endpoint{Driver: *fromDriver, DSN: *fromDSN},
+		dbcopy.Endpoint{Driver: *toDriver, DSN: *toDSN},
+		os.Stdout,
+	)
+	if err != nil {
+		log.Fatalf("Database copy failed, nothing was written to the target: %v", err)
+	}
+
+	fmt.Println()
+	fmt.Println("✓ Database copied. Point DB_DRIVER and DB_DSN at the target to use it.")
 }

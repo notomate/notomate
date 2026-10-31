@@ -16,22 +16,26 @@ import (
 )
 
 func RunMigration() error {
-	driver := config.C.GetString(config.DB_DRIVER)
+	return RunMigrationFor(config.C.GetString(config.DB_DRIVER), config.C.GetString(config.DB_DSN))
+}
 
+// RunMigrationFor applies the migrations of the given driver to the database
+// at dsn, independent of the configured database.
+func RunMigrationFor(driver, dsn string) error {
 	switch driver {
 	case "sqlite3":
-		return runSqlite3Migrations()
+		return runSqlite3Migrations(dsn)
 	case "postgres":
-		return runPostgresMigrations()
+		return runPostgresMigrations(dsn)
 	case "mysql":
-		return runMySQLMigrations()
+		return runMySQLMigrations(dsn)
 	}
 
 	return fmt.Errorf("unsupported database driver: %s", driver)
 }
 
-func runSqlite3Migrations() error {
-	db, err := sql.Open(config.C.GetString(config.DB_DRIVER), config.C.GetString(config.DB_DSN))
+func runSqlite3Migrations(dsn string) error {
+	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,8 +64,8 @@ func runSqlite3Migrations() error {
 	return nil
 }
 
-func runPostgresMigrations() error {
-	db, err := sql.Open(config.C.GetString(config.DB_DRIVER), config.C.GetString(config.DB_DSN))
+func runPostgresMigrations(dsn string) error {
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,10 +94,9 @@ func runPostgresMigrations() error {
 	return nil
 }
 
-func runMySQLMigrations() error {
+func runMySQLMigrations(dsn string) error {
 	// Migration files hold several statements each, which the MySQL driver
 	// only accepts with multiStatements enabled.
-	dsn := config.C.GetString(config.DB_DSN)
 	if !strings.Contains(dsn, "multiStatements=") {
 		if strings.Contains(dsn, "?") {
 			dsn += "&multiStatements=true"

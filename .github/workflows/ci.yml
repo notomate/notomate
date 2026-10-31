@@ -23,6 +23,17 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
     steps:
       - name: Checkout code
@@ -47,6 +58,7 @@ jobs:
         working-directory: ./api
         env:
           NOTOMATE_TEST_MYSQL_DSN: root:root@tcp(127.0.0.1:3306)/
+          NOTOMATE_TEST_POSTGRES_DSN: postgres://postgres:postgres@127.0.0.1:5432/?sslmode=disable
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Build api

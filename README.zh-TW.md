@@ -106,6 +106,19 @@ docker compose up -d
 - **`APP_SECRET` 在 `api`、`collab`、`messaging` 上必須一致。** 它用來簽發三者都要驗證的 session JWT，也用來驗證 api → messaging 的廣播呼叫。
 - **不要更改 container 名稱。** nginx 以 `notomate-api`、`notomate-collab`、`notomate-messaging` 這些名稱解析服務，`MESSAGING_ADDR` 與 `GRPC_ADDR` 也指向同樣的名稱。
 
+### 將資料搬到其他資料庫
+
+`cli migrate-db` 可以把所有資料從一種資料庫搬到另一種（`sqlite3`、`postgres`、`mysql` 任意組合）。它會先把目標資料庫 migrate 到最新 schema，目標已有資料時會拒絕執行，並在單一 transaction 內完成複製。例如把現有的 SQLite 資料搬到 `docker-compose.yml` 裡的 MySQL：
+
+```bash
+docker compose up -d notomate-mysql
+docker compose stop notomate-api
+docker compose run --rm --no-deps notomate-api ./cli migrate-db   --from-driver sqlite3 --from-dsn /usr/local/app/bin/notomate.db   --to-driver mysql --to-dsn 'notomate:notomate_password@tcp(notomate-mysql:3306)/notomate?charset=utf8mb4'
+docker compose up -d
+```
+
+來源資料庫的 schema 版本必須和 CLI 相同，所以請先用新版本對來源啟動一次再進行複製。SQLite 不會強制外鍵，因此父資料已刪除的資料列（例如已刪除工作區裡的筆記）會被略過並顯示數量，因為 MySQL 與 PostgreSQL 會拒絕這些資料。
+
 ## 架構
 
 ```mermaid
