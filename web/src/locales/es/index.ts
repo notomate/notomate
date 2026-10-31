@@ -429,7 +429,14 @@ export default {
     no_files: "Sin archivos aún. ¡Carga tu primer archivo!",
     no_results: "No se encontraron archivos que coincidan con tu búsqueda",
     search_placeholder: "Buscar archivos...",
-    all_types: "Todos los tipos de archivo"
+    all_types: "Todos los tipos de archivo",
+    grid_view: "Vista de cuadrícula",
+    list_view: "Vista de lista",
+    col_name: "Nombre",
+    col_type: "Tipo",
+    col_size: "Tamaño",
+    col_updated: "Actualizado",
+    more_actions: "Más acciones"
   },
   views: {
     title: "Vistas",

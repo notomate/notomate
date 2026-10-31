@@ -429,7 +429,14 @@ export default {
     no_files: "لا توجد ملفات بعد. حمل ملفك الأول!",
     no_results: "لم يتم العثور على ملفات مطابقة للبحث",
     search_placeholder: "ابحث عن الملفات...",
-    all_types: "جميع أنواع الملفات"
+    all_types: "جميع أنواع الملفات",
+    grid_view: "عرض شبكي",
+    list_view: "عرض قائمة",
+    col_name: "الاسم",
+    col_type: "النوع",
+    col_size: "الحجم",
+    col_updated: "آخر تحديث",
+    more_actions: "مزيد من الإجراءات"
   },
   views: {
     title: "العروض",

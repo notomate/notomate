@@ -429,7 +429,14 @@ export default {
     no_files: "まだファイルがありません。最初のファイルをアップロードしてください！",
     no_results: "検索に一致するファイルが見つかりません",
     search_placeholder: "ファイルを検索...",
-    all_types: "すべてのファイルタイプ"
+    all_types: "すべてのファイルタイプ",
+    grid_view: "グリッド表示",
+    list_view: "リスト表示",
+    col_name: "名前",
+    col_type: "種類",
+    col_size: "サイズ",
+    col_updated: "更新日",
+    more_actions: "その他の操作"
   },
   views: {
     title: "ビュー",

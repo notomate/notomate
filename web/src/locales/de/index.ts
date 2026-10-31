@@ -429,7 +429,14 @@ export default {
     no_files: "Noch keine Dateien. Laden Sie Ihre erste Datei hoch!",
     no_results: "Keine Dateien gefunden, die Ihrer Suche entsprechen",
     search_placeholder: "Dateien durchsuchen ...",
-    all_types: "Alle Dateitypen"
+    all_types: "Alle Dateitypen",
+    grid_view: "Rasteransicht",
+    list_view: "Listenansicht",
+    col_name: "Name",
+    col_type: "Typ",
+    col_size: "Größe",
+    col_updated: "Aktualisiert",
+    more_actions: "Weitere Aktionen"
   },
   views: {
     title: "Ansichten",

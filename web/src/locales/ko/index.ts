@@ -429,7 +429,14 @@ export default {
     no_files: "아직 파일이 없습니다. 첫 번째 파일을 업로드해보세요!",
     no_results: "검색과 일치하는 파일을 찾을 수 없습니다",
     search_placeholder: "파일 검색...",
-    all_types: "모든 파일 형식"
+    all_types: "모든 파일 형식",
+    grid_view: "그리드 보기",
+    list_view: "목록 보기",
+    col_name: "이름",
+    col_type: "형식",
+    col_size: "크기",
+    col_updated: "수정일",
+    more_actions: "더 보기"
   },
   views: {
     title: "보기",

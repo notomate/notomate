@@ -429,7 +429,14 @@ export default {
     no_files: "Файлов ещё нет. Загрузите свой первый файл!",
     no_results: "Файлы, соответствующие вашему поиску, не найдены",
     search_placeholder: "Поиск файлов...",
-    all_types: "Все типы файлов"
+    all_types: "Все типы файлов",
+    grid_view: "Плитка",
+    list_view: "Список",
+    col_name: "Имя",
+    col_type: "Тип",
+    col_size: "Размер",
+    col_updated: "Изменён",
+    more_actions: "Другие действия"
   },
   views: {
     title: "Представления",

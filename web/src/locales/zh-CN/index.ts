@@ -595,7 +595,14 @@ export default {
     no_files: "还没有文件。上传你的第一个文件！",
     no_results: "未找到匹配搜索条件的文件",
     search_placeholder: "搜索文件...",
-    all_types: "所有文件类型"
+    all_types: "所有文件类型",
+    grid_view: "网格视图",
+    list_view: "列表视图",
+    col_name: "名称",
+    col_type: "类型",
+    col_size: "大小",
+    col_updated: "更新时间",
+    more_actions: "更多操作"
   },
   views: {
     title: "视图",

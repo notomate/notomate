@@ -429,7 +429,14 @@ export default {
     no_files: "Nenhum arquivo ainda. Envie seu primeiro arquivo!",
     no_results: "Nenhum arquivo encontrado correspondendo à sua pesquisa",
     search_placeholder: "Pesquisar arquivos...",
-    all_types: "Todos os tipos de arquivo"
+    all_types: "Todos os tipos de arquivo",
+    grid_view: "Visualização em grade",
+    list_view: "Visualização em lista",
+    col_name: "Nome",
+    col_type: "Tipo",
+    col_size: "Tamanho",
+    col_updated: "Atualizado",
+    more_actions: "Mais ações"
   },
   views: {
     title: "Exibições",

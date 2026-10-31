@@ -596,7 +596,14 @@ export default {
     no_files: "尚無檔案。上傳你的第一個檔案!",
     no_results: "找不到符合的檔案",
     search_placeholder: "搜尋檔案...",
-    all_types: "所有檔案類型"
+    all_types: "所有檔案類型",
+    grid_view: "格狀檢視",
+    list_view: "清單檢視",
+    col_name: "名稱",
+    col_type: "類型",
+    col_size: "大小",
+    col_updated: "更新時間",
+    more_actions: "更多動作"
   },
   views: {
     title: "視圖",

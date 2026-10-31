@@ -596,7 +596,14 @@ export default {
     no_files: "No files yet. Upload your first file!",
     no_results: "No files found matching your search",
     search_placeholder: "Search files...",
-    all_types: "All file types"
+    all_types: "All file types",
+    grid_view: "Grid view",
+    list_view: "List view",
+    col_name: "Name",
+    col_type: "Type",
+    col_size: "Size",
+    col_updated: "Updated",
+    more_actions: "More actions"
   },
   views: {
     title: "Views",

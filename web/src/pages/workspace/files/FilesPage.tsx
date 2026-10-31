@@ -3,16 +3,52 @@ import { useMutation, useInfiniteQuery, useQueryClient } from '@tanstack/react-q
 import useUploadComplete from '@/hooks/use-upload-complete';
 import { deleteFile, FileInfo, getFileDownloadUrl, listFiles, renameFile, uploadFile } from '../../../api/file';
 import { useToastStore } from '../../../stores/toast';
-import { Download, FileIcon, Trash2, Edit2, X, Check, Search, Filter, Eye, FileText, Copy, Upload, NotebookText } from 'lucide-react';
+import { FileIcon, X, Check, Search, Filter, FileText, Upload, LayoutGrid, List } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import useCurrentWorkspaceId from '@/hooks/use-currentworkspace-id';
 import { Tooltip } from 'radix-ui';
 import FilesGridSkeleton from '@/components/skeletons/FilesGridSkeleton';
+import FilesListSkeleton from '@/components/skeletons/FilesListSkeleton';
 import ProgressiveImage from "@/components/image/ProgressiveImage"
 import FileNotesDialog from "./FileNotesDialog"
+import FileActionsMenu from "./FileActionsMenu"
+import { imageVariantUrl, knownDimensions } from "@/lib/image"
 
 const PAGE_SIZE = 20;
+
+type ViewMode = 'grid' | 'list';
+const VIEW_MODE_KEY = 'notomate:files-view';
+
+const loadViewMode = (): ViewMode => {
+    try {
+        return localStorage.getItem(VIEW_MODE_KEY) === 'list' ? 'list' : 'grid';
+    } catch {
+        return 'grid';
+    }
+};
+
+const isImageFile = (ext: string) => {
+    return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'].includes(ext.toLowerCase());
+};
+
+const isTextFile = (ext: string) => {
+    return ['.txt', '.md', '.json', '.xml', '.csv', '.log', '.js', '.ts', '.tsx', '.jsx', '.css', '.html', '.py', '.go', '.java', '.c', '.cpp', '.h'].includes(ext.toLowerCase());
+};
+
+const canPreview = (file: FileInfo) => {
+    return isImageFile(file.ext) || isTextFile(file.ext);
+};
+
+const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+};
+
+const extLabel = (ext: string) => ext.replace(/^\./, '').toUpperCase();
 
 const FilesPage = () => {
     const { t } = useTranslation();
@@ -21,6 +57,7 @@ const FilesPage = () => {
     const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
     const [extFilter, setExtFilter] = useState<string>('');
     const [isSearchVisible, setIsSearchVisible] = useState(false);
+    const [viewMode, setViewModeState] = useState<ViewMode>(loadViewMode);
     const [editingFileId, setEditingFileId] = useState<string | null>(null);
     const [editingFileName, setEditingFileName] = useState('');
     const [previewFile, setPreviewFile] = useState<FileInfo | null>(null);
@@ -29,6 +66,15 @@ const FilesPage = () => {
     const { addToast } = useToastStore();
     const observerRef = useRef<IntersectionObserver | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const setViewMode = (next: ViewMode) => {
+        setViewModeState(next);
+        try {
+            localStorage.setItem(VIEW_MODE_KEY, next);
+        } catch {
+            // Remembering the view is a convenience only.
+        }
+    };
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -109,14 +155,6 @@ const FilesPage = () => {
         }
     }, [hasNextPage, isLoading, fetchNextPage]);
 
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-    };
-
     const startEdit = (file: FileInfo) => {
         setEditingFileId(file.id);
         setEditingFileName(file.original_name);
@@ -139,8 +177,14 @@ const FilesPage = () => {
             // Get the full URL including origin
             const fullUrl = new URL(fileUrl, window.location.origin).href;
             await navigator.clipboard.writeText(fullUrl);
-        } catch (error) {
+        } catch {
             addToast({ type: 'error', title: t('files.copy_url_error') });
+        }
+    };
+
+    const handleDelete = (file: FileInfo) => {
+        if (confirm(t('files.delete_confirm'))) {
+            deleteMutation.mutate(file.id);
         }
     };
 
@@ -159,18 +203,6 @@ const FilesPage = () => {
         fileInputRef.current?.click();
     };
 
-    const isImageFile = (ext: string) => {
-        return ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'].includes(ext.toLowerCase());
-    };
-
-    const isTextFile = (ext: string) => {
-        return ['.txt', '.md', '.json', '.xml', '.csv', '.log', '.js', '.ts', '.tsx', '.jsx', '.css', '.html', '.py', '.go', '.java', '.c', '.cpp', '.h'].includes(ext.toLowerCase());
-    };
-
-    const canPreview = (file: FileInfo) => {
-        return isImageFile(file.ext) || isTextFile(file.ext);
-    };
-
     const getFileExtensions = () => {
         if (!data?.pages) return [];
         const allFiles = data.pages.flat();
@@ -179,6 +211,90 @@ const FilesPage = () => {
     };
 
     const files = data?.pages.flat().filter(f => f !== null) || [];
+
+    const renderActions = (file: FileInfo, className?: string) => (
+        <FileActionsMenu
+            className={className}
+            downloadUrl={getFileDownloadUrl(currentWorkspaceId!, file.name)}
+            downloadName={file.original_name}
+            onPreview={canPreview(file) ? () => setPreviewFile(file) : undefined}
+            onRename={() => startEdit(file)}
+            onShowUsage={() => setUsageFile(file)}
+            onCopyUrl={() => handleCopyUrl(file)}
+            onDelete={() => handleDelete(file)}
+        />
+    );
+
+    const renderRenameInput = (file: FileInfo) => (
+        <div className="flex items-center gap-1 min-w-0">
+            <input
+                type="text"
+                value={editingFileName}
+                onChange={(e) => setEditingFileName(e.target.value)}
+                aria-label='file name'
+                className="min-w-0 flex-1 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') saveEdit(file.id);
+                    if (e.key === 'Escape') cancelEdit();
+                }}
+                autoFocus
+            />
+            <button
+                onClick={() => saveEdit(file.id)}
+                className="shrink-0 p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                title={t('common.save')}
+            >
+                <Check size={16} />
+            </button>
+            <button
+                onClick={cancelEdit}
+                className="shrink-0 p-1 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded"
+                title={t('common.cancel')}
+            >
+                <X size={16} />
+            </button>
+        </div>
+    );
+
+    // Small square thumbnail for list rows; the grid draws its own larger one.
+    const renderListThumb = (file: FileInfo) => (
+        <div className="h-8 w-8 shrink-0 rounded overflow-hidden bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center">
+            {isImageFile(file.ext) ? (
+                <ProgressiveImage
+                    cover
+                    variantWidth={320}
+                    src={getFileDownloadUrl(currentWorkspaceId!, file.name)}
+                    alt=""
+                    className="w-full h-full"
+                />
+            ) : isTextFile(file.ext) ? (
+                <FileText size={16} className="text-green-500" />
+            ) : (
+                <FileIcon size={16} className="text-muted-foreground" />
+            )}
+        </div>
+    );
+
+    const listColumns = "grid items-center gap-3 px-3 grid-cols-[minmax(0,1fr)_28px] sm:grid-cols-[minmax(0,1fr)_64px_88px_112px_28px]";
+
+    const viewToggleButton = (mode: ViewMode, className = 'p-2.5') => {
+        const Icon = mode === 'grid' ? LayoutGrid : List;
+        const label = t(mode === 'grid' ? 'files.grid_view' : 'files.list_view');
+        return (
+            <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                aria-label={label}
+                aria-pressed={viewMode === mode}
+                title={label}
+                className={`${className} rounded-lg transition-colors ${viewMode === mode
+                    ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-sm'
+                    : 'hover:text-neutral-900 dark:hover:text-neutral-100'}`}
+            >
+                <Icon size={16} />
+            </button>
+        );
+    };
 
     return (
         <div className="h-full overflow-auto bg-neutral-50 dark:bg-neutral-950">
@@ -244,6 +360,10 @@ const FilesPage = () => {
                                             </select>
                                         </div>
                                     </div>
+                                    <div className="hidden sm:flex items-center gap-0.5 mx-1.5 p-0.5 rounded-lg bg-neutral-100 dark:bg-neutral-900">
+                                        {viewToggleButton('grid', 'p-1.5')}
+                                        {viewToggleButton('list', 'p-1.5')}
+                                    </div>
                                     <div className="hidden sm:block px-1.5">
                                         <Tooltip.Root>
                                             <Tooltip.Trigger asChild>
@@ -267,6 +387,13 @@ const FilesPage = () => {
                                         </Tooltip.Root>
                                     </div>
                                     <div className="sm:hidden flex items-center">
+                                        <button
+                                            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                                            aria-label={t(viewMode === 'grid' ? 'files.list_view' : 'files.grid_view')}
+                                            className="p-3"
+                                        >
+                                            {viewMode === 'grid' ? <List size={20} /> : <LayoutGrid size={20} />}
+                                        </button>
                                         <button
                                             onClick={triggerFileInput}
                                             className="p-3 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -297,9 +424,10 @@ const FilesPage = () => {
                             </div>
                     }
                 </div>
+
                 <div className="flex flex-col gap-2 sm:gap-5">
                     <div className="w-full">
-                        {
+                        {viewMode === 'grid' ? (
                             isLoading ? <FilesGridSkeleton /> :
                                 <div className="grid grid-cols-auto-fill-140 gap-4">
                                     {files.map((file) => (
@@ -307,10 +435,16 @@ const FilesPage = () => {
                                             key={file.id}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="group relative border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden hover:shadow-lg transition-all bg-white dark:bg-neutral-800"
+                                            className="relative border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-white dark:bg-neutral-800"
                                         >
-                                            {/* Thumbnail/Icon Area */}
-                                            <div className="aspect-square relative bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center overflow-hidden">
+                                            {/* Thumbnail/Icon Area; opens the preview when the file has one */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setPreviewFile(file)}
+                                                disabled={!canPreview(file)}
+                                                aria-label={t('files.preview')}
+                                                className="w-full aspect-square relative bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center overflow-hidden enabled:cursor-zoom-in"
+                                            >
                                                 {isImageFile(file.ext) ? (
                                                     <ProgressiveImage
                                                         cover
@@ -324,123 +458,79 @@ const FilesPage = () => {
                                                 ) : (
                                                     <FileIcon className="h-16 w-16 text-muted-foreground" />
                                                 )}
-
-                                                {/* Hover Actions Overlay */}
-                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                    {canPreview(file) && (
-                                                        <button
-                                                            onClick={() => setPreviewFile(file)}
-                                                            className="p-2 bg-white rounded-md hover:bg-gray-100 transition-colors"
-                                                            title={t('files.preview')}
-                                                        >
-                                                            <Eye size={18} className="text-gray-700" />
-                                                        </button>
-                                                    )}
-                                                    <a
-                                                        href={getFileDownloadUrl(currentWorkspaceId!, file.name)}
-                                                        download={file.original_name}
-                                                        className="p-2 bg-white rounded-md hover:bg-gray-100 transition-colors"
-                                                        title={t('files.download')}
-                                                    >
-                                                        <Download size={18} className="text-gray-700" />
-                                                    </a>
-                                                </div>
-                                            </div>
+                                            </button>
 
                                             {/* File Info */}
-                                            <div className="p-3">
-                                                {editingFileId === file.id ? (
-                                                    <div className="flex gap-1 flex-wrap">
-                                                        <div className='w-full overflow-x-auto'>
-                                                            <input
-                                                                type="text"
-                                                                value={editingFileName}
-                                                                onChange={(e) => setEditingFileName(e.target.value)}
-                                                                aria-label='file name'
-                                                                className="flex-1 px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100"
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === 'Enter') saveEdit(file.id);
-                                                                    if (e.key === 'Escape') cancelEdit();
-                                                                }}
-                                                                autoFocus
-                                                            />
+                                            <div className="p-2.5">
+                                                {editingFileId === file.id ? renderRenameInput(file) : (
+                                                    <div className="flex items-start gap-1">
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="font-medium text-sm text-neutral-900 dark:text-neutral-100 truncate" title={file.original_name}>
+                                                                {file.original_name}
+                                                            </div>
+                                                            <div className="text-xs text-muted-foreground truncate">
+                                                                {formatFileSize(file.size)} · {extLabel(file.ext)}
+                                                            </div>
                                                         </div>
-                                                        <div >
-                                                            <button
-                                                                onClick={() => saveEdit(file.id)}
-                                                                className="p-1 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
-                                                                title={t('common.save')}
-                                                            >
-                                                                <Check size={16} />
-                                                            </button>
-                                                            <button
-                                                                onClick={cancelEdit}
-                                                                className="p-1 text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded"
-                                                                title={t('common.cancel')}
-                                                            >
-                                                                <X size={16} />
-                                                            </button>
-                                                        </div>
+                                                        {renderActions(file, '-mr-1 shrink-0')}
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        <div className="font-medium text-sm text-neutral-900 dark:text-neutral-100 truncate mb-1" title={file.original_name}>
-                                                            {file.original_name}
-                                                        </div>
-                                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                                            <span>{formatFileSize(file.size)}</span>
-                                                            <span className="px-1.5 py-0.5 bg-neutral-200 dark:bg-neutral-700 rounded text-xs">
-                                                                {file.ext}
-                                                            </span>
-                                                        </div>
-                                                    </>
                                                 )}
                                             </div>
-
-                                            {/* Action Buttons at Bottom */}
-                                            {editingFileId !== file.id && (
-                                                <div className="px-3 pb-3 flex gap-1">
-                                                    <button
-                                                        onClick={() => startEdit(file)}
-                                                        className="flex-1 p-1.5 text-xs text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors flex items-center justify-center gap-1"
-                                                        title={t('files.rename')}
-                                                    >
-                                                        <Edit2 size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setUsageFile(file)}
-                                                        className="flex-1 p-1.5 text-xs text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded transition-colors flex items-center justify-center gap-1"
-                                                        title={t('files.used_in_notes')}
-                                                    >
-                                                        <NotebookText size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleCopyUrl(file)}
-                                                        className="flex-1 p-1.5 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors flex items-center justify-center gap-1"
-                                                        title={t('files.copy_url')}
-                                                    >
-                                                        <Copy size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            if (confirm(t('files.delete_confirm'))) {
-                                                                deleteMutation.mutate(file.id);
-                                                            }
-                                                        }}
-                                                        className="flex-1 p-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex items-center justify-center gap-1"
-                                                        title={t('files.delete')}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
-                                            )}
                                         </motion.div>
                                     ))}
                                 </div>
-                        }
+                        ) : (
+                            <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden">
+                                <div className={`${listColumns} py-2 text-xs font-medium text-muted-foreground border-b border-neutral-200 dark:border-neutral-700`}>
+                                    <span>{t('files.col_name')}</span>
+                                    <span className="hidden sm:block">{t('files.col_type')}</span>
+                                    <span className="hidden sm:block text-right">{t('files.col_size')}</span>
+                                    <span className="hidden sm:block">{t('files.col_updated')}</span>
+                                    <span />
+                                </div>
+                                {isLoading ? <FilesListSkeleton /> :
+                                    <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                                        {files.map((file) => (
+                                            <motion.div
+                                                key={file.id}
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className={`${listColumns} py-2 hover:bg-neutral-50 dark:hover:bg-neutral-700/40`}
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    {renderListThumb(file)}
+                                                    {editingFileId === file.id ? (
+                                                        <div className="flex-1 min-w-0">{renderRenameInput(file)}</div>
+                                                    ) : (
+                                                        <div className="min-w-0 flex-1">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPreviewFile(file)}
+                                                                disabled={!canPreview(file)}
+                                                                title={file.original_name}
+                                                                className="block max-w-full truncate text-left text-sm text-neutral-900 dark:text-neutral-100 enabled:hover:underline disabled:cursor-default"
+                                                            >
+                                                                {file.original_name}
+                                                            </button>
+                                                            <div className="sm:hidden text-xs text-muted-foreground truncate">
+                                                                {formatFileSize(file.size)} · {new Date(file.updated_at).toLocaleDateString()}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <span className="hidden sm:block text-xs text-muted-foreground">{extLabel(file.ext)}</span>
+                                                <span className="hidden sm:block text-xs text-muted-foreground text-right tabular-nums">{formatFileSize(file.size)}</span>
+                                                <span className="hidden sm:block text-xs text-muted-foreground tabular-nums">{new Date(file.updated_at).toLocaleDateString()}</span>
+                                                {renderActions(file)}
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                }
+                            </div>
+                        )}
 
                         <div ref={loadMoreRef} className="h-8"></div>
-                        {isFetchingNextPage && <FilesGridSkeleton count={4} />}
+                        {isFetchingNextPage && (viewMode === 'grid' ? <FilesGridSkeleton count={4} /> : <FilesListSkeleton count={4} />)}
                         {!isLoading && !hasNextPage && files.length > 0 && (
                             <div className="text-center py-4 text-muted-foreground">{t("messages.noMore")}</div>
                         )}
@@ -482,10 +572,19 @@ const FilesPage = () => {
                             </div>
                             <div className="p-4 overflow-auto max-h-[calc(90vh-80px)]">
                                 {isImageFile(previewFile.ext) ? (
-                                    <img
+                                    // Known dimensions reserve the box up front and the grid's
+                                    // cached thumbnail fills it, so the modal doesn't jump or
+                                    // flash blank while the larger image loads.
+                                    <ProgressiveImage
+                                        key={previewFile.id}
                                         src={getFileDownloadUrl(currentWorkspaceId!, previewFile.name)}
                                         alt={previewFile.original_name}
-                                        className="max-w-full h-auto mx-auto"
+                                        width={previewFile.width}
+                                        height={previewFile.height}
+                                        placeholderSrc={knownDimensions(previewFile.width, previewFile.height)
+                                            ? imageVariantUrl(getFileDownloadUrl(currentWorkspaceId!, previewFile.name), 320)
+                                            : undefined}
+                                        className="mx-auto"
                                     />
                                 ) : (
                                     <iframe

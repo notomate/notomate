@@ -10,19 +10,9 @@ const FileCardSkeleton: FC = () => {
             </div>
 
             {/* File Info */}
-            <div className="p-3">
+            <div className="p-2.5">
                 <Skeleton className="h-4 w-3/4 mb-2" />
-                <div className="flex items-center justify-between">
-                    <Skeleton className="h-3 w-1/4" />
-                    <Skeleton className="h-4 w-12" />
-                </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="px-3 pb-3 flex gap-1">
-                <Skeleton className="flex-1 h-7" />
-                <Skeleton className="flex-1 h-7" />
-                <Skeleton className="flex-1 h-7" />
+                <Skeleton className="h-3 w-1/2" />
             </div>
         </div>
     )
