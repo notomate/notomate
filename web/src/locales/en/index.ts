@@ -943,6 +943,7 @@ export default {
     "GoogleMapNode":"Google Map",
     "GooglePlacesNode":"Google Places",
     "GoogleDirectionsNode":"Google Directions",
+    "WikipediaNode":"Wikipedia",
     "TagsNode":"Tags",
     "RatingNode":"Rating",
     "Video":"Video",
@@ -1072,5 +1073,18 @@ export default {
       removed: "Google Maps key removed",
       removeConfirm: "Remove the Google Maps key? Cached results will be deleted and Google Maps blocks will show stored snapshots only."
     }
+  },
+  wikipedia: {
+    searchPlaceholder: "Search Wikipedia",
+    language: "Wikipedia language",
+    noResults: "No articles found.",
+    empty: "No article selected.",
+    error: "Could not reach Wikipedia. Try again later.",
+    change: "Change article",
+    refresh: "Refresh",
+    fetchedAt: "Updated {{date}}",
+    showMore: "Show more",
+    showLess: "Show less",
+    attribution: "From Wikipedia, the free encyclopedia ·"
   },
 } as const;

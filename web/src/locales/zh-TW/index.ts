@@ -1020,6 +1020,7 @@ export default {
     "GoogleMapNode":"Google 地圖",
     "GooglePlacesNode":"Google 地點",
     "GoogleDirectionsNode":"Google 路線規劃",
+    "WikipediaNode":"維基百科",
     "TagsNode":"標籤",
     "RatingNode":"評分",
     "Video":"影片",
@@ -1148,5 +1149,18 @@ export default {
       removed: "已移除 Google 地圖金鑰",
       removeConfirm: "要移除 Google 地圖金鑰嗎？快取資料會被刪除，Google 地圖區塊將只顯示已儲存的內容。"
     }
+  },
+  wikipedia: {
+    searchPlaceholder: "搜尋維基百科",
+    language: "維基百科語言",
+    noResults: "找不到條目。",
+    empty: "尚未選擇條目。",
+    error: "無法連線到維基百科，請稍後再試。",
+    change: "更換條目",
+    refresh: "重新整理",
+    fetchedAt: "更新於 {{date}}",
+    showMore: "顯示更多",
+    showLess: "顯示較少",
+    attribution: "來自維基百科，自由的百科全書 ·"
   },
 } as const;

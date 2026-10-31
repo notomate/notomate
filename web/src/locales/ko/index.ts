@@ -703,6 +703,7 @@ export default {
     "GoogleMapNode":"Google 지도",
     "GooglePlacesNode":"Google 장소",
     "GoogleDirectionsNode":"Google 길찾기",
+    "WikipediaNode":"위키백과",
     "TagsNode":"태그",
     "RatingNode":"평점",
     "Video":"동영상",

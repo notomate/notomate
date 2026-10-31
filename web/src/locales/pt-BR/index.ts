@@ -703,6 +703,7 @@ export default {
     "GoogleMapNode":"Mapa do Google",
     "GooglePlacesNode":"Lugares do Google",
     "GoogleDirectionsNode":"Rotas do Google",
+    "WikipediaNode":"Wikipédia",
     "TagsNode":"Etiquetas",
     "RatingNode":"Avaliação",
     "Video":"Vídeo",

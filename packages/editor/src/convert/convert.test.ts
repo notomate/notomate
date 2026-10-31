@@ -110,6 +110,7 @@ const FIXTURE: TipTapNode = {
     { type: 'googleMapNode', attrs: { title: 'Trip', center: { lat: 1, lng: 2 }, zoom: 13, markers: [{ lat: 1, lng: 2 }], route: null } },
     { type: 'googlePlacesNode', attrs: { query: 'coffee', places: [], fetchedAt: null } },
     { type: 'googleDirectionsNode', attrs: { waypoints: [], travelMode: 'DRIVE', optimize: false, result: null, alternatives: [] } },
+    { type: 'wikipediaNode', attrs: { lang: 'en', query: 'Taipei', article: { lang: 'en', pageId: 1, title: 'Taipei', extract: 'Capital.', url: 'https://en.wikipedia.org/wiki/Taipei' }, fetchedAt: null } },
     { type: 'paragraph' },
   ],
 };

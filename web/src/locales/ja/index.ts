@@ -703,6 +703,7 @@ export default {
     "GoogleMapNode":"Google マップ",
     "GooglePlacesNode":"Google プレイス",
     "GoogleDirectionsNode":"Google ルート",
+    "WikipediaNode":"ウィキペディア",
     "TagsNode":"タグ",
     "RatingNode":"評価",
     "Video":"動画",

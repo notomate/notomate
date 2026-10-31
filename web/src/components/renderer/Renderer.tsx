@@ -26,6 +26,8 @@ import { GoogleMapSnapshot } from '@/components/editor/extensions/googlemaps/sha
 import { MapMarker, StoredRoute, placesTitle, placesToMarkers, Waypoint, waypointColor, waypointLabel } from '@/components/editor/extensions/googlemaps/shared/types'
 import { CompactBody, CompactFrame, DirectionsSummary, MarkersSummary } from '@/components/editor/extensions/googlemaps/shared/CompactSummary'
 import type { PlaceDetails, TravelMode } from '@/api/googleMaps'
+import type { WikipediaArticle } from '@/api/wikipedia'
+import { WikipediaCard } from '@/components/editor/extensions/wikipedianode/WikipediaCard'
 import ProgressiveImage from "@/components/image/ProgressiveImage"
 import ProgressivePhotoView from "@/components/image/ProgressivePhotoView"
 import { computeCarouselLayout } from './carouselLayout'
@@ -753,6 +755,15 @@ const Renderer: React.FC<RendererProps> = ({ content, maxNodes, workspaceId: wor
                 return <InstagramRendererEmbed key={key} url={node.attrs?.url} />
             case 'tiktokEmbed':
                 return <TiktokRendererEmbed key={key} url={node.attrs?.url} />
+            case 'wikipediaNode': {
+                const article: WikipediaArticle | null = node.attrs?.article ?? null
+                if (!article) return null
+                return <div key={key} className="py-1">
+                    <div className="border dark:border-neutral-700 rounded-lg overflow-hidden bg-white dark:bg-neutral-900">
+                        <WikipediaCard article={article} />
+                    </div>
+                </div>
+            }
             case 'tagsNode': {
                 const tags: string[] = node.attrs?.tags ?? []
                 return <TagsRenderer key={key} tags={tags} />

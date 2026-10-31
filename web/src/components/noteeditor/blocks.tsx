@@ -52,11 +52,12 @@ import ThreadsEmbedComponent from '@/components/editor/extensions/threadsembed/T
 import TiktokEmbedComponent from '@/components/editor/extensions/tiktokembed/TiktokEmbedComponent'
 import VideoNodeComponent from '@/components/editor/extensions/videonode/VideoNodeComponent'
 import ViewComponent from '@/components/editor/extensions/viewnode/ViewComponent'
+import WikipediaNodeComponent from '@/components/editor/extensions/wikipedianode/WikipediaNodeComponent'
 import YoutubeEmbedComponent from '@/components/editor/extensions/youtubeembed/YoutubeEmbedComponent'
 import { nodeSpec } from './nodeView'
 import { NEW_TABLE_ROWS, rowsFromTable, TableComponent } from './TableBlock'
 import { PENDING_IMAGE_TAG } from './plugins'
-import { InstagramIcon, ThreadsIcon, TiktokIcon } from './icons'
+import { InstagramIcon, ThreadsIcon, TiktokIcon, WikipediaIcon } from './icons'
 
 /** Block types of the note editor: the editor's text blocks plus the notomate nodes. */
 
@@ -186,6 +187,10 @@ export function noteBlocks(t: TFunction, { googleMapsEnabled }: NoteBlockOptions
     nodeSpec('tiktokEmbed', TiktokEmbedComponent, {
       defaults: { url: null },
       menu: { label: t('editor.TiktokEmbed'), icon: <TiktokIcon />, keywords: 'tiktok short video social embed', group: embed },
+    }),
+    nodeSpec('wikipediaNode', WikipediaNodeComponent, {
+      defaults: { lang: '', query: '', article: null, fetchedAt: null },
+      menu: { label: t('editor.WikipediaNode'), icon: <WikipediaIcon />, keywords: 'wikipedia wiki encyclopedia article', group: embed },
     }),
 
     // Advanced

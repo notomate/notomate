@@ -952,6 +952,7 @@ export default {
     "GoogleMapNode":"Google 地图",
     "GooglePlacesNode":"Google 地点",
     "GoogleDirectionsNode":"Google 路线规划",
+    "WikipediaNode":"维基百科",
     "TagsNode":"标签",
     "RatingNode":"评分",
     "Video":"视频",
@@ -1077,5 +1078,18 @@ export default {
       removed: "已移除 Google 地图密钥",
       removeConfirm: "要移除 Google 地图密钥吗？缓存数据将被删除，Google 地图区块将只显示已保存的内容。"
     }
+  },
+  wikipedia: {
+    searchPlaceholder: "搜索维基百科",
+    language: "维基百科语言",
+    noResults: "找不到条目。",
+    empty: "尚未选择条目。",
+    error: "无法连接到维基百科，请稍后再试。",
+    change: "更换条目",
+    refresh: "刷新",
+    fetchedAt: "更新于 {{date}}",
+    showMore: "显示更多",
+    showLess: "收起",
+    attribution: "来自维基百科，自由的百科全书 ·"
   },
 } as const;

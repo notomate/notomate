@@ -703,6 +703,7 @@ export default {
     "GoogleMapNode":"Карта Google",
     "GooglePlacesNode":"Места Google",
     "GoogleDirectionsNode":"Маршруты Google",
+    "WikipediaNode":"Википедия",
     "TagsNode":"Теги",
     "RatingNode":"Рейтинг",
     "Video":"Видео",
