@@ -27,7 +27,7 @@ export const WikipediaCard = ({ article }: { article: WikipediaArticle }) => {
             {article.extract}
           </p>
           {long && (
-            <button type="button" className="mt-0.5 text-xs text-blue-600 hover:underline" onClick={() => setShowAll(v => !v)}>
+            <button type="button" className="mt-0.5 text-xs text-muted-foreground hover:text-foreground hover:underline" onClick={() => setShowAll(v => !v)}>
               {showAll ? t("wikipedia.showLess") : t("wikipedia.showMore")}
             </button>
           )}

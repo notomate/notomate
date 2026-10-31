@@ -115,7 +115,7 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
                     <button
                       key={mode}
                       type="button"
-                      className={`px-2 py-1 text-xs rounded border ${mode === travelMode ? "bg-blue-600 border-blue-600 text-white" : "dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800"}`}
+                      className={`px-2 py-1 text-xs rounded border ${mode === travelMode ? "bg-gray-200 dark:bg-neutral-700 border-gray-400 dark:border-neutral-500 font-medium" : "dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800"}`}
                       onClick={() => update({ travelMode: mode, optimize: mode === "TRANSIT" ? false : optimize })}
                     >
                       {t(`googleMaps.travelMode.${mode}`)}
@@ -160,7 +160,7 @@ const GoogleDirectionsNodeComponent: React.FC<NodeViewProps> = ({ node, updateAt
                   {transitTooManyStops && <p className="text-xs text-amber-600">{t("googleMaps.transitNoStops")}</p>}
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-50"
                     disabled={busy || waypoints.length < 2 || transitTooManyStops}
                     onClick={compute}
                   >

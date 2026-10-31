@@ -153,7 +153,7 @@ const RouteOption = ({ route, selected, onClick }: { route: StoredRoute; selecte
       type="button"
       disabled={!onClick}
       onClick={onClick}
-      className={`w-full text-left rounded-md border px-2 py-1.5 flex flex-col gap-1 disabled:cursor-default ${selected ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "dark:border-neutral-700 enabled:hover:bg-gray-50 dark:enabled:hover:bg-neutral-800"}`}
+      className={`w-full text-left rounded-md border px-2 py-1.5 flex flex-col gap-1 disabled:cursor-default ${selected ? "border-gray-400 dark:border-neutral-500 bg-gray-100 dark:bg-neutral-800" : "dark:border-neutral-700 enabled:hover:bg-gray-50 dark:enabled:hover:bg-neutral-800"}`}
     >
       <span className="flex items-baseline gap-2">
         <span className="font-semibold text-gray-900 dark:text-gray-100">{route.localizedValues?.duration?.text ?? formatDuration(route.duration)}</span>

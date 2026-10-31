@@ -149,7 +149,7 @@ export const GoogleMapSnapshot = ({ title, markers, workspaceId, embedded, hideL
                   {panel.kind === "marker" && (
                     <button
                       type="button"
-                      className="inline-flex items-center gap-0.5 text-xs text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground hover:underline"
                       onClick={() => setPanel({ kind: "list" })}
                     >
                       <ChevronLeft size={13} />{t("googleMaps.allMarkers")}

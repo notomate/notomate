@@ -191,7 +191,7 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, center, zoom, up
                       <MapPinX size={13} />{t("googleMaps.removeMarker")}
                     </button>
                   ) : (
-                    <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-blue-600 hover:bg-blue-700 text-white" onClick={() => addMarker(place)}>
+                    <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800" onClick={() => addMarker(place)}>
                       <MapPinPlus size={13} />{t("googleMaps.addMarker")}
                     </button>
                   )}
@@ -218,7 +218,7 @@ const GoogleMapEditor = ({ env, workspaceId, editable, markers, center, zoom, up
                         {m.address && <div className="text-xs text-muted-foreground truncate">{m.address}</div>}
                       </button>
                       {m.placeId && (
-                        <button type="button" className="text-xs text-blue-600 hover:underline shrink-0" onClick={() => setSelectedPlaceId(m.placeId!)}>
+                        <button type="button" className="text-xs text-muted-foreground hover:text-foreground hover:underline shrink-0" onClick={() => setSelectedPlaceId(m.placeId!)}>
                           {t("googleMaps.details")}
                         </button>
                       )}

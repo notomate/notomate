@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Loader2, Search, Star } from "lucide-react"
+import { LocateButton } from "./LocateButton"
 import { LatLng, PlaceSummary, googleMapsErrorMessage, parseLatLng, searchGooglePlaces, searchNearbyGooglePlaces } from "@/api/googleMaps"
 
 interface Props {
@@ -67,6 +68,11 @@ export const PlaceSearchBox = ({ workspaceId, bias, placeholder, autoFocus, onSe
     debounceRef.current = setTimeout(() => search(value), 400)
   }
 
+  const handleLocate = (coords: string) => {
+    setQuery(coords)
+    search(coords)
+  }
+
   const handleSelect = (place: PlaceSummary) => {
     requestRef.current += 1
     setQuery(place.displayName?.text ?? "")
@@ -105,26 +111,29 @@ export const PlaceSearchBox = ({ workspaceId, bias, placeholder, autoFocus, onSe
 
   return (
     <div className="relative">
-      <div className="relative">
-        <input
-          ref={inputRef}
-          type="text"
-          className="w-full px-3 py-2 pr-8 text-sm rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          placeholder={placeholder ?? t("googleMaps.searchPlaceholder")}
-          value={query}
-          onChange={e => handleChange(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === "Enter") {
-              e.preventDefault()
-              search(query)
-            } else if (e.key === "Escape") {
-              setResults([])
-            }
-          }}
-        />
-        {isSearching
-          ? <Loader2 size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
-          : <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <input
+            ref={inputRef}
+            type="text"
+            className="w-full px-3 py-2 pr-8 text-sm rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder={placeholder ?? t("googleMaps.searchPlaceholder")}
+            value={query}
+            onChange={e => handleChange(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                search(query)
+              } else if (e.key === "Escape") {
+                setResults([])
+              }
+            }}
+          />
+          {isSearching
+            ? <Loader2 size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
+            : <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />}
+        </div>
+        <LocateButton onLocate={handleLocate} onError={setError} />
       </div>
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
       {list}

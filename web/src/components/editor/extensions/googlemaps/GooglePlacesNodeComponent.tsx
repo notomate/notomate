@@ -5,6 +5,7 @@ import { Edit3, Loader2, RefreshCw, Search, Star, Store } from "lucide-react"
 import { useDragMenu, NodeTouchMenu } from "@/components/editor/DragMenuContext"
 import { PlaceDetails, PlaceSummary, getGooglePlace, googleMapsErrorMessage, parseLatLng, searchGooglePlaces, searchNearbyGooglePlaces } from "@/api/googleMaps"
 import { GoogleMapSnapshot } from "./shared/GoogleMapSnapshot"
+import { LocateButton } from "./shared/LocateButton"
 import { CompactBody, ExpandToggle, MarkersSummary, frameClass } from "./shared/CompactSummary"
 import { placesTitle, placesToMarkers, trimPlace } from "./shared/types"
 
@@ -33,16 +34,16 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
     return details.map(trimPlace)
   }
 
-  const runSearch = async () => {
-    if (!query.trim()) return
+  const runSearch = async (q = query) => {
+    if (!q.trim()) return
     setBusy("search")
     setError("")
     try {
       // A coordinate looks up the places at that spot instead of matching text.
-      const coords = parseLatLng(query)
+      const coords = parseLatLng(q)
       const found = coords
         ? await searchNearbyGooglePlaces(workspaceId, { ...coords, languageCode: i18n.language })
-        : await searchGooglePlaces(workspaceId, { query, languageCode: i18n.language })
+        : await searchGooglePlaces(workspaceId, { query: q, languageCode: i18n.language })
       setResults(found)
       if (coords && found.length === 0) setError(t("googleMaps.noNearbyPlaces"))
     } catch (e) {
@@ -141,10 +142,11 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); runSearch() } }}
             />
-            <button type="button" className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50" disabled={!!busy || !query.trim()} onClick={runSearch}>
+            <button type="button" className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-50" disabled={!!busy || !query.trim()} onClick={() => runSearch()}>
               {busy === "search" ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
               {t("googleMaps.search")}
             </button>
+            <LocateButton disabled={!!busy} onLocate={coords => { setQuery(coords); runSearch(coords) }} onError={setError} />
           </div>
 
           {candidates.length > 0 && (
@@ -179,7 +181,7 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
                 {t("actions.cancel")}
               </button>
             )}
-            <button type="button" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50" disabled={!!busy || checked.size === 0} onClick={save}>
+            <button type="button" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-50" disabled={!!busy || checked.size === 0} onClick={save}>
               {busy === "fetch" && <Loader2 size={14} className="animate-spin" />}
               {t("googleMaps.fetchPlaces", { count: checked.size })}
             </button>
