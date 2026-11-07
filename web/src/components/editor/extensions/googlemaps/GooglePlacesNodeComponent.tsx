@@ -136,13 +136,13 @@ const GooglePlacesNodeComponent: React.FC<NodeViewProps> = ({ node, updateAttrib
           <div className="flex gap-2">
             <input
               autoFocus
-              className="flex-1 px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="flex-1 min-w-0 px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder={t("googleMaps.placesQueryPlaceholder")}
               value={query}
               onChange={e => setQuery(e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); runSearch() } }}
             />
-            <button type="button" className="inline-flex items-center gap-1 px-3 py-2 text-sm rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-50" disabled={!!busy || !query.trim()} onClick={() => runSearch()}>
+            <button type="button" className="shrink-0 inline-flex items-center gap-1 px-3 py-2 text-sm whitespace-nowrap rounded border border-gray-300 dark:border-neutral-600 hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-50" disabled={!!busy || !query.trim()} onClick={() => runSearch()}>
               {busy === "search" ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
               {t("googleMaps.search")}
             </button>

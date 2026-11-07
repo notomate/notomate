@@ -36,7 +36,7 @@ export const LocateButton = ({ disabled, onLocate, onError }: Props) => {
   return (
     <button
       type="button"
-      className="inline-flex items-center px-2.5 py-2 rounded border border-gray-300 dark:border-neutral-600 text-muted-foreground hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-50"
+      className="shrink-0 inline-flex items-center px-2.5 py-2 rounded border border-gray-300 dark:border-neutral-600 text-muted-foreground hover:bg-gray-100 dark:hover:bg-neutral-800 disabled:opacity-50"
       disabled={disabled || locating}
       onClick={locate}
       title={t("googleMaps.useMyLocation")}
