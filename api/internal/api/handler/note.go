@@ -109,6 +109,7 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 		PageNumber: pageNumber,
 		Query:      query,
 		ParentID:   "null",
+		CreatedBy:  c.QueryParam("creatorId"),
 	}
 
 	notes, err := h.db.FindNotes(filter)
@@ -206,6 +207,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 		SortBy:      sortBy,
 		ParentID:    parentID,
 		PinnedOnly:  pinnedOnly,
+		CreatedBy:   c.QueryParam("creatorId"),
 	}
 
 	notes, err := h.db.FindNotes(filter)

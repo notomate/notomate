@@ -75,6 +75,11 @@ func (s SqliteDB) FindNotes(f model.NoteFilter) ([]model.Note, error) {
 		args = append(args, true)
 	}
 
+	if f.CreatedBy != "" {
+		conds = append(conds, "created_by = ?")
+		args = append(args, f.CreatedBy)
+	}
+
 	query := s.getDB().Model(&model.Note{})
 
 	if len(conds) > 0 {

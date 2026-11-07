@@ -298,6 +298,8 @@ export default {
     lastUpdated: "Zuletzt aktualisiert",
     pinned: "Angeheftet",
     creator: "Ersteller",
+    allCreators: "Alle Ersteller",
+    filterByCreator: "Notizen dieses Erstellers anzeigen",
     author: "Autor",
     public: "Öffentlich",
     private: "Privat",

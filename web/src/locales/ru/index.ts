@@ -298,6 +298,8 @@ export default {
     lastUpdated: "Последнее обновление",
     pinned: "Закреплено",
     creator: "Создатель",
+    allCreators: "Все создатели",
+    filterByCreator: "Показать заметки этого создателя",
     author: "Автор",
     public: "Публичная",
     private: "Приватная",

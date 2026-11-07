@@ -465,6 +465,8 @@ export default {
     lastUpdated: "最後更新",
     pinned: "已釘選",
     creator: "建立者",
+    allCreators: "所有建立者",
+    filterByCreator: "查看此建立者的筆記",
     author: "作者",
     public: "公開",
     private: "私人",

@@ -298,6 +298,8 @@ export default {
     lastUpdated: "Dernière mise à jour",
     pinned: "Épinglé",
     creator: "Créateur",
+    allCreators: "Tous les créateurs",
+    filterByCreator: "Voir les notes de ce créateur",
     author: "Auteur",
     public: "Public",
     private: "Privé",

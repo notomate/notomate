@@ -298,6 +298,8 @@ export default {
     lastUpdated: "마지막 업데이트",
     pinned: "고정됨",
     creator: "작성자",
+    allCreators: "모든 작성자",
+    filterByCreator: "이 작성자의 노트 보기",
     author: "저자",
     public: "공개",
     private: "비공개",

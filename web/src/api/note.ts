@@ -18,9 +18,10 @@ export interface NoteData {
 }
 
 
-export const getPublicNotes = async (pageNum: number, pageSize: number, query = '') => {
+export const getPublicNotes = async (pageNum: number, pageSize: number, query = '', creatorId?: string) => {
   const params = new URLSearchParams({ pageSize: String(pageSize), pageNumber: String(pageNum) });
   if (query) params.set('query', query);
+  if (creatorId) params.set('creatorId', creatorId);
   const response = await axios.get(`/api/v1/explore/notes?${params}`);
   return response.data;
 };
@@ -30,11 +31,12 @@ export const getPublicNote = async (id: string) => {
   return response.data;
 };
 
-export const getNotes = async (workspaceId: string, pageNum: number, pageSize: number, query: string, sort?: string, parentId?: string, pinnedOnly?: boolean) => {
+export const getNotes = async (workspaceId: string, pageNum: number, pageSize: number, query: string, sort?: string, parentId?: string, pinnedOnly?: boolean, creatorId?: string) => {
   const params = new URLSearchParams({ pageSize: String(pageSize), pageNumber: String(pageNum), query });
   if (sort) params.set('sort', sort);
   if (parentId !== undefined) params.set('parentId', parentId);
   if (pinnedOnly) params.set('pinned', 'true');
+  if (creatorId) params.set('creatorId', creatorId);
   const response = await axios.get(`/api/v1/workspaces/${workspaceId}/notes?${params}`, { withCredentials: true });
   return response.data;
 };

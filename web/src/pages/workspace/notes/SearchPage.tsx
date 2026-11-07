@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { useInfiniteQuery } from "@tanstack/react-query"
-import { Search, Trash2 } from "lucide-react"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { Search, Trash2, UserRound } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { getNotes } from "@/api/note"
+import { getWorkspaceMembers } from "@/api/workspace"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
 import NoteList from "@/components/notecard/NoteList"
 import NoteListSkeleton from "@/components/notecard/NoteListSkeleton"
@@ -14,6 +15,7 @@ const SearchPage = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
     const [query, setQuery] = useState("")
     const [debouncedQuery, setDebouncedQuery] = useState("")
+    const [creatorId, setCreatorId] = useState("")
     const observerRef = useRef<IntersectionObserver | null>(null)
     const scrollRef = useRef<HTMLDivElement | null>(null)
 
@@ -22,10 +24,19 @@ const SearchPage = () => {
         return () => clearTimeout(handler)
     }, [query])
 
+    // Reset the creator filter when switching workspaces; the members differ.
+    useEffect(() => setCreatorId(""), [currentWorkspaceId])
+
+    const { data: members = [] } = useQuery({
+        queryKey: ["workspaceMembers", currentWorkspaceId],
+        queryFn: () => getWorkspaceMembers(currentWorkspaceId),
+        enabled: !!currentWorkspaceId,
+    })
+
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-        queryKey: ["notes-search", currentWorkspaceId, debouncedQuery],
+        queryKey: ["notes-search", currentWorkspaceId, debouncedQuery, creatorId],
         queryFn: async ({ pageParam = 1 }: { pageParam?: unknown }) =>
-            await getNotes(currentWorkspaceId, Number(pageParam), PAGE_SIZE, debouncedQuery),
+            await getNotes(currentWorkspaceId, Number(pageParam), PAGE_SIZE, debouncedQuery, undefined, undefined, undefined, creatorId),
         enabled: !!currentWorkspaceId,
         getNextPageParam: (lastPage, allPages) =>
             lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
@@ -73,13 +84,29 @@ const SearchPage = () => {
                             </button>
                         )}
                     </div>
+                    <div className="px-2 pt-2">
+                        <label className="inline-flex items-center gap-1.5 max-w-full px-2 py-1 rounded-full text-xs bg-neutral-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200">
+                            <UserRound size={14} className="shrink-0 text-muted-foreground" />
+                            <select
+                                value={creatorId}
+                                onChange={(e) => setCreatorId(e.target.value)}
+                                aria-label={t("common.creator")}
+                                className="min-w-0 bg-transparent outline-none cursor-pointer truncate"
+                            >
+                                <option value="">{t("common.allCreators")}</option>
+                                {members.map((m) => (
+                                    <option key={m.user_id} value={m.user_id}>{m.user_name}</option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
                 </div>
                 <div className="w-full lg:max-w-[600px] mx-auto">
                     {isLoading ? (
                         <NoteListSkeleton />
                     ) : notes.length === 0 ? (
                         <div className="text-center text-muted-foreground py-16 text-sm">
-                            {debouncedQuery ? t("common.noResults") : t("messages.noMoreNotes")}
+                            {debouncedQuery || creatorId ? t("common.noResults") : t("messages.noMoreNotes")}
                         </div>
                     ) : (
                         <>
@@ -89,6 +116,10 @@ const SearchPage = () => {
                                 maxNodes={100}
                                 workspaceId={currentWorkspaceId}
                                 showActions
+                                onCreatorClick={(note) => {
+                                    setCreatorId(note.created_by_id!)
+                                    scrollRef.current?.scrollTo({ top: 0 })
+                                }}
                             />
                             <div ref={loadMoreRef} className="h-2" />
                             {isFetchingNextPage && <NoteListSkeleton count={3} />}

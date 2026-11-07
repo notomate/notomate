@@ -298,6 +298,8 @@ export default {
     lastUpdated: "最後に更新",
     pinned: "ピン留め",
     creator: "作成者",
+    allCreators: "すべての作成者",
+    filterByCreator: "この作成者のノートを表示",
     author: "著者",
     public: "公開",
     private: "非公開",

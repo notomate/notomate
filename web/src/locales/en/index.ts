@@ -465,6 +465,8 @@ export default {
     lastUpdated: "Last Updated",
     pinned: "Pinned",
     creator: "Creator",
+    allCreators: "All creators",
+    filterByCreator: "Show notes by this creator",
     author: "Author",
     public: "Public",
     private: "Private",

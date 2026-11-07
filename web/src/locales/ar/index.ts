@@ -298,6 +298,8 @@ export default {
     lastUpdated: "آخر تحديث",
     pinned: "مثبت",
     creator: "المنشئ",
+    allCreators: "كل المنشئين",
+    filterByCreator: "عرض ملاحظات هذا المنشئ",
     author: "المؤلف",
     public: "عام",
     private: "خاص",

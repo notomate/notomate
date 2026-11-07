@@ -21,9 +21,11 @@ interface NoteCardProps {
     workspaceId?: string
     commentsReadOnly?: boolean
     showActions?: boolean
+    /** Makes the creator clickable, e.g. to filter a list by that creator. */
+    onCreatorClick?: (note: NoteData) => void
 }
 
-const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, linkKind = "edit", maxNodes, parentNoteTitle, parentNoteLinkTo, workspaceId, commentsReadOnly, showActions = false }) => {
+const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, linkKind = "edit", maxNodes, parentNoteTitle, parentNoteLinkTo, workspaceId, commentsReadOnly, showActions = false, onCreatorClick }) => {
     const { t } = useTranslation()
     const commentsWorkspaceId = workspaceId || note.workspace_id
     return (
@@ -55,13 +57,23 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, linkKind =
                 )}
                 <div className="flex items-center text-muted-foreground">
                     <div className="flex items-center gap-2 min-w-0">
-                        {note.created_by && <Avatar name={note.created_by} avatarUrl={note.created_by_avatar_url} size={32} />}
+                        {note.created_by && (onCreatorClick && note.created_by_id ? (
+                            <button type="button" onClick={() => onCreatorClick(note)} title={t("common.filterByCreator")} className="shrink-0 rounded-full">
+                                <Avatar name={note.created_by} avatarUrl={note.created_by_avatar_url} size={32} />
+                            </button>
+                        ) : (
+                            <Avatar name={note.created_by} avatarUrl={note.created_by_avatar_url} size={32} />
+                        ))}
                         <div className="flex flex-col min-w-0">
-                            {note.created_by && (
+                            {note.created_by && (onCreatorClick && note.created_by_id ? (
+                                <button type="button" onClick={() => onCreatorClick(note)} title={t("common.filterByCreator")} className="font-medium text-left text-muted-foreground dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:underline truncate max-w-[140px]">
+                                    {note.created_by}
+                                </button>
+                            ) : (
                                 <span className="font-medium text-muted-foreground dark:text-gray-300 truncate max-w-[140px]">
                                     {note.created_by}
                                 </span>
-                            )}
+                            ))}
                             <NoteTime time={note.created_at ?? ""} />
                         </div>
                     </div>

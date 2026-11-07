@@ -4,6 +4,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPublicNotes } from '@/api/note';
 import NoteList from '@/components/notecard/NoteList';
 import NoteListSkeleton from '@/components/notecard/NoteListSkeleton';
+import CreatorFilterChip, { type CreatorFilter } from '@/components/notecard/CreatorFilterChip';
 import AboutModal from '@/components/user/AboutModal';
 import UserMenu from '@/components/usermenu/UserMenu';
 import MobileTopBar from '@/components/mobiletopbar/MobileTopBar';
@@ -24,6 +25,7 @@ const ExplorePage: React.FC = () => {
 
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [creator, setCreator] = useState<CreatorFilter | null>(null);
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -31,9 +33,9 @@ const ExplorePage: React.FC = () => {
     }, [search]);
 
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-        queryKey: ['explore-notes', debouncedSearch],
+        queryKey: ['explore-notes', debouncedSearch, creator?.id],
         queryFn: ({ pageParam = 1 }: { pageParam?: unknown }) =>
-            getPublicNotes(Number(pageParam), PAGE_SIZE, debouncedSearch),
+            getPublicNotes(Number(pageParam), PAGE_SIZE, debouncedSearch, creator?.id),
         getNextPageParam: (lastPage, allPages) =>
             lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
         initialPageParam: 1,
@@ -160,13 +162,18 @@ const ExplorePage: React.FC = () => {
                                         </button>
                                     )}
                                 </div>
+                                {creator && (
+                                    <div className="px-2 pt-2">
+                                        <CreatorFilterChip creator={creator} onClear={() => setCreator(null)} />
+                                    </div>
+                                )}
                             </div>
                             <div className="w-full lg:max-w-[600px] mx-auto">
                                 {isLoading ? (
                                     <NoteListSkeleton />
                                 ) : notes.length === 0 ? (
                                     <div className="text-center text-muted-foreground py-16 text-sm">
-                                        {debouncedSearch ? t("pages.explore.noSearchResults") : t("pages.explore.noPublicNotes")}
+                                        {debouncedSearch || creator ? t("pages.explore.noSearchResults") : t("pages.explore.noPublicNotes")}
                                     </div>
                                 ) : (
                                     <>
@@ -176,6 +183,10 @@ const ExplorePage: React.FC = () => {
                                             linkKind="open"
                                             commentsReadOnly
                                             maxNodes={15}
+                                            onCreatorClick={(note) => {
+                                                setCreator({ id: note.created_by_id!, name: note.created_by ?? '', avatarUrl: note.created_by_avatar_url });
+                                                scrollRef.current?.scrollTo({ top: 0 });
+                                            }}
                                         />
                                         <div ref={loadMoreRef} className="h-2" />
                                         {isFetchingNextPage && <NoteListSkeleton count={3} />}
