@@ -67,11 +67,6 @@ const NoteCard: FC<NoteCardProps> = ({ note, linkTo, showLink = true, linkKind =
                     </div>
                 </div>
                 <div className="break-all w-full flex flex-col m-auto overflow-auto">
-                    {note.title && (
-                        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                            {note.title}
-                        </div>
-                    )}
                     {note.content && (
                         <Renderer content={note.content} maxNodes={maxNodes} workspaceId={note.workspace_id} />
                     )}
