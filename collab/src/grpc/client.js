@@ -62,7 +62,7 @@ function createGrpcClient(address) {
 
     async validateApiKey(key) {
       const res = await call(METHODS.ValidateAPIKey, { key })
-      return res.valid ? { id: res.user_id, name: res.user_name, disabled: res.disabled } : null
+      return res.valid ? { id: res.user_id, name: res.user_name, disabled: res.disabled, scope: res.scope || '' } : null
     },
 
     async isWorkspaceMember(userId, workspaceId) {

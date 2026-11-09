@@ -8,7 +8,8 @@ import { signOut } from "@/api/auth"
 import { toast } from "@/stores/toast"
 import { useState, useEffect, useRef } from "react"
 import { updatePreferences, uploadAvatar, removeAvatar, updateEmail, changePassword } from "@/api/user"
-import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, CreateAPIKeyRequest } from "@/api/apikey"
+import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, APIKeyScope, CreateAPIKeyRequest } from "@/api/apikey"
+import { listOAuthGrants, deleteOAuthGrant, OAuthGrant } from "@/api/oauth"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
 import Select from "@/components/select/Select"
@@ -79,6 +80,8 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const [showCreationDialog, setShowCreationDialog] = useState(false)
     const [newKeyName, setNewKeyName] = useState("")
     const [newKeyExpiresAt, setNewKeyExpiresAt] = useState("")
+    const [newKeyScope, setNewKeyScope] = useState<APIKeyScope>("mcp:read")
+    const [oauthGrants, setOAuthGrants] = useState<OAuthGrant[]>([])
     const [createdKey, setCreatedKey] = useState<string | null>(null)
 
     // User Management state
@@ -134,8 +137,9 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
 
         setLoading(true)
         try {
-            const keys = await listAPIKeys(user.id)
+            const [keys, grants] = await Promise.all([listAPIKeys(user.id), listOAuthGrants(user.id)])
             setApiKeys(keys)
+            setOAuthGrants(grants)
         } catch (err) {
             toast.error(t("messages.apiKeyLoadFailed"))
         } finally {
@@ -152,6 +156,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
         try {
             const request: CreateAPIKeyRequest = {
                 name: newKeyName.trim(),
+                scope: newKeyScope,
             }
 
             if (newKeyExpiresAt) {
@@ -162,10 +167,27 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
             setCreatedKey(response.full_key)
             setNewKeyName("")
             setNewKeyExpiresAt("")
+            setNewKeyScope("mcp:read")
             await loadAPIKeys()
             toast.success(t("messages.apiKeyCreated"))
         } catch (err) {
             toast.error(t("messages.apiKeyCreateFailed"))
+        }
+    }
+
+    const scopeLabel = (scope: string) =>
+        scope === "mcp:read" ? t("pages.preferences.scopeMcpRead")
+            : scope === "mcp:write" ? t("pages.preferences.scopeMcpWrite")
+                : t("pages.preferences.scopeFull")
+
+    const handleDeleteOAuthGrant = async (grantId: string) => {
+        if (!user) return
+        try {
+            await deleteOAuthGrant(user.id, grantId)
+            await loadAPIKeys()
+            toast.success(t("messages.oauthGrantDeleted"))
+        } catch (err) {
+            toast.error(t("messages.oauthGrantDeleteFailed"))
         }
     }
 
@@ -744,6 +766,9 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                         <div className="flex-1">
                                                             <div className="flex items-center gap-2">
                                                                 <div className="font-semibold">{key.name}</div>
+                                                                <span className="text-xs bg-gray-100 dark:bg-neutral-800 px-2 py-1 rounded">
+                                                                    {scopeLabel(key.scope)}
+                                                                </span>
                                                                 {isExpired(key.expires_at) && (
                                                                     <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
                                                                         {t("pages.preferences.expired")}
@@ -775,6 +800,39 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                             <Trash2 size={18} />
                                                         </button>
                                                     </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {oauthGrants.length > 0 && (
+                                        <div className="space-y-2 pt-4">
+                                            <h3 className="text-sm font-semibold">{t("pages.preferences.connectedApps")}</h3>
+                                            {oauthGrants.map((grant) => (
+                                                <div key={grant.id} className="p-4 border border-gray-200 dark:border-neutral-700 rounded-lg flex items-center justify-between">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="font-semibold truncate">{grant.client_name}</div>
+                                                            <span className="text-xs bg-gray-100 dark:bg-neutral-800 px-2 py-1 rounded shrink-0">
+                                                                {scopeLabel(grant.scope)}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground mt-1">
+                                                            <span>{t("pages.preferences.created")}: {formatDate(grant.created_at)}</span>
+                                                            {grant.last_used_at && (
+                                                                <span className="ml-4">
+                                                                    {t("pages.preferences.lastUsed")}: {formatDate(grant.last_used_at)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleDeleteOAuthGrant(grant.id)}
+                                                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                                        title={t("pages.preferences.disconnect")}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
@@ -1003,6 +1061,19 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                         onChange={(e) => setNewKeyExpiresAt(e.target.value)}
                                         className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold">{t("pages.preferences.keyScope")}</label>
+                                    <select
+                                        value={newKeyScope}
+                                        onChange={(e) => setNewKeyScope(e.target.value as APIKeyScope)}
+                                        className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
+                                    >
+                                        <option value="mcp:read">{t("pages.preferences.scopeMcpRead")}</option>
+                                        <option value="mcp:write">{t("pages.preferences.scopeMcpWrite")}</option>
+                                        <option value="">{t("pages.preferences.scopeFull")}</option>
+                                    </select>
                                 </div>
 
                                 <div className="flex gap-2">

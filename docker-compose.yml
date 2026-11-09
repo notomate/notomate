@@ -30,6 +30,7 @@ services:
       - notomate-api
       - notomate-collab
       - notomate-messaging
+      - notomate-mcp
     restart: unless-stopped
 
   notomate-api:
@@ -46,6 +47,7 @@ services:
       - DB_DSN=notomate:${MYSQL_PASSWORD:-notomate_password}@tcp(notomate-mysql:3306)/notomate?charset=utf8mb4
       - APP_DISABLE_SIGNUP=${APP_DISABLE_SIGNUP}
       - APP_SECRET=${APP_SECRET}
+      - APP_PUBLIC_URL=${APP_PUBLIC_URL:-}
       - MESSAGING_ADDR=http://notomate-messaging:4000
     ports:
       # gRPC port for the runner (docker-compose.runner.yml), which lives in
@@ -86,6 +88,23 @@ services:
       - GRPC_ADDR=notomate-api:50051
     depends_on:
       - notomate-api
+    restart: unless-stopped
+
+  notomate-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mcp-runtime
+    image: notomate/notomate-mcp
+    container_name: notomate-mcp
+    environment:
+      - PORT=5000
+      - API_URL=http://notomate-api:8080
+      - COLLAB_URL=ws://notomate-collab:3000
+      - APP_PUBLIC_URL=${APP_PUBLIC_URL:-}
+    depends_on:
+      - notomate-api
+      - notomate-collab
     restart: unless-stopped
 
 volumes:

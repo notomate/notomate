@@ -49,6 +49,7 @@ const (
 	SERVER_API_ROOT_PATH  = "server_api_root_path"
 	APP_DISABLE_SIGNUP    = "app_disable_signup"
 	APP_SECRET            = "app_secret"
+	APP_PUBLIC_URL        = "app_public_url"
 	GRPC_PORT             = "grpc_port"
 	MESSAGING_ADDR        = "messaging_addr"
 
@@ -81,6 +82,7 @@ func Init() {
 	C.SetDefault(SERVER_API_ROOT_PATH, "/api/v1")
 	C.SetDefault(APP_DISABLE_SIGNUP, false)
 	C.SetDefault(APP_SECRET, "default_secret")
+	C.SetDefault(APP_PUBLIC_URL, "")
 	C.SetDefault(GRPC_PORT, "50051")
 	C.SetDefault(MESSAGING_ADDR, "")
 	C.SetDefault(RUNNER_REGISTRATION_TOKEN, "")

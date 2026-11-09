@@ -1,0 +1,20 @@
+{
+  "name": "notomate-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test src/*.test.js"
+  },
+  "dependencies": {
+    "@hocuspocus/provider": "^4.0.0",
+    "@modelcontextprotocol/node": "^2.1.2",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@notomate/editor": "file:../packages/editor",
+    "marked": "^18.1.3",
+    "ws": "^8.18.0",
+    "yjs": "^13.6.0",
+    "zod": "^4.2.0"
+  }
+}

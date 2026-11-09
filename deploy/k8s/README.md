@@ -3,7 +3,7 @@
 Kustomize base for running notomate on Kubernetes (k3s works out of the box).
 
 ```
-deploy/k8s/base/   api, collab, messaging, nginx (Deployment + Service each)
+deploy/k8s/base/   api, collab, messaging, mcp, nginx (Deployment + Service each)
 ```
 
 The base is environment-neutral: no namespace, and the images are the
@@ -42,12 +42,14 @@ images:
     newTag: 1.2.3
   - name: notomate/notomate-messaging
     newTag: 1.2.3
+  - name: notomate/notomate-mcp
+    newTag: 1.2.3
   - name: notomate/notomate-nginx
     newTag: 1.2.3
 ```
 
 Expose the `notomate-nginx` Service (port 80) through an Ingress or a tunnel;
-it serves the SPA and proxies `/api/`, `/ws/` and `/socket.io/` to the other
+it serves the SPA and proxies `/api/`, `/ws/`, `/socket.io/` and `/mcp` to the other
 services. WebSocket support is required.
 
 ## Tracking main (staging)
@@ -79,6 +81,7 @@ spec:
         - notomate/notomate-api=ghcr.io/<owner>/notomate-api:main
         - notomate/notomate-collab=ghcr.io/<owner>/notomate-collab:main
         - notomate/notomate-messaging=ghcr.io/<owner>/notomate-messaging:main
+        - notomate/notomate-mcp=ghcr.io/<owner>/notomate-mcp:main
         - notomate/notomate-nginx=ghcr.io/<owner>/notomate-nginx:main
   destination:
     server: https://kubernetes.default.svc
@@ -121,6 +124,12 @@ spec:
           manifestTargets:
             kustomize:
               name: notomate/notomate-messaging
+        - alias: mcp
+          imageName: ghcr.io/<owner>/notomate-mcp
+          commonUpdateSettings: *settings
+          manifestTargets:
+            kustomize:
+              name: notomate/notomate-mcp
         - alias: nginx
           imageName: ghcr.io/<owner>/notomate-nginx
           commonUpdateSettings: *settings

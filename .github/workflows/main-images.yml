@@ -34,7 +34,7 @@ jobs:
 
     strategy:
       matrix:
-        target: [api, collab, messaging, nginx]
+        target: [api, collab, messaging, mcp, nginx]
 
     steps:
       - name: Checkout code

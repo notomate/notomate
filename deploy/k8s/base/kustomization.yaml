@@ -9,4 +9,5 @@ resources:
   - api.yaml
   - collab.yaml
   - messaging.yaml
+  - mcp.yaml
   - nginx.yaml

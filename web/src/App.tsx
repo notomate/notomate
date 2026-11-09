@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import SignIn from './pages/auth/SignInPage';
 import SignUp from './pages/auth/SignUpPage';
+import OAuthAuthorize from './pages/auth/OAuthAuthorizePage';
 import ExplorePage from './pages/explore/ExplorePage';
 import ExploreNotePage from './pages/explore/ExploreNotePage';
 import NotFound from './pages/errors/NotFoundPage';
@@ -70,6 +71,7 @@ function App() {
       <Routes location={location}>
         <Route path='signin' element={<SignIn />}></Route>
         <Route path='signup' element={<SignUp />}></Route>
+        <Route path='oauth/authorize' element={<OAuthAuthorize />} />
         <Route path='explore' element={<ExplorePage />}>
           <Route path='notes/:noteId' element={<ExploreNotePage />} />
         </Route>

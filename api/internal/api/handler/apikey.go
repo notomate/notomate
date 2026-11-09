@@ -14,6 +14,7 @@ import (
 type CreateAPIKeyRequest struct {
 	Name      string `json:"name" validate:"required"`
 	ExpiresAt string `json:"expires_at"` // Optional, RFC3339 format
+	Scope     string `json:"scope"`      // Optional: "mcp:read", "mcp:write", empty for full access
 }
 
 // ListAPIKeys returns all API keys for a user (masked)
@@ -43,9 +44,13 @@ func (h Handler) ListAPIKeys(c echo.Context) error {
 	}
 
 	// Convert to response format (masked)
-	responses := make([]model.APIKeyResponse, len(keys))
-	for i, key := range keys {
-		responses[i] = model.APIKeyResponse{
+	responses := make([]model.APIKeyResponse, 0, len(keys))
+	for _, key := range keys {
+		// OAuth access tokens are managed through their grant.
+		if key.GrantID != "" {
+			continue
+		}
+		responses = append(responses, model.APIKeyResponse{
 			ID:         key.ID,
 			UserID:     key.UserID,
 			Name:       key.Name,
@@ -53,7 +58,8 @@ func (h Handler) ListAPIKeys(c echo.Context) error {
 			LastUsedAt: key.LastUsedAt,
 			ExpiresAt:  key.ExpiresAt,
 			CreatedAt:  key.CreatedAt,
-		}
+			Scope:      key.Scope,
+		})
 	}
 
 	return c.JSON(http.StatusOK, responses)
@@ -87,6 +93,10 @@ func (h Handler) CreateAPIKey(c echo.Context) error {
 
 	if req.Name == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "name is required")
+	}
+
+	if req.Scope != "" && req.Scope != model.ScopeMCPRead && req.Scope != model.ScopeMCPWrite {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid scope")
 	}
 
 	// Validate expiration date if provided
@@ -124,6 +134,7 @@ func (h Handler) CreateAPIKey(c echo.Context) error {
 		ExpiresAt: expiresAt,
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 		CreatedBy: currentUser.ID,
+		Scope:     req.Scope,
 	}
 
 	// Save to database
@@ -140,6 +151,7 @@ func (h Handler) CreateAPIKey(c echo.Context) error {
 			Prefix:    apiKey.Prefix,
 			ExpiresAt: apiKey.ExpiresAt,
 			CreatedAt: apiKey.CreatedAt,
+			Scope:     apiKey.Scope,
 		},
 		FullKey: fullKey,
 	}

@@ -75,6 +75,18 @@ services:
       - api
     restart: unless-stopped
 
+  mcp:
+    image: notomate/notomate-mcp
+    container_name: notomate-mcp
+    environment:
+      API_URL: http://notomate-api:8080
+      COLLAB_URL: ws://notomate-collab:3000
+      # APP_PUBLIC_URL: https://notes.example.com
+    depends_on:
+      - api
+      - collab
+    restart: unless-stopped
+
   nginx:
     image: notomate/notomate-nginx
     container_name: notomate-nginx
@@ -84,6 +96,7 @@ services:
       - api
       - collab
       - messaging
+      - mcp
     restart: unless-stopped
 
 volumes:
@@ -101,10 +114,19 @@ The app will be available at `http://localhost`. See [`.env.example`](./.env.exa
 
 MySQL is the default database; PostgreSQL and SQLite are also supported via `DB_DRIVER` / `DB_DSN` (see [`.env.example`](./.env.example)).
 
-The four app services are all required — `collab` backs the realtime editor and `messaging` backs channel chat, and nginx proxies to both. Two things to keep in mind:
+The five app services are all required — `collab` backs the realtime editor, `messaging` backs channel chat and `mcp` serves AI clients, and nginx proxies to all three. Two things to keep in mind:
 
 - **`APP_SECRET` must be identical on `api`, `collab` and `messaging`.** It signs the session JWT that all three verify, and authenticates the api → messaging broadcast call.
-- **Don't rename the containers.** nginx resolves `notomate-api`, `notomate-collab` and `notomate-messaging` by name, and `MESSAGING_ADDR` / `GRPC_ADDR` point at those same names.
+- **Don't rename the containers.** nginx resolves `notomate-api`, `notomate-collab`, `notomate-messaging` and `notomate-mcp` by name, and `MESSAGING_ADDR` / `GRPC_ADDR` point at those same names.
+
+### Connecting AI clients (MCP)
+
+Notomate serves an [MCP](https://modelcontextprotocol.io) endpoint at `/mcp`, so AI clients can search, read and edit notes, comment, and post to channels as you. Edits go through the realtime editor, so they are safe while people are working on the same note. Set `APP_PUBLIC_URL` to your instance's public URL on `api` and `mcp`.
+
+- **claude.ai and the mobile apps:** add a custom connector with the URL `https://<your-host>/mcp` and approve it when asked to sign in.
+- **Claude Code:** `claude mcp add --transport http notomate https://<your-host>/mcp` and sign in with `/mcp`, or create a key under **Settings → API Keys** and add `--header "Authorization: Bearer ntp_..."`.
+
+Connections are read-only unless you choose otherwise, and can be removed under **Settings → API Keys**.
 
 ### Moving data to another database
 

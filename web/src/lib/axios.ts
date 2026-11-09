@@ -7,9 +7,10 @@ axios.interceptors.response.use(
   (error) => {
     // Check if the error is a 401 Unauthorized
     if (error.response && error.response.status === 401) {
-      // Exclude /share/... paths and root path from redirect
+      // Exclude /share/... paths and root path from redirect. The OAuth consent page
+      // sends people to sign in itself, keeping the request to come back to.
       const currentPath = window.location.pathname;
-      const shouldRedirect = !currentPath.startsWith('/share/') && currentPath !== '/' && !currentPath.startsWith('/explore') && !currentPath.startsWith('/signup') && !currentPath.startsWith('/signin');
+      const shouldRedirect = !currentPath.startsWith('/share/') && currentPath !== '/' && !currentPath.startsWith('/explore') && !currentPath.startsWith('/signup') && !currentPath.startsWith('/signin') && !currentPath.startsWith('/oauth/');
 
       if (shouldRedirect) {
         // Clear user state

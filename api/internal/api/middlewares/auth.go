@@ -11,7 +11,6 @@ import (
 	"github.com/notomate/notomate/internal/util"
 
 	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthMiddleware struct {
@@ -55,8 +54,7 @@ func (a AuthMiddleware) ParseJWT() echo.MiddlewareFunc {
 				}
 
 				// Verify full key with bcrypt (constant-time comparison)
-				err = bcrypt.CompareHashAndPassword([]byte(apiKeyRecord.KeyHash), []byte(apiKey))
-				if err != nil {
+				if err := util.VerifyAPIKey(apiKeyRecord.KeyHash, apiKey); err != nil {
 					return echo.NewHTTPError(http.StatusUnauthorized, "invalid API key")
 				}
 
@@ -71,6 +69,10 @@ func (a AuthMiddleware) ParseJWT() echo.MiddlewareFunc {
 					return echo.NewHTTPError(http.StatusUnauthorized, "user account disabled")
 				}
 
+				if !apiKeyScopeAllows(apiKeyRecord.Scope, c.Request().Method, c.Path()) {
+					return echo.NewHTTPError(http.StatusForbidden, "API key scope does not allow this request")
+				}
+
 				// Update last_used_at asynchronously (don't block request)
 				go func() {
 					apiKeyRecord.LastUsedAt = time.Now().UTC().Format(time.RFC3339)
@@ -79,6 +81,7 @@ func (a AuthMiddleware) ParseJWT() echo.MiddlewareFunc {
 
 				// Set user in context
 				c.Set("user", user)
+				c.Set("apiKeyScope", apiKeyRecord.Scope)
 				return next(c)
 			}
 

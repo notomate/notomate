@@ -15,6 +15,7 @@ export class AuthExtension {
 
     let userId = null
     let userName = 'Anonymous'
+    let keyScope = ''
 
     // STEP 1: Check for Authorization header with Bearer token (API Key)
     const authHeader = data.requestHeaders.get('authorization') || ''
@@ -25,6 +26,7 @@ export class AuthExtension {
       if (user && !user.disabled) {
         userId = user.id
         userName = user.name
+        keyScope = user.scope || ''
       }
     } else {
       // STEP 2: Fall back to JWT cookie authentication
@@ -52,17 +54,21 @@ export class AuthExtension {
     const docType = colonIdx !== -1 ? data.documentName.substring(0, colonIdx) : data.documentName
     const resourceId = colonIdx !== -1 ? data.documentName.substring(colonIdx + 1) : ''
 
+    let access = 'write'
     if (docType === 'note') {
       const note = await this.db.findNote(resourceId)
       if (!note) throw new Error('Note not found')
-      if (!(await this.checkAccess(note, userId))) throw new Error('Access denied')
+      access = await this.accessLevel(note, userId, { creatorOnlyWhenPrivate: true })
     } else if (docType === 'whiteboard' || docType === 'spreadsheet') {
       const view = await this.db.findView(resourceId)
       if (!view) throw new Error('View not found')
-      if (!(await this.checkAccess(view, userId))) throw new Error('Access denied')
+      access = await this.accessLevel(view, userId)
     }
+    if (!access) throw new Error('Access denied')
 
-    if (isPublic) {
+    // Scoped (MCP) keys only ever edit notes, and only with the write scope.
+    const scopeCanWrite = keyScope === '' || (keyScope === 'mcp:write' && docType === 'note')
+    if (isPublic || access === 'read' || !scopeCanWrite) {
       data.connectionConfig.readOnly = true
     }
 
@@ -70,8 +76,16 @@ export class AuthExtension {
     data.context.userName = userName
   }
 
-  async checkAccess(resource, userId) {
-    if (resource.visibility === 'public') return true
-    return userId != null && (await this.db.isWorkspaceMember(userId, resource.workspace_id))
+  /**
+   * 'write', 'read', or null when the user may not open the room. Mirrors the REST
+   * handlers: a private note belongs to its creator, and only workspace members
+   * edit; anyone may read a public resource.
+   */
+  async accessLevel(resource, userId, { creatorOnlyWhenPrivate = false } = {}) {
+    const isMember = userId != null && (await this.db.isWorkspaceMember(userId, resource.workspace_id))
+    if (resource.visibility === 'public') return isMember ? 'write' : 'read'
+    if (!isMember) return null
+    if (creatorOnlyWhenPrivate && resource.visibility === 'private' && resource.created_by !== userId) return null
+    return 'write'
   }
 }

@@ -44,6 +44,16 @@ WORKDIR /app/messaging
 COPY messaging/package*.json ./
 RUN npm install --omit=dev
 
+# ---------- Stage 2c: install MCP service dependencies ----------
+FROM node:20-alpine AS mcp-deps
+WORKDIR /app/mcp
+
+# mcp depends on file:../packages/editor (the block converter in dist/convert.js).
+COPY --from=editor /app/packages/editor/package.json /app/packages/editor/package.json
+COPY --from=editor /app/packages/editor/dist /app/packages/editor/dist
+COPY mcp/package*.json ./
+RUN npm install --omit=dev
+
 # ---------- Stage 3: build Go backend ----------
 FROM golang:1.26-alpine AS backend
 WORKDIR /app/api
@@ -125,6 +135,21 @@ COPY messaging/src ./messaging/src
 COPY messaging/package.json ./messaging/package.json
 CMD ["node", "messaging/src/index.js"]
 
+# ---------- Stage 5c: MCP runtime (MCP server for AI clients) ----------
+FROM node:20-alpine AS mcp-runtime
+WORKDIR /usr/local/app
+
+RUN apk add --no-cache tzdata
+
+ENV TZ="UTC"
+
+COPY --from=mcp-deps /app/mcp/node_modules ./mcp/node_modules
+# Target of the node_modules/@notomate/editor link.
+COPY --from=mcp-deps /app/packages/editor ./packages/editor
+COPY mcp/src ./mcp/src
+COPY mcp/package.json ./mcp/package.json
+CMD ["node", "mcp/src/index.js"]
+
 # ---------- Stage 6: nginx with static frontend ----------
 FROM nginx:alpine AS nginx-runtime
 ENV CLIENT_MAX_BODY_SIZE=100m
@@ -133,6 +158,7 @@ ENV CLIENT_MAX_BODY_SIZE=100m
 # under other names (e.g. prefixed Kubernetes Service names).
 ENV API_UPSTREAM=notomate-api:8080 \
     COLLAB_UPSTREAM=notomate-collab:3000 \
-    MESSAGING_UPSTREAM=notomate-messaging:4000
+    MESSAGING_UPSTREAM=notomate-messaging:4000 \
+    MCP_UPSTREAM=notomate-mcp:5000
 COPY nginx/nginx.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=frontend /app/web/dist /usr/share/nginx/html

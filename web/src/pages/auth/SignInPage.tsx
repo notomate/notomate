@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { signIn } from '@/api/auth';
 import logo from '@/assets/app.svg'
@@ -21,6 +21,7 @@ const SignIn: React.FC = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { fetchUser } = useCurrentUserStore();
     const { setTheme, setPrimaryColor } = useTheme()!;
 
@@ -33,7 +34,9 @@ const SignIn: React.FC = () => {
                 if (currentUser.preferences.theme) setTheme(currentUser.preferences.theme);
                 if (currentUser.preferences.primaryColor) setPrimaryColor(currentUser.preferences.primaryColor);
             }
-            navigate('/');
+            // Only the OAuth consent page sends people here to come back.
+            const next = searchParams.get('next');
+            navigate(next?.startsWith('/oauth/authorize?') ? next : '/');
         },
         onError: (error: any) => {
             const errorMessage = error?.response?.data?.error || '';

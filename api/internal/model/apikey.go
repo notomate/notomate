@@ -16,6 +16,8 @@ type APIKey struct {
 	ExpiresAt  string `json:"expires_at"`
 	CreatedAt  string `json:"created_at"`
 	CreatedBy  string `json:"created_by"`
+	Scope      string `json:"scope"`
+	GrantID    string `json:"-"` // Set on OAuth access tokens
 }
 
 // APIKeyResponse is what we return to clients (masked key)
@@ -27,6 +29,7 @@ type APIKeyResponse struct {
 	LastUsedAt string `json:"last_used_at"`
 	ExpiresAt  string `json:"expires_at"`
 	CreatedAt  string `json:"created_at"`
+	Scope      string `json:"scope"`
 }
 
 // APIKeyCreationResponse includes the full key (only returned once)

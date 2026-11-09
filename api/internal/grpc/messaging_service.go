@@ -151,7 +151,12 @@ func (s *messagingServer) GetUser(ctx context.Context, req *GetUserRequest) (*Ge
 }
 
 func (s *messagingServer) ValidateAPIKey(ctx context.Context, req *ValidateAPIKeyRequest) (*ValidateAPIKeyResponse, error) {
-	return doValidateAPIKey(s.db, req)
+	res, err := doValidateAPIKey(s.db, req)
+	// Scoped (MCP) keys post through REST; they get no socket access.
+	if err == nil && res.Scope != "" {
+		return &ValidateAPIKeyResponse{Valid: false}, nil
+	}
+	return res, err
 }
 
 func (s *messagingServer) IsWorkspaceMember(ctx context.Context, req *IsWorkspaceMemberRequest) (*IsWorkspaceMemberResponse, error) {

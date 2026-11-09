@@ -25,4 +25,8 @@ func RegisterUser(api *echo.Group, h handler.Handler, authMiddleware middlewares
 	apiKeys.GET("", h.ListAPIKeys)            // GET /api/v1/users/:id/api-keys
 	apiKeys.POST("", h.CreateAPIKey)          // POST /api/v1/users/:id/api-keys
 	apiKeys.DELETE("/:keyId", h.DeleteAPIKey) // DELETE /api/v1/users/:id/api-keys/:keyId
+
+	// Applications connected through OAuth
+	g.GET("/:id/oauth-grants", h.ListOAuthGrants)
+	g.DELETE("/:id/oauth-grants/:grantId", h.DeleteOAuthGrant)
 }

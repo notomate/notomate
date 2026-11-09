@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -42,6 +41,7 @@ type ValidateAPIKeyResponse struct {
 	UserID   string `json:"user_id"`
 	UserName string `json:"user_name"`
 	Disabled bool   `json:"disabled"`
+	Scope    string `json:"scope"`
 }
 
 type IsWorkspaceMemberRequest struct {
@@ -209,7 +209,7 @@ func doValidateAPIKey(database db.DB, req *ValidateAPIKeyRequest) (*ValidateAPIK
 		}
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(apiKeyRecord.KeyHash), []byte(req.Key)); err != nil {
+	if err := util.VerifyAPIKey(apiKeyRecord.KeyHash, req.Key); err != nil {
 		return &ValidateAPIKeyResponse{Valid: false}, nil
 	}
 
@@ -224,6 +224,7 @@ func doValidateAPIKey(database db.DB, req *ValidateAPIKeyRequest) (*ValidateAPIK
 	}()
 
 	return &ValidateAPIKeyResponse{
+		Scope:    apiKeyRecord.Scope,
 		Valid:    true,
 		UserID:   user.ID,
 		UserName: user.Name,

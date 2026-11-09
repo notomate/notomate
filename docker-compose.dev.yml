@@ -8,6 +8,11 @@
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 #   cd web && npm run dev
 services:
+  # OAuth discovery must point at Vite, or sign-in lands on nginx's built frontend.
+  notomate-api:
+    environment:
+      - APP_PUBLIC_URL=${APP_PUBLIC_URL:-http://localhost:5173}
+
   notomate-collab:
     ports:
       - "3000:3000"
@@ -15,3 +20,9 @@ services:
   notomate-messaging:
     ports:
       - "4000:4000"
+
+  notomate-mcp:
+    environment:
+      - APP_PUBLIC_URL=${APP_PUBLIC_URL:-http://localhost:5173}
+    ports:
+      - "5000:5000"

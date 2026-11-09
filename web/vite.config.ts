@@ -23,6 +23,18 @@ export default defineConfig({
         ws: true,
         headers: { 'X-Public-Access': 'false' },
       },
+      '/mcp': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/.well-known/oauth-protected-resource': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/.well-known/oauth-authorization-server': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
       '/socket.io': {
         target: 'http://localhost:4000',
         changeOrigin: true,

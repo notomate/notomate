@@ -2,8 +2,13 @@ package util
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"sync"
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -47,4 +52,47 @@ func ValidateAPIKeyFormat(apiKey string) bool {
 		return false
 	}
 	return true
+}
+
+const (
+	verifiedKeyTTL = 5 * time.Minute
+	verifiedKeyMax = 10000
+)
+
+type verifiedKey struct {
+	keyHash string
+	until   time.Time
+}
+
+var (
+	verifiedKeysMu sync.RWMutex
+	verifiedKeys   = map[[32]byte]verifiedKey{}
+)
+
+// VerifyAPIKey checks a key against its stored bcrypt hash. Successes are
+// remembered briefly because an MCP client makes many requests in a row and
+// bcrypt at cost 12 is far too slow to repeat for each. The caller still loads
+// the key's row on every request, so deleting a key takes effect immediately.
+func VerifyAPIKey(keyHash, apiKey string) error {
+	id := sha256.Sum256([]byte(apiKey))
+	now := time.Now()
+
+	verifiedKeysMu.RLock()
+	cached, ok := verifiedKeys[id]
+	verifiedKeysMu.RUnlock()
+	if ok && cached.keyHash == keyHash && now.Before(cached.until) {
+		return nil
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(keyHash), []byte(apiKey)); err != nil {
+		return err
+	}
+
+	verifiedKeysMu.Lock()
+	defer verifiedKeysMu.Unlock()
+	if len(verifiedKeys) >= verifiedKeyMax {
+		verifiedKeys = map[[32]byte]verifiedKey{}
+	}
+	verifiedKeys[id] = verifiedKey{keyHash: keyHash, until: now.Add(verifiedKeyTTL)}
+	return nil
 }

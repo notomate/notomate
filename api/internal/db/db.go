@@ -20,6 +20,7 @@ type DB interface {
 	ViewRepository
 	ViewObjectRepository
 	APIKeyRepository
+	OAuthRepository
 	WorkflowRepository
 	WorkflowRunRepository
 	WorkflowVarRepository
@@ -129,6 +130,25 @@ type ViewObjectRepository interface {
 	FindViewObject(v model.ViewObject) (model.ViewObject, error)
 	FindViewObjects(f model.ViewObjectFilter) ([]model.ViewObject, error)
 }
+type OAuthRepository interface {
+	CreateOAuthClient(c model.OAuthClient) error
+	FindOAuthClient(id string) (model.OAuthClient, error)
+	DeleteUnusedOAuthClients(createdBefore string) error
+	CreateOAuthCode(c model.OAuthCode) error
+	// ConsumeOAuthCode returns the code and deletes it; only one caller can win.
+	ConsumeOAuthCode(codeHash string) (model.OAuthCode, error)
+	DeleteExpiredOAuthData(now string) error
+	CreateOAuthGrant(g model.OAuthGrant) error
+	FindOAuthGrantByID(id string) (model.OAuthGrant, error)
+	FindOAuthGrantByRefreshHash(hash string) (model.OAuthGrant, error)
+	FindOAuthGrantByPrevRefreshHash(hash string) (model.OAuthGrant, error)
+	FindOAuthGrantsByUser(userID string) ([]model.OAuthGrant, error)
+	// RotateOAuthGrant swaps the refresh token, reporting false if oldHash is no longer current.
+	RotateOAuthGrant(id, oldHash, newHash, lastUsedAt, expiresAt string) (bool, error)
+	// DeleteOAuthGrant removes the grant and its access tokens.
+	DeleteOAuthGrant(id string) error
+}
+
 type APIKeyRepository interface {
 	CreateAPIKey(k model.APIKey) error
 	FindAPIKeys(f model.APIKeyFilter) ([]model.APIKey, error)

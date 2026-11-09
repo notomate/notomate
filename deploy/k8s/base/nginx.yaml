@@ -1,5 +1,5 @@
 # notomate-nginx: serves the SPA and reverse-proxies to the other services.
-# The image defaults API_UPSTREAM, COLLAB_UPSTREAM and MESSAGING_UPSTREAM to
+# The image defaults API_UPSTREAM, COLLAB_UPSTREAM, MESSAGING_UPSTREAM and MCP_UPSTREAM to
 # the Service names below; set those env vars here if the names change
 # (e.g. a kustomize namePrefix).
 apiVersion: apps/v1

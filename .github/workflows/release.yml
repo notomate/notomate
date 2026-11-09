@@ -16,6 +16,7 @@ env:
   IMAGE_API: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-api
   IMAGE_COLLAB: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-collab
   IMAGE_MESSAGING: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-messaging
+  IMAGE_MCP: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-mcp
   IMAGE_NGINX: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-nginx
   IMAGE_RUNNER: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-runner
 
@@ -83,6 +84,15 @@ jobs:
             type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
             type=raw,value=latest
 
+      - name: Extract metadata (mcp)
+        id: meta-mcp
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_MCP }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
+            type=raw,value=latest
+
       - name: Extract metadata (nginx)
         id: meta-nginx
         uses: docker/metadata-action@v5
@@ -138,6 +148,19 @@ jobs:
           push: true
           tags: ${{ steps.meta-messaging.outputs.tags }}
           labels: ${{ steps.meta-messaging.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Build and push mcp image (mcp-runtime)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: mcp-runtime
+          push: true
+          tags: ${{ steps.meta-mcp.outputs.tags }}
+          labels: ${{ steps.meta-mcp.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64

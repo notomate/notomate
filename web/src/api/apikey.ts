@@ -1,5 +1,8 @@
 import axios from "axios";
 
+/** Empty for an unrestricted key. */
+export type APIKeyScope = "" | "mcp:read" | "mcp:write";
+
 export interface APIKey {
     id: string;
     user_id: string;
@@ -8,6 +11,7 @@ export interface APIKey {
     last_used_at: string;
     expires_at: string;
     created_at: string;
+    scope: APIKeyScope;
 }
 
 export interface APIKeyCreationResponse extends APIKey {
@@ -17,6 +21,7 @@ export interface APIKeyCreationResponse extends APIKey {
 export interface CreateAPIKeyRequest {
     name: string;
     expires_at?: string; // Optional, RFC3339 format
+    scope?: APIKeyScope;
 }
 
 export const listAPIKeys = async (userId: string): Promise<APIKey[]> => {

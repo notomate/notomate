@@ -40,6 +40,7 @@ func New(db db.DB, storage storage.Storage, engine *workflow.Engine) (*echo.Echo
 	// Register REST API routes under /api/v1
 	api := e.Group(apiRoot)
 	route.RegisterAuth(api, *handler)
+	route.RegisterOAuth(e, api, *handler, *auth)
 	route.RegisterAdmin(api, *handler, *auth)
 	route.RegisterUser(api, *handler, *auth)
 	route.RegisterWorkspace(api, *handler, *auth, *workspace)

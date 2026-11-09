@@ -46,6 +46,12 @@ spec:
                 secretKeyRef:
                   name: notomate-secrets
                   key: APP_SECRET
+            - name: APP_PUBLIC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: notomate-secrets
+                  key: APP_PUBLIC_URL
+                  optional: true
             - name: APP_DISABLE_SIGNUP
               valueFrom:
                 secretKeyRef:
