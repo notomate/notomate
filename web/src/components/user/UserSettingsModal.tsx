@@ -11,18 +11,24 @@ import { updatePreferences, uploadAvatar, removeAvatar, updateEmail, changePassw
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, APIKeyScope, CreateAPIKeyRequest } from "@/api/apikey"
 import { listOAuthGrants, deleteOAuthGrant, OAuthGrant } from "@/api/oauth"
 import McpSettingsTab from "./McpSettingsTab"
+import { SelectField } from "@/components/ui/select-field"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
 import Select from "@/components/select/Select"
 import Avatar from "@/components/avatar/Avatar"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera, X } from "lucide-react"
+import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera, X, User as UserIcon, Palette, KeyRound, Plug, Users, Server, type LucideIcon } from "lucide-react"
 
 interface UserSettingsModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
 }
+
+// A full-access key has an empty scope, which a select option cannot hold.
+const FULL_ACCESS_OPTION = "full"
+
+type SettingsTab = 'account' | 'preferences' | 'apiKeys' | 'mcp' | 'users' | 'system'
 
 const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const { user, fetchUser, resetCurrentUser } = useCurrentUserStore()
@@ -41,7 +47,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const [ownPasswordSaving, setOwnPasswordSaving] = useState(false)
 
     // Tab state
-    const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'apiKeys' | 'mcp' | 'users' | 'system'>('account')
+    const [activeTab, setActiveTab] = useState<SettingsTab>('account')
     const isOwner = user?.role === 'owner'
 
     // Preferences state
@@ -175,6 +181,19 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
             toast.error(t("messages.apiKeyCreateFailed"))
         }
     }
+
+    const settingsSections: { value: SettingsTab; label: string; icon: LucideIcon }[] = [
+        { value: "account", label: t("menu.user"), icon: UserIcon },
+        { value: "preferences", label: `${t("pages.preferences.language")} & ${t("pages.preferences.theme")}`, icon: Palette },
+        { value: "apiKeys", label: t("pages.preferences.apiKeys"), icon: KeyRound },
+        { value: "mcp", label: "MCP", icon: Plug },
+        ...(isOwner
+            ? [
+                { value: "users" as const, label: t("pages.preferences.userManagement"), icon: Users },
+                { value: "system" as const, label: t("pages.preferences.systemSettings"), icon: Server },
+            ]
+            : []),
+    ]
 
     const scopeLabel = (scope: string) =>
         scope === "mcp:read" ? t("pages.preferences.scopeMcpRead")
@@ -479,77 +498,37 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                 open={open}
                 onOpenChange={onOpenChange}
                 title={t("menu.settings")}
+                hideTitle
                 className="max-w-[800px] h-[85vh] flex flex-col"
             >
-                        {/* Tabs */}
-                        <div className="flex gap-2 overflow-x-auto border-b border-gray-200 dark:border-neutral-700 mb-4">
-                            <button
-                                onClick={() => setActiveTab('account')}
-                                className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
-                                    activeTab === 'account'
-                                        ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                        : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
-                                }`}
-                            >
-                                {t("menu.user")}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('preferences')}
-                                className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
-                                    activeTab === 'preferences'
-                                        ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                        : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
-                                }`}
-                            >
-                                {t("pages.preferences.language")} & {t("pages.preferences.theme")}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('apiKeys')}
-                                className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
-                                    activeTab === 'apiKeys'
-                                        ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                        : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
-                                }`}
-                            >
-                                {t("pages.preferences.apiKeys")}
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('mcp')}
-                                className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
-                                    activeTab === 'mcp'
-                                        ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                        : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
-                                }`}
-                            >
-                                MCP
-                            </button>
-                            {isOwner && (
+                        <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0">
+                        {/* Section picker: a side list when there is room, otherwise a select */}
+                        <nav className="hidden md:flex flex-col gap-0.5 w-52 shrink-0">
+                            {settingsSections.map((section) => (
                                 <button
-                                    onClick={() => setActiveTab('users')}
-                                    className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
-                                        activeTab === 'users'
-                                            ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                            : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
+                                    key={section.value}
+                                    onClick={() => setActiveTab(section.value)}
+                                    aria-current={activeTab === section.value ? "page" : undefined}
+                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-left text-sm font-medium transition-colors ${
+                                        activeTab === section.value
+                                            ? 'bg-neutral-100 dark:bg-neutral-700 text-primary'
+                                            : 'text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-gray-900 dark:hover:text-gray-200'
                                     }`}
                                 >
-                                    {t("pages.preferences.userManagement")}
+                                    <section.icon size={16} className="shrink-0" />
+                                    {section.label}
                                 </button>
-                            )}
-                            {isOwner && (
-                                <button
-                                    onClick={() => setActiveTab('system')}
-                                    className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
-                                        activeTab === 'system'
-                                            ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
-                                            : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
-                                    }`}
-                                >
-                                    {t("pages.preferences.systemSettings")}
-                                </button>
-                            )}
-                        </div>
+                            ))}
+                        </nav>
+                        <SelectField
+                            value={activeTab}
+                            onChange={(value) => setActiveTab(value as SettingsTab)}
+                            aria-label={t("menu.settings")}
+                            className="md:hidden shrink-0 bg-neutral-100 dark:bg-neutral-700"
+                            options={settingsSections}
+                        />
 
-                        <div className="space-y-4 overflow-y-auto flex-1">
+                        <div className="space-y-4 overflow-y-auto flex-1 min-w-0">
                             {/* Account Tab */}
                             {activeTab === 'account' && (
                                 <div className="w-full px-4">
@@ -952,6 +931,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                 <RunnersSection />
                             )}
                         </div>
+                        </div>
             </Modal>
 
             {/* Change Own Password Dialog */}
@@ -1078,15 +1058,16 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
 
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold">{t("pages.preferences.keyScope")}</label>
-                                    <select
-                                        value={newKeyScope}
-                                        onChange={(e) => setNewKeyScope(e.target.value as APIKeyScope)}
-                                        className="w-full px-3 py-2 border rounded-md dark:bg-neutral-900 dark:border-neutral-700"
-                                    >
-                                        <option value="mcp:read">{t("pages.preferences.scopeMcpRead")}</option>
-                                        <option value="mcp:write">{t("pages.preferences.scopeMcpWrite")}</option>
-                                        <option value="">{t("pages.preferences.scopeFull")}</option>
-                                    </select>
+                                    <SelectField
+                                        value={newKeyScope || FULL_ACCESS_OPTION}
+                                        onChange={(value) => setNewKeyScope(value === FULL_ACCESS_OPTION ? "" : value as APIKeyScope)}
+                                        aria-label={t("pages.preferences.keyScope")}
+                                        options={[
+                                            { value: "mcp:read", label: t("pages.preferences.scopeMcpRead") },
+                                            { value: "mcp:write", label: t("pages.preferences.scopeMcpWrite") },
+                                            { value: FULL_ACCESS_OPTION, label: t("pages.preferences.scopeFull") },
+                                        ]}
+                                    />
                                 </div>
 
                                 <div className="flex gap-2">

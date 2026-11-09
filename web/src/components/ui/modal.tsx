@@ -7,6 +7,8 @@ export interface ModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title?: ReactNode
+  /** Keep the title for screen readers only, with no visible header. */
+  hideTitle?: boolean
   children: ReactNode
   /** Extra classes for the content box (e.g. to override max-width). */
   className?: string
@@ -24,6 +26,7 @@ export function Modal({
   open,
   onOpenChange,
   title,
+  hideTitle = false,
   children,
   className,
   showClose = false,
@@ -42,7 +45,8 @@ export function Modal({
             className,
           )}
         >
-          {(title || showClose) && (
+          {hideTitle && <Dialog.Title className="sr-only">{title}</Dialog.Title>}
+          {!hideTitle && (title || showClose) && (
             <div className="flex items-center justify-between mb-4">
               {title ? (
                 <Dialog.Title className="text-xl font-semibold">{title}</Dialog.Title>
