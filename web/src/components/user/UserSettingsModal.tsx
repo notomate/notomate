@@ -10,6 +10,7 @@ import { useState, useEffect, useRef } from "react"
 import { updatePreferences, uploadAvatar, removeAvatar, updateEmail, changePassword } from "@/api/user"
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, APIKeyScope, CreateAPIKeyRequest } from "@/api/apikey"
 import { listOAuthGrants, deleteOAuthGrant, OAuthGrant } from "@/api/oauth"
+import McpSettingsTab from "./McpSettingsTab"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
 import Select from "@/components/select/Select"
@@ -40,7 +41,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const [ownPasswordSaving, setOwnPasswordSaving] = useState(false)
 
     // Tab state
-    const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'apiKeys' | 'users' | 'system'>('account')
+    const [activeTab, setActiveTab] = useState<'account' | 'preferences' | 'apiKeys' | 'mcp' | 'users' | 'system'>('account')
     const isOwner = user?.role === 'owner'
 
     // Preferences state
@@ -512,6 +513,16 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             >
                                 {t("pages.preferences.apiKeys")}
                             </button>
+                            <button
+                                onClick={() => setActiveTab('mcp')}
+                                className={`shrink-0 whitespace-nowrap px-3 sm:px-4 py-2 text-sm sm:text-base font-medium transition-colors ${
+                                    activeTab === 'mcp'
+                                        ? 'text-primary dark:text-primary border-b-2 border-primary dark:border-primary'
+                                        : 'text-muted-foreground hover:text-gray-900 dark:hover:text-gray-200'
+                                }`}
+                            >
+                                MCP
+                            </button>
                             {isOwner && (
                                 <button
                                     onClick={() => setActiveTab('users')}
@@ -839,6 +850,8 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                     )}
                                 </div>
                             )}
+
+                            {activeTab === 'mcp' && <McpSettingsTab />}
 
                             {/* Users Tab */}
                             {activeTab === 'users' && isOwner && (
