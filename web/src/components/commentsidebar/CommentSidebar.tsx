@@ -12,6 +12,7 @@ import Avatar from "@/components/avatar/Avatar"
 import CommentEditor from "./CommentEditor"
 import { renderCommentBody } from "./commentMarkdown"
 import useMobileSheet from "@/hooks/use-mobile-sheet"
+import { BottomSheet } from "@/components/ui/bottom-sheet"
 
 interface CommentSidebarProps {
   workspaceId: string
@@ -44,6 +45,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
   const [composerFocusKey, setComposerFocusKey] = useState(0)
   const [composerExpanded, setComposerExpanded] = useState(false)
   const [composerBody, setComposerBody] = useState("")
+  const [mobileComposerOpen, setMobileComposerOpen] = useState(false)
   const [expandedReplyThreads, setExpandedReplyThreads] = useState<Set<string>>(new Set())
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set())
   const [replyBodies, setReplyBodies] = useState<Record<string, string>>({})
@@ -327,7 +329,7 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
           </button>
         </div>
 
-        {!readOnly && <div className="p-3 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 shrink-0">
+        {!readOnly && <div className="hidden lg:block p-3 border-b dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 shrink-0">
           {composerExpanded ? (
             <>
               <div className="flex gap-2 items-start">
@@ -452,7 +454,57 @@ const CommentSidebar: FC<CommentSidebarProps> = ({ workspaceId, noteId, open, on
           )
         })}
         </div>
+
+        {/* Below lg the composer sits pinned to the bottom of the sheet and opens its own sheet on top. */}
+        {!readOnly && (
+          <div className="lg:hidden shrink-0 border-t dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800/50 px-3 pt-2.5 pb-[calc(10px+env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              className="w-full flex items-center gap-2 text-left"
+              onClick={() => setMobileComposerOpen(true)}
+            >
+              <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
+              <span className={`flex-1 min-w-0 truncate text-sm border dark:border-neutral-600 rounded-full bg-white dark:bg-neutral-900 px-3 py-1.5 ${composerBody.trim() ? "text-gray-700 dark:text-gray-300" : "text-muted-foreground"}`}>
+                {composerBody.trim() ? composerBody : t("comments.composerPlaceholder")}
+              </span>
+            </button>
+          </div>
+        )}
       </aside>
+
+      {!readOnly && (
+        <BottomSheet stacked open={mobileComposerOpen} onOpenChange={setMobileComposerOpen} className="lg:hidden">
+          <div className="px-3 pt-2 pb-2">
+            <div className="flex gap-2 items-start">
+              <Avatar name={user?.name} avatarUrl={user?.avatar_url} size={24} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-gray-700 dark:text-gray-200 mb-1 truncate">{user?.name}</div>
+                <div className="flex gap-2 items-end">
+                  {mobileComposerOpen && (
+                    <CommentEditor
+                      autoFocus
+                      className="text-sm"
+                      minHeight={96}
+                      placeholder={t("comments.composerPlaceholder") as string}
+                      value={composerBody}
+                      onChange={setComposerBody}
+                      members={members}
+                      workspaceId={workspaceId}
+                    />
+                  )}
+                  <button
+                    className="p-1.5 text-primary disabled:opacity-40 shrink-0"
+                    disabled={!composerBody.trim()}
+                    onClick={() => { handleSubmitComposer(); setMobileComposerOpen(false) }}
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </BottomSheet>
+      )}
     </>
   )
 }

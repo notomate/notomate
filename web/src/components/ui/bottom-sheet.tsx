@@ -10,13 +10,15 @@ export interface BottomSheetProps {
   children: ReactNode
   /** Extra classes for the sheet panel (e.g. max height, flex layout). */
   className?: string
+  /** Layer this sheet above another open sheet (e.g. a composer over a list sheet). */
+  stacked?: boolean
 }
 
 /**
  * Shared mobile bottom sheet. Centralizes the backdrop, panel surface, drag
  * handle and slide transition so every sheet in the app looks the same.
  */
-export function BottomSheet({ open, onOpenChange, children, className }: BottomSheetProps) {
+export function BottomSheet({ open, onOpenChange, children, className, stacked = false }: BottomSheetProps) {
   // Stay mounted through the closing transition; `visible` drives the slide.
   const [mounted, setMounted] = useState(open)
   const [visible, setVisible] = useState(false)
@@ -48,14 +50,16 @@ export function BottomSheet({ open, onOpenChange, children, className }: BottomS
     <>
       <div
         className={cn(
-          "fixed inset-0 bg-black/40 dark:bg-black/70 z-drawer-backdrop transition-opacity duration-200",
+          "fixed inset-0 bg-black/40 dark:bg-black/70 transition-opacity duration-200",
+          stacked ? "z-modal-backdrop" : "z-drawer-backdrop",
           visible ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={() => onOpenChange(false)}
       />
       <div
         className={cn(
-          "fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-xl pb-[calc(4px+env(safe-area-inset-bottom))] dark:ring-1 dark:ring-white/10 z-drawer shadow-xl transition-transform duration-200 ease-out",
+          "fixed bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-t-xl pb-[calc(4px+env(safe-area-inset-bottom))] dark:ring-1 dark:ring-white/10 shadow-xl transition-transform duration-200 ease-out",
+          stacked ? "z-modal" : "z-drawer",
           visible ? "translate-y-0" : "translate-y-full",
           className,
         )}
