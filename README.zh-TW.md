@@ -18,82 +18,16 @@
 
 ### Docker Compose（推薦）
 
-1. 下載 [`.env.example`](./.env.example) 存成 `.env` 並編輯：設定 `APP_SECRET`（例如 `openssl rand -hex 32`）、修改 MySQL 密碼（`DB_DSN` 內的也要一起改），使用 MCP 客戶端時再設定 `APP_PUBLIC_URL`：
-
 ```bash
-curl -o .env https://raw.githubusercontent.com/notomate/notomate/main/.env.example
-```
-
-2. 在同目錄建立 `docker-compose.yml`，所有服務都讀取同一份 `.env`：
-
-```yaml
-x-common: &common
-  env_file: .env
-  restart: unless-stopped
-
-services:
-  mysql:
-    <<: *common
-    image: mysql:8.4
-    container_name: notomate-mysql
-    volumes: [mysql_data:/var/lib/mysql]
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
-      interval: 10s
-      retries: 10
-
-  api:
-    <<: *common
-    image: notomate/notomate-api
-    container_name: notomate-api
-    volumes: [notomate_data:/usr/local/app/bin]
-    depends_on:
-      mysql: { condition: service_healthy }
-
-  collab:
-    <<: *common
-    image: notomate/notomate-collab
-    container_name: notomate-collab
-    depends_on: [api]
-
-  messaging:
-    <<: *common
-    image: notomate/notomate-messaging
-    container_name: notomate-messaging
-    depends_on: [api]
-
-  mcp:
-    <<: *common
-    image: notomate/notomate-mcp
-    container_name: notomate-mcp
-    depends_on: [api, collab]
-
-  nginx:
-    <<: *common
-    image: notomate/notomate-nginx
-    container_name: notomate-nginx
-    ports: ["80:80"]
-    depends_on: [api, collab, messaging, mcp]
-
-volumes:
-  mysql_data:
-  notomate_data:
-```
-
-3. 啟動：
-
-```bash
+git clone https://github.com/notomate/notomate.git
+cd notomate
+cp .env.example .env   # 設定 APP_SECRET 與 MySQL 密碼（DB_DSN 內的也要改）
 docker compose up -d
 ```
 
-啟動後即可於 `http://localhost` 存取應用程式。設定選項請參閱 [`.env.example`](./.env.example)。
+啟動後即可於 `http://localhost:8080` 存取應用程式。所有設定都在 `.env` 裡，完整選項請參閱 [`.env.example`](./.env.example) 的註解，包含改用 PostgreSQL / SQLite（`DB_DRIVER` / `DB_DSN`）與 S3 儲存。
 
-預設資料庫為 MySQL，也可透過 `DB_DRIVER` / `DB_DSN` 改用 PostgreSQL 或 SQLite（請參閱 [`.env.example`](./.env.example)）。
-
-五個應用服務都是必要的 —— `collab` 支撐即時協作編輯器，`messaging` 支撐頻道聊天，`mcp` 提供 AI 客戶端連線，nginx 會同時反向代理到這三者。有兩點要注意：
-
-- **`APP_SECRET` 在 `api`、`collab`、`messaging` 上必須一致。** 它用來簽發三者都要驗證的 session JWT，也用來驗證 api → messaging 的廣播呼叫。
-- **不要更改 container 名稱。** nginx 以 `notomate-api`、`notomate-collab`、`notomate-messaging`、`notomate-mcp` 這些名稱解析服務，`MESSAGING_ADDR` 與 `GRPC_ADDR` 也指向同樣的名稱。
+五個應用服務都是必要的 —— `collab` 支撐即時協作編輯器，`messaging` 支撐頻道聊天，`mcp` 提供 AI 客戶端連線，nginx 會同時反向代理到這三者。
 
 ### 將資料搬到其他資料庫
 

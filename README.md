@@ -18,86 +18,20 @@ Write anything, anywhere — from a quick memo to a full blog post. The block-ba
 
 ### Docker Compose (recommended)
 
-1. Download [`.env.example`](./.env.example) as `.env`, then edit it: set `APP_SECRET` (e.g. `openssl rand -hex 32`), change the MySQL passwords (also in `DB_DSN`), and set `APP_PUBLIC_URL` if you use MCP clients:
-
 ```bash
-curl -o .env https://raw.githubusercontent.com/notomate/notomate/main/.env.example
-```
-
-2. Create `docker-compose.yml` next to it. Every service loads the same `.env`:
-
-```yaml
-x-common: &common
-  env_file: .env
-  restart: unless-stopped
-
-services:
-  mysql:
-    <<: *common
-    image: mysql:8.4
-    container_name: notomate-mysql
-    volumes: [mysql_data:/var/lib/mysql]
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
-      interval: 10s
-      retries: 10
-
-  api:
-    <<: *common
-    image: notomate/notomate-api
-    container_name: notomate-api
-    volumes: [notomate_data:/usr/local/app/bin]
-    depends_on:
-      mysql: { condition: service_healthy }
-
-  collab:
-    <<: *common
-    image: notomate/notomate-collab
-    container_name: notomate-collab
-    depends_on: [api]
-
-  messaging:
-    <<: *common
-    image: notomate/notomate-messaging
-    container_name: notomate-messaging
-    depends_on: [api]
-
-  mcp:
-    <<: *common
-    image: notomate/notomate-mcp
-    container_name: notomate-mcp
-    depends_on: [api, collab]
-
-  nginx:
-    <<: *common
-    image: notomate/notomate-nginx
-    container_name: notomate-nginx
-    ports: ["80:80"]
-    depends_on: [api, collab, messaging, mcp]
-
-volumes:
-  mysql_data:
-  notomate_data:
-```
-
-3. Start it:
-
-```bash
+git clone https://github.com/notomate/notomate.git
+cd notomate
+cp .env.example .env   # set APP_SECRET and the MySQL passwords (also in DB_DSN)
 docker compose up -d
 ```
 
-The app will be available at `http://localhost`. See [`.env.example`](./.env.example) for configuration options.
+The app will be available at `http://localhost:8080`. All settings live in `.env` — see the comments in [`.env.example`](./.env.example) for the full list, including PostgreSQL / SQLite (`DB_DRIVER` / `DB_DSN`) and S3 storage.
 
-MySQL is the default database; PostgreSQL and SQLite are also supported via `DB_DRIVER` / `DB_DSN` (see [`.env.example`](./.env.example)).
-
-The five app services are all required — `collab` backs the realtime editor, `messaging` backs channel chat and `mcp` serves AI clients, and nginx proxies to all three. Two things to keep in mind:
-
-- **`APP_SECRET` must be identical on `api`, `collab` and `messaging`.** It signs the session JWT that all three verify, and authenticates the api → messaging broadcast call.
-- **Don't rename the containers.** nginx resolves `notomate-api`, `notomate-collab`, `notomate-messaging` and `notomate-mcp` by name, and `MESSAGING_ADDR` / `GRPC_ADDR` point at those same names.
+The five app services are all required — `collab` backs the realtime editor, `messaging` backs channel chat and `mcp` serves AI clients, and nginx proxies to all three.
 
 ### Connecting AI clients (MCP)
 
-Notomate serves an [MCP](https://modelcontextprotocol.io) endpoint at `/mcp`, so AI clients can search, read and edit notes, comment, and post to channels as you. Edits go through the realtime editor, so they are safe while people are working on the same note. Set `APP_PUBLIC_URL` to your instance's public URL on `api` and `mcp`.
+Notomate serves an [MCP](https://modelcontextprotocol.io) endpoint at `/mcp`, so AI clients can search, read and edit notes, comment, and post to channels as you. Edits go through the realtime editor, so they are safe while people are working on the same note. Set `APP_PUBLIC_URL` in `.env` to your instance's public URL.
 
 - **claude.ai and the mobile apps:** add a custom connector with the URL `https://<your-host>/mcp` and approve it when asked to sign in.
 - **Claude Code:** `claude mcp add --transport http notomate https://<your-host>/mcp` and sign in with `/mcp`, or create a key under **Settings → API Keys** and add `--header "Authorization: Bearer ntp_..."`.
