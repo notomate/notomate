@@ -18,93 +18,69 @@ Write anything, anywhere — from a quick memo to a full blog post. The block-ba
 
 ### Docker Compose (recommended)
 
+1. Download [`.env.example`](./.env.example) as `.env`, then edit it: set `APP_SECRET` (e.g. `openssl rand -hex 32`), change the MySQL passwords (also in `DB_DSN`), and set `APP_PUBLIC_URL` if you use MCP clients:
+
+```bash
+curl -o .env https://raw.githubusercontent.com/notomate/notomate/main/.env.example
+```
+
+2. Create `docker-compose.yml` next to it. Every service loads the same `.env`:
+
 ```yaml
+x-common: &common
+  env_file: .env
+  restart: unless-stopped
+
 services:
   mysql:
+    <<: *common
     image: mysql:8.4
     container_name: notomate-mysql
-    volumes:
-      - mysql_data:/var/lib/mysql
-    environment:
-      MYSQL_DATABASE: notomate
-      MYSQL_USER: notomate
-      # Change these before deploying
-      MYSQL_PASSWORD: notomate_password
-      MYSQL_ROOT_PASSWORD: notomate_root_password
+    volumes: [mysql_data:/var/lib/mysql]
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
-      timeout: 5s
       retries: 10
-      start_period: 30s
-    restart: unless-stopped
 
   api:
+    <<: *common
     image: notomate/notomate-api
     container_name: notomate-api
-    volumes:
-      - notomate_data:/usr/local/app/bin
-    environment:
-      DB_DRIVER: mysql
-      DB_DSN: notomate:notomate_password@tcp(notomate-mysql:3306)/notomate?charset=utf8mb4
-      MESSAGING_ADDR: http://notomate-messaging:4000
-      # APP_SECRET: your-secret-key
-      # APP_DISABLE_SIGNUP: true
+    volumes: [notomate_data:/usr/local/app/bin]
     depends_on:
-      mysql:
-        condition: service_healthy
-    restart: unless-stopped
+      mysql: { condition: service_healthy }
 
   collab:
+    <<: *common
     image: notomate/notomate-collab
     container_name: notomate-collab
-    environment:
-      GRPC_ADDR: notomate-api:50051
-      # APP_SECRET: your-secret-key
-    depends_on:
-      - api
-    restart: unless-stopped
+    depends_on: [api]
 
   messaging:
+    <<: *common
     image: notomate/notomate-messaging
     container_name: notomate-messaging
-    environment:
-      GRPC_ADDR: notomate-api:50051
-      # APP_SECRET: your-secret-key
-    depends_on:
-      - api
-    restart: unless-stopped
+    depends_on: [api]
 
   mcp:
+    <<: *common
     image: notomate/notomate-mcp
     container_name: notomate-mcp
-    environment:
-      API_URL: http://notomate-api:8080
-      COLLAB_URL: ws://notomate-collab:3000
-      # APP_PUBLIC_URL: https://notes.example.com
-    depends_on:
-      - api
-      - collab
-    restart: unless-stopped
+    depends_on: [api, collab]
 
   nginx:
+    <<: *common
     image: notomate/notomate-nginx
     container_name: notomate-nginx
-    ports:
-      - "80:80"
-    depends_on:
-      - api
-      - collab
-      - messaging
-      - mcp
-    restart: unless-stopped
+    ports: ["80:80"]
+    depends_on: [api, collab, messaging, mcp]
 
 volumes:
   mysql_data:
-    driver: local
   notomate_data:
-    driver: local
 ```
+
+3. Start it:
 
 ```bash
 docker compose up -d
