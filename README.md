@@ -56,6 +56,7 @@ The source must be on the same schema version as the CLI, so start the new versi
 ```mermaid
 flowchart LR
     browser["<b>Browser</b><br/>React SPA"]
+    aiclient["<b>AI client</b><br/>Claude, etc."]
 
     subgraph core["Core stack — docker-compose.yml"]
         direction LR
@@ -63,6 +64,7 @@ flowchart LR
         api["<b>api</b> — Go<br/>REST :8080<br/>gRPC :50051"]
         collab["<b>collab</b> — Node<br/>Hocuspocus / Yjs :3000"]
         messaging["<b>messaging</b> — Node<br/>Socket.IO :4000"]
+        mcp["<b>mcp</b> — Node<br/>MCP over HTTP :5000"]
         db[("MySQL / PostgreSQL<br/>or SQLite")]
         store[("Local disk<br/>or S3 / MinIO")]
     end
@@ -74,13 +76,17 @@ flowchart LR
     browser -->|"/ · /api/"| nginx
     browser -->|"/ws/ · /ws/public/"| nginx
     browser -->|"/socket.io/"| nginx
+    aiclient -->|"/mcp · OAuth"| nginx
 
     nginx -->|"REST"| api
     nginx -->|"WebSocket"| collab
     nginx -->|"WebSocket"| messaging
+    nginx -->|"HTTP"| mcp
 
     collab -->|"gRPC: load/persist docs"| api
     messaging -->|"gRPC: auth, persist messages"| api
+    mcp -->|"REST: read, search, comment"| api
+    mcp -->|"WebSocket: edit notes"| collab
     api -.->|"POST /internal/broadcast<br/>(REST-originated changes)"| messaging
 
     api --> db
@@ -91,10 +97,11 @@ flowchart LR
 
 | Service | Role |
 | --- | --- |
-| **nginx** | Single entrypoint on `:80`. Serves the built SPA and reverse-proxies `/api/` to api, `/ws/` + `/ws/public/` to collab, `/socket.io/` to messaging. |
+| **nginx** | Single entrypoint on `:80`. Serves the built SPA and reverse-proxies `/api/` to api, `/ws/` + `/ws/public/` to collab, `/socket.io/` to messaging, `/mcp` to mcp. |
 | **api** | Go backend and the only writer to the database and object storage. Serves the REST API, plus a gRPC service that collab, messaging and the runner call. |
 | **collab** | Hocuspocus/Yjs server for realtime, multi-cursor note editing. Stateless — it loads and persists documents through the api's gRPC service. |
 | **messaging** | Socket.IO server for channel chat and presence. Sockets are scoped to one channel; messages are persisted via gRPC to api. Room state is in-memory, so run exactly one replica. |
+| **mcp** | [MCP](https://modelcontextprotocol.io) server for AI clients. Stateless — it calls the api's REST API with the client's token and edits notes through collab, so edits merge with people typing live. See [Connecting AI clients](#connecting-ai-clients-mcp). |
 | **runner** | Optional workflow executor, in its own compose project. Long-polls api over gRPC for queued jobs and runs each one in a container via [act](https://github.com/nektos/act). See [Workflows](#workflows-beta). |
 
 ## Workflows (beta)

@@ -29,6 +29,15 @@ docker compose up -d
 
 五個應用服務都是必要的 —— `collab` 支撐即時協作編輯器，`messaging` 支撐頻道聊天，`mcp` 提供 AI 客戶端連線，nginx 會同時反向代理到這三者。
 
+### 連接 AI 客戶端（MCP）
+
+Notomate 在 `/mcp` 提供 [MCP](https://modelcontextprotocol.io) 端點，讓 AI 客戶端能以你的身分搜尋、閱讀與編輯筆記、留言，以及在頻道中發訊息。編輯會經過即時協作編輯器，所以即使有人正在編輯同一份筆記也能安全合併。請在 `.env` 將 `APP_PUBLIC_URL` 設為此實例的公開網址。
+
+- **claude.ai 與行動版 App：** 新增自訂連接器，URL 填 `https://<your-host>/mcp`，並在要求登入時同意授權。
+- **Claude Code：** 執行 `claude mcp add --transport http notomate https://<your-host>/mcp` 後用 `/mcp` 登入；或在 **設定 → API 金鑰** 建立金鑰，並加上 `--header "Authorization: Bearer ntp_..."`。
+
+除非你另外選擇，連線預設為唯讀，可在 **設定 → API 金鑰** 中移除。
+
 ### 將資料搬到其他資料庫
 
 `cli migrate-db` 可以把所有資料從一種資料庫搬到另一種（`sqlite3`、`postgres`、`mysql` 任意組合）。它會先把目標資料庫 migrate 到最新 schema，目標已有資料時會拒絕執行，並在單一 transaction 內完成複製。例如把現有的 SQLite 資料搬到 `docker-compose.yml` 裡的 MySQL：
@@ -47,6 +56,7 @@ docker compose up -d
 ```mermaid
 flowchart LR
     browser["<b>瀏覽器</b><br/>React SPA"]
+    aiclient["<b>AI 客戶端</b><br/>Claude 等"]
 
     subgraph core["核心服務 — docker-compose.yml"]
         direction LR
@@ -54,6 +64,7 @@ flowchart LR
         api["<b>api</b> — Go<br/>REST :8080<br/>gRPC :50051"]
         collab["<b>collab</b> — Node<br/>Hocuspocus / Yjs :3000"]
         messaging["<b>messaging</b> — Node<br/>Socket.IO :4000"]
+        mcp["<b>mcp</b> — Node<br/>MCP over HTTP :5000"]
         db[("MySQL / PostgreSQL<br/>或 SQLite")]
         store[("本機磁碟<br/>或 S3 / MinIO")]
     end
@@ -65,13 +76,17 @@ flowchart LR
     browser -->|"/ · /api/"| nginx
     browser -->|"/ws/ · /ws/public/"| nginx
     browser -->|"/socket.io/"| nginx
+    aiclient -->|"/mcp · OAuth"| nginx
 
     nginx -->|"REST"| api
     nginx -->|"WebSocket"| collab
     nginx -->|"WebSocket"| messaging
+    nginx -->|"HTTP"| mcp
 
     collab -->|"gRPC：讀取／保存文件"| api
     messaging -->|"gRPC：驗證、保存訊息"| api
+    mcp -->|"REST：讀取、搜尋、留言"| api
+    mcp -->|"WebSocket：編輯筆記"| collab
     api -.->|"POST /internal/broadcast<br/>（REST 來源的異動）"| messaging
 
     api --> db
@@ -82,10 +97,11 @@ flowchart LR
 
 | 服務 | 職責 |
 | --- | --- |
-| **nginx** | 唯一入口（`:80`）。提供打包好的 SPA，並將 `/api/` 反向代理到 api、`/ws/` 與 `/ws/public/` 到 collab、`/socket.io/` 到 messaging。 |
+| **nginx** | 唯一入口（`:80`）。提供打包好的 SPA，並將 `/api/` 反向代理到 api、`/ws/` 與 `/ws/public/` 到 collab、`/socket.io/` 到 messaging、`/mcp` 到 mcp。 |
 | **api** | Go 後端，也是唯一會寫入資料庫與物件儲存的服務。提供 REST API，以及給 collab、messaging、runner 呼叫的 gRPC 服務。 |
 | **collab** | Hocuspocus/Yjs 伺服器，負責即時多人協作編輯。本身無狀態 —— 透過 api 的 gRPC 服務讀取與保存文件。 |
 | **messaging** | Socket.IO 伺服器，負責頻道聊天與線上狀態。每條連線只綁定單一頻道，訊息透過 gRPC 交由 api 保存。房間狀態存於記憶體，因此只能跑單一副本。 |
+| **mcp** | 給 AI 客戶端使用的 [MCP](https://modelcontextprotocol.io) 伺服器。本身無狀態 —— 以客戶端的 token 呼叫 api 的 REST API，並透過 collab 編輯筆記，因此能和正在即時編輯的使用者安全合併。詳見[連接 AI 客戶端](#連接-ai-客戶端mcp)。 |
 | **runner** | 選用的工作流執行器，自成一個 compose 專案。透過 gRPC 向 api 長輪詢排隊中的 job，並以 [act](https://github.com/nektos/act) 在容器中執行。詳見[工作流](#工作流beta)。 |
 
 ## 工作流(Beta)
