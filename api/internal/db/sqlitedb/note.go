@@ -14,9 +14,12 @@ func (s SqliteDB) CreateNote(n model.Note) error {
 }
 
 func (s SqliteDB) UpdateNote(n model.Note) error {
+	// Any change makes the search index stale; the indexer picks the note
+	// up again (see internal/search).
+	n.SearchIndexedAt = nil
 	_, err := gorm.G[model.Note](s.getDB()).
 		Where("id = ?", n.ID).
-		Select("title", "content", "visibility", "parent_id", "pinned", "updated_at", "updated_by").
+		Select("title", "content", "visibility", "parent_id", "pinned", "updated_at", "updated_by", "search_indexed_at").
 		Updates(context.Background(), n)
 	return err
 }

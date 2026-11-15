@@ -50,6 +50,24 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  notomate-search-indexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: search-indexer-runtime
+    image: notomate/notomate-search-indexer
+    container_name: notomate-search-indexer
+    env_file: .env
+    volumes:
+      # Only used with DB_DRIVER=sqlite3, to reach the same database file.
+      - "./bin:/usr/local/app/bin"
+    depends_on:
+      notomate-mysql:
+        condition: service_healthy
+      notomate-api:
+        condition: service_started
+    restart: unless-stopped
+
   notomate-collab:
     build:
       context: .

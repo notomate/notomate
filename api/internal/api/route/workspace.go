@@ -6,6 +6,7 @@ import (
 
 	"github.com/notomate/notomate/internal/api/handler"
 	"github.com/notomate/notomate/internal/api/middlewares"
+	"github.com/notomate/notomate/internal/model"
 
 	"github.com/labstack/echo/v4"
 )
@@ -39,6 +40,16 @@ func RegisterWorkspace(api *echo.Group, h handler.Handler, authMiddleware middle
 	g.POST("", h.CreateWorkspace)
 	g.PUT("/:workspaceId", h.UpdateWorkspace)
 	g.DELETE("/:workspaceId", h.DeleteWorkspace)
+
+	// Structured search over the index built by internal/search. Members
+	// only: unlike the notes list it is not meant for outside visitors.
+	member := workspaceMiddleware.RequireWorkspaceRole(
+		model.WorkspaceUserRoleOwner,
+		model.WorkspaceUserRoleAdmin,
+		model.WorkspaceUserRoleUser,
+	)
+	g.GET("/:workspaceId/search", h.SearchNotes, member)
+	g.GET("/:workspaceId/search/tags", h.GetSearchTags, member)
 
 	g.GET("/:workspaceId/notes", h.GetNotes)
 	g.POST("/:workspaceId/notes", h.CreateNote)

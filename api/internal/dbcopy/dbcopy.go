@@ -71,6 +71,11 @@ var tables = []table{
 	{name: "marketplace_actions", fks: []fk{{column: "source_id", parent: "action_sources"}, {column: "workspace_id", parent: "workspaces"}}},
 	{name: "note_files"},
 	{name: "backfills"},
+	// The search index; rebuilt by the indexer anyway, but copied so the
+	// target needn't reindex everything.
+	{name: "note_search"},
+	{name: "note_tags"},
+	{name: "note_locations"},
 }
 
 const migrationsTable = "schema_migrations"

@@ -109,25 +109,64 @@ export function buildServer({ apiUrl, collabUrl, token, canWrite }) {
     'search_notes',
     {
       title: 'Search notes',
-      description: 'Find notes whose title or text contains the query. Returns summaries; use get_note for the full text.',
+      description:
+        'Search notes by keywords (title, text, tags, place names, block contents and comments), by tags, and by a ' +
+        'coordinate range of their locations. Give at least one of query, tags or bbox. Returns summaries with each ' +
+        "note's tags and locations; use get_note for the full text. Recent edits are indexed in the background, so " +
+        'they may take a few seconds to show up (pending counts notes not indexed yet).',
       inputSchema: z.object({
         workspace_id: workspaceId,
-        query: z.string().min(1).describe('Text to look for.'),
+        query: z.string().optional().describe('Keywords separated by spaces; every one must appear.'),
+        tags: z.array(z.string().min(1)).max(20).optional().describe('Tags to filter by, without "#". Use list_tags to see them.'),
+        tag_mode: z.enum(['all', 'any']).default('all').describe('Whether a note needs all of the tags or any one of them.'),
+        bbox: z
+          .object({
+            min_lng: z.number().min(-180).max(180),
+            min_lat: z.number().min(-90).max(90),
+            max_lng: z.number().min(-180).max(180),
+            max_lat: z.number().min(-90).max(90),
+          })
+          .optional()
+          .describe('Only notes with a location inside this box. min_lng > max_lng crosses the antimeridian.'),
         page,
         page_size: pageSize,
       }),
       annotations: READ_ONLY,
     },
-    async ({ workspace_id, query, page: pageNumber, page_size }) => {
-      const notes = await api.listNotes(workspace_id, { query, pageNumber, pageSize: page_size, sort: 'updated_at' })
-      // The API matches against stored JSON, so words like "paragraph" hit every note.
-      const needle = query.toLowerCase()
-      const results = notes.flatMap((note) => {
-        const body = plainText(note.content)
-        return `${note.title} ${body}`.toLowerCase().includes(needle) ? [noteSummary(note, body)] : []
+    async ({ workspace_id, query, tags, tag_mode, bbox, page: pageNumber, page_size }) => {
+      if (!query?.trim() && !tags?.length && !bbox) return failure('Give at least one of query, tags or bbox.')
+      if (bbox && bbox.min_lat > bbox.max_lat) return failure('bbox min_lat must not exceed max_lat.')
+      const res = await api.searchNotes(workspace_id, {
+        q: query,
+        tags: tags?.join(','),
+        tagMode: tag_mode,
+        bbox: bbox && [bbox.min_lng, bbox.min_lat, bbox.max_lng, bbox.max_lat].join(','),
+        pageNumber,
+        pageSize: page_size,
+        sort: 'updated_at',
       })
-      return json({ results, page: pageNumber, has_more: notes.length === page_size })
+      const results = res.notes.map((note) => ({
+        ...noteSummary(note),
+        tags: note.tags,
+        locations: note.locations.map(({ name, address, lat, lng }) => ({ name, address, lat, lng })),
+      }))
+      return json({ results, page: pageNumber, has_more: res.notes.length === page_size, pending: res.pending })
     },
+  )
+
+  tool(
+    'list_tags',
+    {
+      title: 'List tags',
+      description: 'List the tags used in a workspace with how many notes use each, most used first.',
+      inputSchema: z.object({
+        workspace_id: workspaceId,
+        prefix: z.string().optional().describe('Only tags starting with this text.'),
+        limit: z.number().int().min(1).max(200).default(50).describe('Maximum number of tags.'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ workspace_id, prefix, limit }) => json(await api.listTags(workspace_id, { prefix, limit })),
   )
 
   tool(

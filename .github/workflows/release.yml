@@ -17,6 +17,7 @@ env:
   IMAGE_COLLAB: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-collab
   IMAGE_MESSAGING: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-messaging
   IMAGE_MCP: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-mcp
+  IMAGE_SEARCH_INDEXER: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-search-indexer
   IMAGE_NGINX: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-nginx
   IMAGE_RUNNER: ${{ secrets.DOCKERHUB_USERNAME }}/notomate-runner
 
@@ -93,6 +94,15 @@ jobs:
             type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
             type=raw,value=latest
 
+      - name: Extract metadata (search-indexer)
+        id: meta-search-indexer
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_SEARCH_INDEXER }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.VERSION_TAG }}
+            type=raw,value=latest
+
       - name: Extract metadata (nginx)
         id: meta-nginx
         uses: docker/metadata-action@v5
@@ -165,6 +175,21 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
+      - name: Build and push search-indexer image (search-indexer-runtime)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: search-indexer-runtime
+          push: true
+          build-args: |
+            APP_VERSION=${{ steps.version.outputs.VERSION }}
+          tags: ${{ steps.meta-search-indexer.outputs.tags }}
+          labels: ${{ steps.meta-search-indexer.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
       - name: Build and push nginx image (nginx-runtime)
         uses: docker/build-push-action@v5
         with:
@@ -221,6 +246,10 @@ jobs:
           echo "**Messaging:**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_MESSAGING }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_MESSAGING }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Search indexer:**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_SEARCH_INDEXER }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.IMAGE_SEARCH_INDEXER }}:latest\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Nginx (static frontend):**" >> $GITHUB_STEP_SUMMARY
           echo "- \`${{ env.IMAGE_NGINX }}:${{ steps.version.outputs.VERSION_TAG }}\`" >> $GITHUB_STEP_SUMMARY

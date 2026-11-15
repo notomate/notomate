@@ -21,6 +21,8 @@ var (
 		workspaceRoute + "/notes/:id":                    true,
 		workspaceRoute + "/notes/:noteId/comments":       true,
 		workspaceRoute + "/channels":                     true,
+		workspaceRoute + "/search":                       true,
+		workspaceRoute + "/search/tags":                  true,
 		workspaceRoute + "/channels/:channelId/messages": true,
 	}
 	mcpWriteRoutes = map[string]bool{

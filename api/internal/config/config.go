@@ -65,6 +65,10 @@ const (
 	UPLOAD_TMP_DIR      = "upload_tmp_dir"
 	UPLOAD_MAX_SIZE     = "upload_max_size"
 	UPLOAD_EXPIRE_HOURS = "upload_expire_hours"
+
+	SEARCH_WORKERS               = "search_workers"
+	SEARCH_SCAN_INTERVAL_SECONDS = "search_scan_interval_seconds"
+	SEARCH_BATCH_SIZE            = "search_batch_size"
 )
 
 func Init() {
@@ -95,6 +99,9 @@ func Init() {
 	C.SetDefault(UPLOAD_TMP_DIR, "./bin/tus-tmp/")
 	C.SetDefault(UPLOAD_MAX_SIZE, 0)
 	C.SetDefault(UPLOAD_EXPIRE_HOURS, 24)
+	C.SetDefault(SEARCH_WORKERS, 2)
+	C.SetDefault(SEARCH_SCAN_INTERVAL_SECONDS, 3)
+	C.SetDefault(SEARCH_BATCH_SIZE, 100)
 
 	C.AutomaticEnv()
 }

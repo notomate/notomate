@@ -15,6 +15,7 @@ type DB interface {
 	MessageRepository
 	FileRepository
 	NoteFileRepository
+	SearchRepository
 	WorkspaceRepository
 	WorkspaceUserRepository
 	ViewRepository
@@ -53,6 +54,22 @@ type NoteRepository interface {
 	FindNote(n model.Note) (model.Note, error)
 	FindNotes(f model.NoteFilter) ([]model.Note, error)
 	GetNoteCountsByDate(workspaceID string, startDate string, timezoneOffsetMinutes int) (map[string]int, error)
+}
+// SearchRepository keeps the structured search index (note_search,
+// note_tags, note_locations) and the notes.search_indexed_at marker.
+type SearchRepository interface {
+	FindNotesToIndex(limit int) ([]string, error)
+	CountUnindexedNotes(workspaceID string) (int64, error)
+	ClaimNoteForIndexing(noteID string) (bool, error)
+	ResetSearchClaims() error
+	MarkNoteUnindexed(noteID string) error
+	ReplaceNoteSearchIndex(workspaceID, noteID string, idx model.NoteSearchIndex, indexedAt string) (bool, error)
+	DeleteNoteSearchIndex(noteID string) error
+	DeleteOrphanSearchIndex() (int64, error)
+	SearchNotes(f model.SearchFilter) ([]model.Note, error)
+	FindNoteTags(noteIDs []string) ([]model.NoteTag, error)
+	FindNoteLocations(noteIDs []string) ([]model.NoteLocation, error)
+	FindTags(workspaceID, userID, prefix string, limit int) ([]model.TagCount, error)
 }
 type CommentRepository interface {
 	CreateComment(c model.Comment) error

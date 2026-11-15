@@ -25,4 +25,8 @@ type Note struct {
 	CreatedBy   string `json:"created_by"`
 	UpdatedAt   string `json:"updated_at"`
 	UpdatedBy   string `json:"updated_by"`
+	// SearchIndexedAt is when the search indexer last processed this note's
+	// content; nil means the index is missing or stale. UpdateNote always
+	// resets it.
+	SearchIndexedAt *string `json:"-"`
 }

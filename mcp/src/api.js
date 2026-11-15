@@ -46,6 +46,8 @@ export function createApi({ apiUrl, token }) {
     tokenInfo: () => request('GET', '/oauth/tokeninfo'),
     listWorkspaces: () => request('GET', '/workspaces'),
     listNotes: (ws, query) => request('GET', `${workspace(ws)}/notes`, { query }),
+    searchNotes: (ws, query) => request('GET', `${workspace(ws)}/search`, { query }),
+    listTags: (ws, query) => request('GET', `${workspace(ws)}/search/tags`, { query }),
     getNote: (ws, id) => request('GET', note(ws, id)),
     createNote: (ws, body) =>
       request('POST', `${workspace(ws)}/notes`, { body, headers: { 'X-Content-Format': 'markdown' } }),

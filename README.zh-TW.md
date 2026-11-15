@@ -27,7 +27,7 @@ docker compose up -d
 
 啟動後即可於 `http://localhost:8080` 存取應用程式。所有設定都在 `.env` 裡，完整選項請參閱 [`.env.example`](./.env.example) 的註解，包含改用 PostgreSQL / SQLite（`DB_DRIVER` / `DB_DSN`）與 S3 儲存。
 
-五個應用服務都是必要的 —— `collab` 支撐即時協作編輯器，`messaging` 支撐頻道聊天，`mcp` 提供 AI 客戶端連線，nginx 會同時反向代理到這三者。
+六個應用服務都是必要的 —— `collab` 支撐即時協作編輯器，`messaging` 支撐頻道聊天，`mcp` 提供 AI 客戶端連線，`search-indexer` 讓筆記搜尋保持最新，nginx 會反向代理到 collab、messaging 與 mcp。
 
 ### 連接 AI 客戶端（MCP）
 
@@ -44,7 +44,7 @@ Notomate 在 `/mcp` 提供 [MCP](https://modelcontextprotocol.io) 端點，讓 A
 
 ```bash
 docker compose up -d notomate-mysql
-docker compose stop notomate-api
+docker compose stop notomate-api notomate-search-indexer
 docker compose run --rm --no-deps notomate-api ./cli migrate-db   --from-driver sqlite3 --from-dsn /usr/local/app/bin/notomate.db   --to-driver mysql --to-dsn 'notomate:notomate_password@tcp(notomate-mysql:3306)/notomate?charset=utf8mb4'
 docker compose up -d
 ```
@@ -65,6 +65,7 @@ flowchart LR
         collab["<b>collab</b> — Node<br/>Hocuspocus / Yjs :3000"]
         messaging["<b>messaging</b> — Node<br/>Socket.IO :4000"]
         mcp["<b>mcp</b> — Node<br/>MCP over HTTP :5000"]
+        indexer["<b>search-indexer</b> — Go<br/>背景 worker"]
         db[("MySQL / PostgreSQL<br/>或 SQLite")]
         store[("本機磁碟<br/>或 S3 / MinIO")]
     end
@@ -91,6 +92,7 @@ flowchart LR
 
     api --> db
     api --> store
+    indexer -->|"輪詢已變更的筆記<br/>寫入搜尋索引"| db
 
     runner -->|"gRPC :50051<br/>發布於主機"| api
 ```
@@ -98,10 +100,11 @@ flowchart LR
 | 服務 | 職責 |
 | --- | --- |
 | **nginx** | 唯一入口（`:80`）。提供打包好的 SPA，並將 `/api/` 反向代理到 api、`/ws/` 與 `/ws/public/` 到 collab、`/socket.io/` 到 messaging、`/mcp` 到 mcp。 |
-| **api** | Go 後端，也是唯一會寫入資料庫與物件儲存的服務。提供 REST API，以及給 collab、messaging、runner 呼叫的 gRPC 服務。 |
+| **api** | Go 後端，也是唯一會寫入資料庫與物件儲存的服務。提供 REST API，以及給 collab、messaging、runner 呼叫的 gRPC 服務。筆記或其留言一有變更，就會把該筆記的搜尋索引標為過期，交給 search-indexer 重建。 |
 | **collab** | Hocuspocus/Yjs 伺服器，負責即時多人協作編輯。本身無狀態 —— 透過 api 的 gRPC 服務讀取與保存文件。 |
 | **messaging** | Socket.IO 伺服器，負責頻道聊天與線上狀態。每條連線只綁定單一頻道，訊息透過 gRPC 交由 api 保存。房間狀態存於記憶體，因此只能跑單一副本。 |
 | **mcp** | 給 AI 客戶端使用的 [MCP](https://modelcontextprotocol.io) 伺服器。本身無狀態 —— 以客戶端的 token 呼叫 api 的 REST API，並透過 collab 編輯筆記，因此能和正在即時編輯的使用者安全合併。詳見[連接 AI 客戶端](#連接-ai-客戶端mcp)。 |
+| **search-indexer** | 把每份筆記的文字、標籤與地點座標建成搜尋索引，供 api 的 `/search` 端點查詢。定期從資料庫找出 api 標記過的筆記，由 worker pool 重建索引，變更在數秒內就能被搜到；與 api 分開執行，索引負載或當掉都不會影響 api。可用 `SEARCH_WORKERS`、`SEARCH_SCAN_INTERVAL_SECONDS`、`SEARCH_BATCH_SIZE` 調整。migration 由 api 執行，升級後請先啟動 api。 |
 | **runner** | 選用的工作流執行器，自成一個 compose 專案。透過 gRPC 向 api 長輪詢排隊中的 job，並以 [act](https://github.com/nektos/act) 在容器中執行。詳見[工作流](#工作流beta)。 |
 
 ## 工作流(Beta)

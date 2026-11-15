@@ -1,0 +1,11 @@
+package mysqldb
+
+import (
+	"testing"
+
+	"github.com/notomate/notomate/internal/db/dbtest"
+)
+
+func TestSearchIndex(t *testing.T) {
+	dbtest.SearchIndex(t, newTestDB(t))
+}

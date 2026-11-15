@@ -8,6 +8,7 @@ import (
 
 	"github.com/notomate/notomate/internal/model"
 	"github.com/notomate/notomate/internal/notefile"
+	"github.com/notomate/notomate/internal/search"
 	"github.com/notomate/notomate/internal/util"
 
 	"github.com/labstack/echo/v4"
@@ -367,6 +368,7 @@ func (h Handler) DeleteNote(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	notefile.RemoveNote(h.db, existingNote.ID)
+	search.Remove(h.db, existingNote.ID)
 
 	h.notifyNoteEvent(model.WorkflowEventNoteDeleted, existingNote, user.ID)
 

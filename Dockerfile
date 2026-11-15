@@ -87,6 +87,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     -ldflags "-X main.Version=${APP_VERSION}" \
     -o /out/cli ./cmd/cli/main.go
 
+RUN --mount=type=cache,target=/root/.cache/go-build     --mount=type=cache,target=/go/pkg/mod     GOOS=linux GOARCH=amd64 go build     -ldflags "-X main.Version=${APP_VERSION}"     -o /out/indexer ./cmd/indexer/main.go
+
 # ---------- Stage 4: api runtime (Go API) ----------
 FROM alpine:3.20 AS api-runtime
 WORKDIR /usr/local/app
@@ -104,6 +106,22 @@ COPY --from=backend /out/cli ./cli
 RUN mkdir -p ./bin
 VOLUME /usr/local/app/bin
 CMD ["./api"]
+
+# ---------- Stage 4b: search indexer runtime ----------
+# Builds the note search index in the background, apart from the api. It
+# needs no migrations: the api owns the schema.
+FROM alpine:3.20 AS search-indexer-runtime
+WORKDIR /usr/local/app
+
+RUN apk add --no-cache tzdata
+
+ENV TZ="UTC"
+
+COPY --from=backend /out/indexer ./indexer
+
+RUN mkdir -p ./bin
+VOLUME /usr/local/app/bin
+CMD ["./indexer"]
 
 # ---------- Stage 5: collab runtime (Collab service) ----------
 FROM node:20-alpine AS collab-runtime
