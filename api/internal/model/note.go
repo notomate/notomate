@@ -11,6 +11,12 @@ type NoteFilter struct {
 	ParentID    string // filter by parent note id; use "null" to get root notes
 	PinnedOnly  bool   // filter to only pinned notes
 	CreatedBy   string // filter by creator user id
+	// BlockTypes keeps notes whose content holds a node of any of these
+	// TipTap types (e.g. "image", "taskList"). Names must be plain identifiers.
+	BlockTypes []string
+	DateField  string // "updated_at" or "created_at" (default); the column From/To apply to
+	DateFrom   string // inclusive lower bound, UTC "2006-01-02T15:04:05"
+	DateTo     string // exclusive upper bound, UTC "2006-01-02T15:04:05"
 }
 
 type Note struct {

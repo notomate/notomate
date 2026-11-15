@@ -82,6 +82,31 @@ func (s MySQLDB) FindNotes(f model.NoteFilter) ([]model.Note, error) {
 		args = append(args, f.CreatedBy)
 	}
 
+	// Content is compact TipTap JSON, so a node shows up as "type":"<name>".
+	if len(f.BlockTypes) > 0 {
+		var typeConds []string
+		for _, t := range f.BlockTypes {
+			typeConds = append(typeConds, "content LIKE ?")
+			args = append(args, `%"type":"`+t+`"%`)
+		}
+		conds = append(conds, "("+strings.Join(typeConds, " OR ")+")")
+	}
+
+	// Timestamps are text in either RFC3339 or Go's time.String() layout; the
+	// first 19 characters with ' ' read as 'T' compare correctly in both.
+	dateCol := "created_at"
+	if f.DateField == "updated_at" {
+		dateCol = "updated_at"
+	}
+	if f.DateFrom != "" {
+		conds = append(conds, "REPLACE(SUBSTR("+dateCol+", 1, 19), ' ', 'T') >= ?")
+		args = append(args, f.DateFrom)
+	}
+	if f.DateTo != "" {
+		conds = append(conds, "REPLACE(SUBSTR("+dateCol+", 1, 19), ' ', 'T') < ?")
+		args = append(args, f.DateTo)
+	}
+
 	query := s.getDB().Model(&model.Note{})
 
 	if len(conds) > 0 {

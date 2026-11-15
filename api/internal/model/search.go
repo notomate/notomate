@@ -55,8 +55,13 @@ type SearchFilter struct {
 	PinnedOnly  bool
 	CreatedBy   string
 	SortBy      string // "updated_at" or "created_at" (default)
-	PageSize    int
-	PageNumber  int
+	// BlockTypes, DateField, DateFrom and DateTo work as in NoteFilter.
+	BlockTypes []string
+	DateField  string
+	DateFrom   string
+	DateTo     string
+	PageSize   int
+	PageNumber int
 }
 
 type TagCount struct {

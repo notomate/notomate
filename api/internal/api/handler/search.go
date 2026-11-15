@@ -34,9 +34,14 @@ type SearchNotesResponse struct {
 //	tags     comma-separated tags; with tagMode=any one is enough, otherwise all
 //	bbox     minLng,minLat,maxLng,maxLat: notes with a location inside; a box
 //	         with minLng > maxLng crosses the antimeridian
-//	creatorId, parentId, pinned, sort, pageSize, pageNumber as in GetNotes
+//	creatorId, parentId, pinned, sort, types, dateField, from, to, pageSize,
+//	pageNumber as in GetNotes
 func (h Handler) SearchNotes(c echo.Context) error {
 	user := c.Get("user").(model.User)
+	var list model.NoteFilter
+	if err := applyNoteListFilters(c, &list); err != nil {
+		return err
+	}
 	f := model.SearchFilter{
 		WorkspaceID: c.Param("workspaceId"),
 		UserID:      user.ID,
@@ -45,8 +50,12 @@ func (h Handler) SearchNotes(c echo.Context) error {
 		MatchAnyTag: c.QueryParam("tagMode") == "any",
 		ParentID:    c.QueryParam("parentId"),
 		PinnedOnly:  c.QueryParam("pinned") == "true",
-		CreatedBy:   c.QueryParam("creatorId"),
-		SortBy:      c.QueryParam("sort"),
+		CreatedBy:   list.CreatedBy,
+		SortBy:      list.SortBy,
+		BlockTypes:  list.BlockTypes,
+		DateField:   list.DateField,
+		DateFrom:    list.DateFrom,
+		DateTo:      list.DateTo,
 		PageSize:    20,
 		PageNumber:  1,
 	}

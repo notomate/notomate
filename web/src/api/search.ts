@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { NoteData } from '@/api/note';
+import { NoteData, type NoteListFilterParams } from '@/api/note';
 
 export interface NoteLocation {
   source: string;
@@ -27,7 +27,8 @@ export interface SearchNotesParams {
   /** [minLng, minLat, maxLng, maxLat]; minLng > maxLng crosses the antimeridian. */
   bbox?: [number, number, number, number];
   creatorId?: string;
-  sort?: 'created_at' | 'updated_at';
+  /** Sort, block types and date range, as for the note list endpoints. */
+  filters?: NoteListFilterParams;
   pageNumber: number;
   pageSize: number;
 }
@@ -39,7 +40,9 @@ export const searchNotes = async (workspaceId: string, p: SearchNotesParams): Pr
   if (p.tagMode) params.set('tagMode', p.tagMode);
   if (p.bbox) params.set('bbox', p.bbox.join(','));
   if (p.creatorId) params.set('creatorId', p.creatorId);
-  if (p.sort) params.set('sort', p.sort);
+  for (const [key, value] of Object.entries(p.filters ?? {})) {
+    if (value) params.set(key, value);
+  }
   const response = await axios.get(`/api/v1/workspaces/${workspaceId}/search?${params}`, { withCredentials: true });
   return response.data;
 };

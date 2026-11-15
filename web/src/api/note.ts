@@ -18,10 +18,20 @@ export interface NoteData {
 }
 
 
-export const getPublicNotes = async (pageNum: number, pageSize: number, query = '', creatorId?: string) => {
+/** Optional list filters (sort, block types, date range); see `toFilterParams`. */
+export type NoteListFilterParams = Partial<Record<'sort' | 'types' | 'dateField' | 'from' | 'to', string>>;
+
+const applyFilterParams = (params: URLSearchParams, filters?: NoteListFilterParams) => {
+  for (const [key, value] of Object.entries(filters ?? {})) {
+    if (value) params.set(key, value);
+  }
+};
+
+export const getPublicNotes = async (pageNum: number, pageSize: number, query = '', creatorId?: string, filters?: NoteListFilterParams) => {
   const params = new URLSearchParams({ pageSize: String(pageSize), pageNumber: String(pageNum) });
   if (query) params.set('query', query);
   if (creatorId) params.set('creatorId', creatorId);
+  applyFilterParams(params, filters);
   const response = await axios.get(`/api/v1/explore/notes?${params}`);
   return response.data;
 };
@@ -31,12 +41,13 @@ export const getPublicNote = async (id: string) => {
   return response.data;
 };
 
-export const getNotes = async (workspaceId: string, pageNum: number, pageSize: number, query: string, sort?: string, parentId?: string, pinnedOnly?: boolean, creatorId?: string) => {
+export const getNotes = async (workspaceId: string, pageNum: number, pageSize: number, query: string, sort?: string, parentId?: string, pinnedOnly?: boolean, creatorId?: string, filters?: NoteListFilterParams) => {
   const params = new URLSearchParams({ pageSize: String(pageSize), pageNumber: String(pageNum), query });
   if (sort) params.set('sort', sort);
   if (parentId !== undefined) params.set('parentId', parentId);
   if (pinnedOnly) params.set('pinned', 'true');
   if (creatorId) params.set('creatorId', creatorId);
+  applyFilterParams(params, filters);
   const response = await axios.get(`/api/v1/workspaces/${workspaceId}/notes?${params}`, { withCredentials: true });
   return response.data;
 };

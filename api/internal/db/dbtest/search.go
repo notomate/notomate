@@ -63,6 +63,9 @@ func SearchIndex(t *testing.T, s db.DB) {
 	} {
 		n.WorkspaceID = "ws"
 		n.CreatedAt, n.UpdatedAt = "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z"
+		if n.ID == "n4" { // Go's time.String() layout, as older rows have
+			n.CreatedAt = "2026-03-01 08:00:00.123 +0000 UTC"
+		}
 		if err := s.CreateNote(n); err != nil {
 			t.Fatal(err)
 		}
@@ -102,6 +105,12 @@ func SearchIndex(t *testing.T, s db.DB) {
 		{"bbox", model.SearchFilter{BBox: &model.BBox{MinLng: 121, MinLat: 24.5, MaxLng: 122, MaxLat: 25.5}}, "n1"},
 		{"bbox across antimeridian", model.SearchFilter{BBox: &model.BBox{MinLng: 170, MinLat: -10, MaxLng: -170, MaxLat: 10}}, "n4"},
 		{"bbox and keyword", model.SearchFilter{Terms: []string{"beta"}, BBox: &model.BBox{MinLng: 121, MinLat: 24.5, MaxLng: 122, MaxLat: 25.5}}, ""},
+		{"block type", model.SearchFilter{BlockTypes: []string{"locationNode"}}, "n1,n2,n4"},
+		{"missing block type", model.SearchFilter{BlockTypes: []string{"image"}}, ""},
+		{"created from", model.SearchFilter{DateFrom: "2026-02-01T00:00:00"}, "n4"},
+		{"created before", model.SearchFilter{DateTo: "2026-02-01T00:00:00", Tags: []string{"work"}}, "n1,n2"},
+		{"updated range", model.SearchFilter{DateField: "updated_at", DateFrom: "2026-02-01T00:00:00"}, ""},
+		{"date and keyword", model.SearchFilter{Terms: []string{"fiji"}, DateTo: "2026-02-01T00:00:00"}, ""},
 	}
 	for _, c := range cases {
 		if got := find(c.f); got != c.want {

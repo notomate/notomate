@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -89,6 +90,55 @@ func (h Handler) isUserWorkspaceMember(userID string, workspaceID string) bool {
 	return false
 }
 
+var blockTypePattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9]{0,63}$`)
+
+const maxBlockTypes = 32
+
+// applyNoteListFilters reads the filters shared by the note list endpoints:
+// sort, creatorId, types (comma-separated TipTap node types, matching any),
+// dateField ("created" or "updated") and from/to (RFC3339 instants, to exclusive).
+func applyNoteListFilters(c echo.Context, f *model.NoteFilter) error {
+	f.SortBy = "created_at"
+	if c.QueryParam("sort") == "updated_at" {
+		f.SortBy = "updated_at"
+	}
+	f.CreatedBy = c.QueryParam("creatorId")
+
+	if types := c.QueryParam("types"); types != "" {
+		for _, t := range strings.Split(types, ",") {
+			t = strings.TrimSpace(t)
+			if t == "" {
+				continue
+			}
+			if !blockTypePattern.MatchString(t) {
+				return echo.NewHTTPError(http.StatusBadRequest, "Invalid block type: "+t)
+			}
+			f.BlockTypes = append(f.BlockTypes, t)
+		}
+		if len(f.BlockTypes) > maxBlockTypes {
+			return echo.NewHTTPError(http.StatusBadRequest, "Too many block types")
+		}
+	}
+
+	f.DateField = "created_at"
+	if c.QueryParam("dateField") == "updated" {
+		f.DateField = "updated_at"
+	}
+	const layout = "2006-01-02T15:04:05"
+	for param, dst := range map[string]*string{"from": &f.DateFrom, "to": &f.DateTo} {
+		v := c.QueryParam(param)
+		if v == "" {
+			continue
+		}
+		ts, err := time.Parse(time.RFC3339, v)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid "+param+" date")
+		}
+		*dst = ts.UTC().Format(layout)
+	}
+	return nil
+}
+
 func (h Handler) GetPublicNotes(c echo.Context) error {
 	pageSize := 20
 	pageNumber := 1
@@ -110,7 +160,9 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 		PageNumber: pageNumber,
 		Query:      query,
 		ParentID:   "null",
-		CreatedBy:  c.QueryParam("creatorId"),
+	}
+	if err := applyNoteListFilters(c, &filter); err != nil {
+		return err
 	}
 
 	notes, err := h.db.FindNotes(filter)
@@ -190,10 +242,6 @@ func (h Handler) GetNotes(c echo.Context) error {
 	}
 
 	query := c.QueryParam("query")
-	sortBy := c.QueryParam("sort")
-	if sortBy != "updated_at" {
-		sortBy = "created_at"
-	}
 	parentID := c.QueryParam("parentId")
 	pinnedOnly := c.QueryParam("pinned") == "true"
 
@@ -205,10 +253,11 @@ func (h Handler) GetNotes(c echo.Context) error {
 		PageNumber:  pageNumber,
 		UserID:      user.ID,
 		Query:       query,
-		SortBy:      sortBy,
 		ParentID:    parentID,
 		PinnedOnly:  pinnedOnly,
-		CreatedBy:   c.QueryParam("creatorId"),
+	}
+	if err := applyNoteListFilters(c, &filter); err != nil {
+		return err
 	}
 
 	notes, err := h.db.FindNotes(filter)

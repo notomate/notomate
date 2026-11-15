@@ -9,7 +9,9 @@ import AboutModal from '@/components/user/AboutModal';
 import UserMenu from '@/components/usermenu/UserMenu';
 import MobileTopBar from '@/components/mobiletopbar/MobileTopBar';
 import logo from '@/assets/app.svg';
-import { LogIn, ArrowLeft, Search, Trash2, Info, Compass, PanelRight } from 'lucide-react';
+import { LogIn, ArrowLeft, Info, Compass, PanelRight } from 'lucide-react';
+import { FilteredNoteListLayout } from '@/components/notefilter/FilteredNoteListLayout';
+import { useNoteFilters } from '@/components/notefilter/note-filters';
 import { useCurrentUserStore } from '@/stores/current-user';
 import { useTranslation } from 'react-i18next';
 
@@ -26,6 +28,8 @@ const ExplorePage: React.FC = () => {
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [creator, setCreator] = useState<CreatorFilter | null>(null);
+    const { filters, params, update, reset, activeCount } = useNoteFilters();
+    const totalActive = activeCount + (creator ? 1 : 0);
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -33,9 +37,9 @@ const ExplorePage: React.FC = () => {
     }, [search]);
 
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-        queryKey: ['explore-notes', debouncedSearch, creator?.id],
+        queryKey: ['explore-notes', debouncedSearch, creator?.id, params],
         queryFn: ({ pageParam = 1 }: { pageParam?: unknown }) =>
-            getPublicNotes(Number(pageParam), PAGE_SIZE, debouncedSearch, creator?.id),
+            getPublicNotes(Number(pageParam), PAGE_SIZE, debouncedSearch, creator?.id, params),
         getNextPageParam: (lastPage, allPages) =>
             lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined,
         initialPageParam: 1,
@@ -137,63 +141,46 @@ const ExplorePage: React.FC = () => {
                 <div className="flex-1 overflow-hidden">
                     {noteId && <Outlet />}
                     {/* Kept mounted while a note is open so going back restores the search and scroll position. */}
-                    <div className={`h-full flex-col bg-neutral-50 dark:bg-neutral-950 ${noteId ? "hidden" : "flex"}`}>
-                        <div ref={scrollRef} className="flex-1 overflow-auto">
-                            <div className="w-full lg:max-w-[600px] px-2 pt-2 xl:pt-4 pb-2 mx-auto">
-                                <div className="relative">
-                                    <Search
-                                        size={16}
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        placeholder={t("pages.explore.searchPlaceholder")}
-                                        className="w-full pl-9 pr-9 py-2.5 text-sm rounded-lg bg-neutral-50 dark:bg-neutral-950 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none"
-                                    />
-                                    {search && (
-                                        <button
-                                            onClick={() => setSearch('')}
-                                            title={t("common.clear")}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-red-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
-                                    )}
+                    <div className={`h-full ${noteId ? "hidden" : ""}`}>
+                        <FilteredNoteListLayout
+                            scrollRef={scrollRef}
+                            query={search}
+                            onQueryChange={setSearch}
+                            placeholder={t("pages.explore.searchPlaceholder")}
+                            filters={filters}
+                            onFiltersChange={update}
+                            onReset={() => { reset(); setCreator(null); }}
+                            activeCount={totalActive}
+                            canReset={totalActive > 0 || filters.sort !== 'created_at'}
+                            creator={creator
+                                ? <div><CreatorFilterChip creator={creator} onClear={() => setCreator(null)} /></div>
+                                : <p className="text-xs text-muted-foreground">{t("noteFilter.creatorHint")}</p>}
+                            chips={creator && <CreatorFilterChip creator={creator} onClear={() => setCreator(null)} />}
+                        >
+                            {isLoading ? (
+                                <NoteListSkeleton />
+                            ) : notes.length === 0 ? (
+                                <div className="text-center text-muted-foreground py-16 text-sm">
+                                    {debouncedSearch || totalActive ? t("pages.explore.noSearchResults") : t("pages.explore.noPublicNotes")}
                                 </div>
-                                {creator && (
-                                    <div className="px-2 pt-2">
-                                        <CreatorFilterChip creator={creator} onClear={() => setCreator(null)} />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="w-full lg:max-w-[600px] mx-auto">
-                                {isLoading ? (
-                                    <NoteListSkeleton />
-                                ) : notes.length === 0 ? (
-                                    <div className="text-center text-muted-foreground py-16 text-sm">
-                                        {debouncedSearch || creator ? t("pages.explore.noSearchResults") : t("pages.explore.noPublicNotes")}
-                                    </div>
-                                ) : (
-                                    <>
-                                        <NoteList
-                                            notes={notes}
-                                            getLinkTo={(note) => `/explore/notes/${note.id}`}
-                                            linkKind="open"
-                                            commentsReadOnly
-                                            maxNodes={15}
-                                            onCreatorClick={(note) => {
-                                                setCreator({ id: note.created_by_id!, name: note.created_by ?? '', avatarUrl: note.created_by_avatar_url });
-                                                scrollRef.current?.scrollTo({ top: 0 });
-                                            }}
-                                        />
-                                        <div ref={loadMoreRef} className="h-2" />
-                                        {isFetchingNextPage && <NoteListSkeleton count={3} />}
-                                    </>
-                                )}
-                            </div>
-                        </div>
+                            ) : (
+                                <>
+                                    <NoteList
+                                        notes={notes}
+                                        getLinkTo={(note) => `/explore/notes/${note.id}`}
+                                        linkKind="open"
+                                        commentsReadOnly
+                                        maxNodes={15}
+                                        onCreatorClick={(note) => {
+                                            setCreator({ id: note.created_by_id!, name: note.created_by ?? '', avatarUrl: note.created_by_avatar_url });
+                                            scrollRef.current?.scrollTo({ top: 0 });
+                                        }}
+                                    />
+                                    <div ref={loadMoreRef} className="h-2" />
+                                    {isFetchingNextPage && <NoteListSkeleton count={3} />}
+                                </>
+                            )}
+                        </FilteredNoteListLayout>
                     </div>
                 </div>
             </div>

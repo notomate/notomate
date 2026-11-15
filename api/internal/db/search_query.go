@@ -206,6 +206,30 @@ func SearchNotes(g *gorm.DB, f model.SearchFilter) ([]model.Note, error) {
 		q = q.Where("notes.created_by = ?", f.CreatedBy)
 	}
 
+	// Same rules as FindNotes: content is compact TipTap JSON, so a node
+	// shows up as "type":"<name>" (names are validated identifiers).
+	if len(f.BlockTypes) > 0 {
+		conds := make([]string, len(f.BlockTypes))
+		args := make([]any, len(f.BlockTypes))
+		for i, t := range f.BlockTypes {
+			conds[i] = "notes.content LIKE ?"
+			args[i] = `%"type":"` + t + `"%`
+		}
+		q = q.Where("("+strings.Join(conds, " OR ")+")", args...)
+	}
+	// Timestamps are text in RFC3339 or Go's time.String() layout; the first
+	// 19 characters with ' ' read as 'T' compare correctly in both.
+	dateCol := "notes.created_at"
+	if f.DateField == "updated_at" {
+		dateCol = "notes.updated_at"
+	}
+	if f.DateFrom != "" {
+		q = q.Where("REPLACE(SUBSTR("+dateCol+", 1, 19), ' ', 'T') >= ?", f.DateFrom)
+	}
+	if f.DateTo != "" {
+		q = q.Where("REPLACE(SUBSTR("+dateCol+", 1, 19), ' ', 'T') < ?", f.DateTo)
+	}
+
 	sortCol := "notes.created_at"
 	if f.SortBy == "updated_at" {
 		sortCol = "notes.updated_at"
