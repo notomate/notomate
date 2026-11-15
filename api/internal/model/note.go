@@ -6,12 +6,14 @@ type NoteFilter struct {
 	PageSize    int
 	PageNumber  int
 	UserID      string
-	Query       string
+	// Terms are normalized keywords (search.Terms), all matched against the
+	// search index.
+	Terms       []string
 	SortBy      string // "updated_at" or "created_at" (default)
 	ParentID    string // filter by parent note id; use "null" to get root notes
 	PinnedOnly  bool   // filter to only pinned notes
 	CreatedBy   string // filter by creator user id
-	// BlockTypes keeps notes whose content holds a node of any of these
+	// BlockTypes keeps notes with a node of any of these
 	// TipTap types (e.g. "image", "taskList"). Names must be plain identifiers.
 	BlockTypes []string
 	DateField  string // "updated_at" or "created_at" (default); the column From/To apply to

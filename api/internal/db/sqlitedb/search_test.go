@@ -9,3 +9,7 @@ import (
 func TestSearchIndex(t *testing.T) {
 	dbtest.SearchIndex(t, newTestDB(t))
 }
+
+func TestFindNotes(t *testing.T) {
+	dbtest.FindNotes(t, newTestDB(t))
+}

@@ -2,8 +2,8 @@ package postgresdb
 
 import (
 	"context"
-	"strings"
 
+	"github.com/notomate/notomate/internal/db"
 	"github.com/notomate/notomate/internal/model"
 	"gorm.io/gorm"
 )
@@ -38,93 +38,7 @@ func (s PostgresDB) FindNote(n model.Note) (model.Note, error) {
 }
 
 func (s PostgresDB) FindNotes(f model.NoteFilter) ([]model.Note, error) {
-	var notes []model.Note
-
-	var conds []string
-	var args []interface{}
-
-	if f.WorkspaceID != "" {
-		conds = append(conds, "workspace_id = ?")
-		args = append(args, f.WorkspaceID)
-	}
-
-	if f.Query != "" {
-		query := "%" + f.Query + "%"
-		conds = append(conds, "(title LIKE ? OR content LIKE ?)")
-		args = append(args, query, query)
-	}
-
-	if f.UserID != "" {
-		permissionCond := `(
-            visibility IN ('public', 'workspace')
-            OR (visibility = 'private' AND created_by = ?)
-        )`
-		conds = append(conds, permissionCond)
-		args = append(args, f.UserID)
-	} else {
-		conds = append(conds, "visibility = 'public'")
-	}
-
-	if f.ParentID == "null" {
-		conds = append(conds, "(parent_id IS NULL OR parent_id = '')")
-	} else if f.ParentID != "" {
-		conds = append(conds, "parent_id = ?")
-		args = append(args, f.ParentID)
-	}
-
-	if f.PinnedOnly {
-		conds = append(conds, "pinned = ?")
-		args = append(args, true)
-	}
-
-	if f.CreatedBy != "" {
-		conds = append(conds, "created_by = ?")
-		args = append(args, f.CreatedBy)
-	}
-
-	// Content is compact TipTap JSON, so a node shows up as "type":"<name>".
-	if len(f.BlockTypes) > 0 {
-		var typeConds []string
-		for _, t := range f.BlockTypes {
-			typeConds = append(typeConds, "content LIKE ?")
-			args = append(args, `%"type":"`+t+`"%`)
-		}
-		conds = append(conds, "("+strings.Join(typeConds, " OR ")+")")
-	}
-
-	// Timestamps are text in either RFC3339 or Go's time.String() layout; the
-	// first 19 characters with ' ' read as 'T' compare correctly in both.
-	dateCol := "created_at"
-	if f.DateField == "updated_at" {
-		dateCol = "updated_at"
-	}
-	if f.DateFrom != "" {
-		conds = append(conds, "REPLACE(SUBSTR("+dateCol+", 1, 19), ' ', 'T') >= ?")
-		args = append(args, f.DateFrom)
-	}
-	if f.DateTo != "" {
-		conds = append(conds, "REPLACE(SUBSTR("+dateCol+", 1, 19), ' ', 'T') < ?")
-		args = append(args, f.DateTo)
-	}
-
-	query := s.getDB().Model(&model.Note{})
-
-	if len(conds) > 0 {
-		query = query.Where(strings.Join(conds, " AND "), args...)
-	}
-
-	sortCol := "created_at"
-	if f.SortBy == "updated_at" {
-		sortCol = "updated_at"
-	}
-
-	err := query.
-		Order(sortCol + " DESC").
-		Offset((f.PageNumber - 1) * f.PageSize).
-		Limit(f.PageSize).
-		Find(&notes).Error
-
-	return notes, err
+	return db.FindNotes(s.getDB(), f)
 }
 
 func (s PostgresDB) GetNoteCountsByDate(workspaceID string, startDate string, timezoneOffsetMinutes int) (map[string]int, error) {

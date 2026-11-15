@@ -158,7 +158,7 @@ func (h Handler) GetPublicNotes(c echo.Context) error {
 	filter := model.NoteFilter{
 		PageSize:   pageSize,
 		PageNumber: pageNumber,
-		Query:      query,
+		Terms:      search.Terms(query),
 		ParentID:   "null",
 	}
 	if err := applyNoteListFilters(c, &filter); err != nil {
@@ -252,7 +252,7 @@ func (h Handler) GetNotes(c echo.Context) error {
 		PageSize:    pageSize,
 		PageNumber:  pageNumber,
 		UserID:      user.ID,
-		Query:       query,
+		Terms:       search.Terms(query),
 		ParentID:    parentID,
 		PinnedOnly:  pinnedOnly,
 	}
