@@ -21,6 +21,8 @@ interface FilteredNoteListLayoutProps {
     creator?: ReactNode
     /** Tag filter control rendered inside the filter panel. */
     tags?: ReactNode
+    /** Shows the block content filters, for pages backed by the search index. */
+    contentFilters?: boolean
     /** Shown above the list, e.g. a notice that results may be incomplete. */
     notice?: ReactNode
     /** Shown under the search bar while the panel is closed (e.g. a clicked-creator chip). */
@@ -35,14 +37,14 @@ interface FilteredNoteListLayoutProps {
  */
 export function FilteredNoteListLayout({
     scrollRef, query, onQueryChange, placeholder, filters, onFiltersChange, onReset,
-    activeCount, canReset, creator, tags, chips, notice, children,
+    activeCount, canReset, creator, tags, contentFilters, chips, notice, children,
 }: FilteredNoteListLayoutProps) {
     const { t } = useTranslation()
     const [open, setOpen] = useState(false)
     const isLg = useIsLg()
     const isXl = useMediaQuery("(min-width: 1280px)")
 
-    const panel = { filters, onChange: onFiltersChange, onReset, creator, tags, canReset }
+    const panel = { filters, onChange: onFiltersChange, onReset, creator, tags, contentFilters, canReset }
     const close = () => setOpen(false)
     const showColumn = open && isXl
 

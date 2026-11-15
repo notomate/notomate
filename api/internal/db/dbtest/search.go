@@ -60,6 +60,14 @@ func SearchIndex(t *testing.T, s db.DB) {
 		{ID: "n2", Title: "Beta", Visibility: "workspace", CreatedBy: "u1", Content: noteContent([]string{"work"}, 35.68, 139.76, "tokyo")},
 		{ID: "n3", Title: "Gamma", Visibility: "private", CreatedBy: "u2", Content: noteContent([]string{"work"}, 25.1, 121.5, "secret")},
 		{ID: "n4", Title: "Delta", Visibility: "public", CreatedBy: "u1", Content: noteContent(nil, 0, 179.5, "fiji")},
+		{ID: "n5", Title: "Plans", Visibility: "public", CreatedBy: "u1", Content: `{"type":"doc","content":[` +
+			`{"type":"calendarNode","attrs":{"date":"2026-07-15","title":"Launch"}},` +
+			`{"type":"ratingNode","attrs":{"rating":4,"maxRating":5,"label":""}},` +
+			`{"type":"taskList","content":[{"type":"taskItem","attrs":{"checked":true}},{"type":"taskItem","attrs":{"checked":false}}]}]}`},
+		{ID: "n6", Title: "Review", Visibility: "public", CreatedBy: "u1", Content: `{"type":"doc","content":[` +
+			`{"type":"calendarNode","attrs":{"date":"2026-08-01","title":"Retro"}},` +
+			`{"type":"ratingNode","attrs":{"rating":7,"maxRating":10,"label":"ok"}},` +
+			`{"type":"taskList","content":[{"type":"taskItem","attrs":{"checked":true}}]}]}`},
 	} {
 		n.WorkspaceID = "ws"
 		n.CreatedAt, n.UpdatedAt = "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z"
@@ -70,7 +78,7 @@ func SearchIndex(t *testing.T, s db.DB) {
 			t.Fatal(err)
 		}
 	}
-	if pending, _ := s.CountUnindexedNotes("ws"); pending != 4 {
+	if pending, _ := s.CountUnindexedNotes("ws"); pending != 6 {
 		t.Fatalf("pending before indexing: %d", pending)
 	}
 	indexAll(t, s)
@@ -111,6 +119,16 @@ func SearchIndex(t *testing.T, s db.DB) {
 		{"created before", model.SearchFilter{DateTo: "2026-02-01T00:00:00", Tags: []string{"work"}}, "n1,n2"},
 		{"updated range", model.SearchFilter{DateField: "updated_at", DateFrom: "2026-02-01T00:00:00"}, ""},
 		{"date and keyword", model.SearchFilter{Terms: []string{"fiji"}, DateTo: "2026-02-01T00:00:00"}, ""},
+		{"block types match any", model.SearchFilter{BlockTypes: []string{"ratingNode", "tagsNode"}}, "n1,n2,n4,n5,n6"},
+		{"nested block type", model.SearchFilter{BlockTypes: []string{"taskItem"}}, "n5,n6"},
+		{"event in range", model.SearchFilter{EventFrom: "2026-07-01", EventTo: "2026-07-31"}, "n5"},
+		{"event range is inclusive", model.SearchFilter{EventFrom: "2026-07-15", EventTo: "2026-08-01"}, "n5,n6"},
+		{"event from only", model.SearchFilter{EventFrom: "2026-07-16"}, "n6"},
+		{"open tasks", model.SearchFilter{Tasks: "open"}, "n5"},
+		{"all tasks done", model.SearchFilter{Tasks: "done"}, "n6"},
+		{"rating at least 4", model.SearchFilter{MinRating: 4}, "n5"},
+		{"rating scaled from 10", model.SearchFilter{MinRating: 3.5}, "n5,n6"},
+		{"rating and tasks", model.SearchFilter{MinRating: 3, Tasks: "done"}, "n6"},
 	}
 	for _, c := range cases {
 		if got := find(c.f); got != c.want {
@@ -189,7 +207,7 @@ func SearchIndex(t *testing.T, s db.DB) {
 		t.Fatal(err)
 	}
 	removed, err := s.DeleteOrphanSearchIndex()
-	if err != nil || removed != 2 { // note_search + note_locations
+	if err != nil || removed != 5 { // note_search, note_locations, 3 note_blocks
 		t.Fatalf("orphans removed: %d err %v", removed, err)
 	}
 	if pending, _ := s.CountUnindexedNotes("ws"); pending != 0 {

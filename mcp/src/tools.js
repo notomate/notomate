@@ -22,6 +22,7 @@ const noteId = z.string().describe('Note id, from list_notes or search_notes.')
 const channelId = z.string().describe('Channel id, from list_channels.')
 const page = z.number().int().min(1).default(1).describe('Page number, starting at 1.')
 const pageSize = z.number().int().min(1).max(MAX_PAGE_SIZE).default(20).describe('Results per page.')
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD.')
 
 const json = (value) => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] })
 const text = (value) => ({ content: [{ type: 'text', text: value }] })
@@ -110,8 +111,9 @@ export function buildServer({ apiUrl, collabUrl, token, canWrite }) {
     {
       title: 'Search notes',
       description:
-        'Search notes by keywords (title, text, tags, place names, block contents and comments), by tags, and by a ' +
-        'coordinate range of their locations. Give at least one of query, tags or bbox. Returns summaries with each ' +
+        'Search notes by keywords (title, text, tags, place names, block contents and comments), by tags, by a ' +
+        'coordinate range of their locations, and by block content: block types, calendar event dates, to-do status ' +
+        'and ratings. Give at least one filter. Returns summaries with each ' +
         "note's tags and locations; use get_note for the full text. Recent edits are indexed in the background, so " +
         'they may take a few seconds to show up (pending counts notes not indexed yet).',
       inputSchema: z.object({
@@ -128,19 +130,46 @@ export function buildServer({ apiUrl, collabUrl, token, canWrite }) {
           })
           .optional()
           .describe('Only notes with a location inside this box. min_lng > max_lng crosses the antimeridian.'),
+        block_types: z
+          .array(z.string().regex(/^[A-Za-z][A-Za-z0-9]{0,63}$/))
+          .max(32)
+          .optional()
+          .describe(
+            'Only notes containing a block of any of these editor node types, e.g. image, taskList, table, codeBlock, ' +
+              'calendarNode, ratingNode, locationNode, attachment.',
+          ),
+        event_from: day.optional().describe('Only notes with a calendar block dated on or after this day (YYYY-MM-DD).'),
+        event_to: day.optional().describe('Only notes with a calendar block dated on or before this day (YYYY-MM-DD).'),
+        tasks: z
+          .enum(['open', 'done'])
+          .optional()
+          .describe('open: notes with an unchecked to-do; done: notes whose to-dos are all checked.'),
+        min_rating: z
+          .number()
+          .gt(0)
+          .max(5)
+          .optional()
+          .describe('Only notes with a rating block of at least this many stars out of 5 (other scales are converted).'),
         page,
         page_size: pageSize,
       }),
       annotations: READ_ONLY,
     },
-    async ({ workspace_id, query, tags, tag_mode, bbox, page: pageNumber, page_size }) => {
-      if (!query?.trim() && !tags?.length && !bbox) return failure('Give at least one of query, tags or bbox.')
+    async ({ workspace_id, query, tags, tag_mode, bbox, block_types, event_from, event_to, tasks, min_rating, page: pageNumber, page_size }) => {
+      const filtered = query?.trim() || tags?.length || bbox || block_types?.length || event_from || event_to || tasks || min_rating
+      if (!filtered) return failure('Give at least one of query, tags, bbox, block_types, event_from, event_to, tasks or min_rating.')
+      if (event_from && event_to && event_from > event_to) return failure('event_from must not be after event_to.')
       if (bbox && bbox.min_lat > bbox.max_lat) return failure('bbox min_lat must not exceed max_lat.')
       const res = await api.searchNotes(workspace_id, {
         q: query,
         tags: tags?.join(','),
         tagMode: tag_mode,
         bbox: bbox && [bbox.min_lng, bbox.min_lat, bbox.max_lng, bbox.max_lat].join(','),
+        types: block_types?.join(','),
+        eventFrom: event_from,
+        eventTo: event_to,
+        tasks,
+        minRating: min_rating,
         pageNumber,
         pageSize: page_size,
         sort: 'updated_at',

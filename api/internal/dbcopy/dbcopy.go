@@ -76,6 +76,9 @@ var tables = []table{
 	{name: "note_search"},
 	{name: "note_tags"},
 	{name: "note_locations"},
+	{name: "note_blocks"},
+	{name: "note_events"},
+	{name: "note_ratings"},
 }
 
 const migrationsTable = "schema_migrations"

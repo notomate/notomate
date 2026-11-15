@@ -100,3 +100,47 @@ func TestNormalize(t *testing.T) {
 		t.Error("blank query should have no terms")
 	}
 }
+
+func TestExtractBlockFacets(t *testing.T) {
+	idx := Extract("ws", "n1", "", `{"type":"doc","content":[
+	 {"type":"calendarNode","attrs":{"date":"2026-07-15","title":"Team sync"}},
+	 {"type":"calendarNode","attrs":{"date":"not a date","title":"Bad"}},
+	 {"type":"calendarNode","attrs":{"date":null,"title":"Undated"}},
+	 {"type":"ratingNode","attrs":{"rating":4.5,"maxRating":5,"label":"Food"}},
+	 {"type":"ratingNode","attrs":{"rating":8,"maxRating":10,"label":""}},
+	 {"type":"ratingNode","attrs":{"rating":0,"maxRating":5,"label":""}},
+	 {"type":"taskList","content":[
+	  {"type":"taskItem","attrs":{"checked":true},"content":[{"type":"paragraph","content":[{"type":"text","text":"done"}]}]},
+	  {"type":"taskItem","attrs":{"checked":false},"content":[{"type":"paragraph"}]},
+	  {"type":"taskItem","attrs":{"checked":false},"content":[{"type":"paragraph"}]}
+	 ]}
+	]}`, nil)
+
+	if len(idx.Events) != 1 || idx.Events[0].Date != "2026-07-15" || idx.Events[0].Title != "Team sync" || idx.Events[0].NoteID != "n1" {
+		t.Errorf("events: %+v", idx.Events)
+	}
+	if len(idx.Ratings) != 2 || idx.Ratings[0].Rating != 4.5 || idx.Ratings[1].MaxRating != 10 || idx.Ratings[1].Seq != 1 {
+		t.Errorf("ratings (the unrated 0 one must be skipped): %+v", idx.Ratings)
+	}
+	if idx.TasksOpen != 2 || idx.TasksDone != 1 {
+		t.Errorf("tasks: open %d done %d", idx.TasksOpen, idx.TasksDone)
+	}
+
+	counts := map[string]int{}
+	for _, b := range idx.Blocks {
+		counts[b.Type] = b.Count
+	}
+	if counts["calendarNode"] != 3 || counts["ratingNode"] != 3 || counts["taskItem"] != 3 || counts["taskList"] != 1 || counts["paragraph"] != 3 {
+		t.Errorf("blocks: %+v", idx.Blocks)
+	}
+	if _, ok := counts["doc"]; ok {
+		t.Error("doc should not count as a block")
+	}
+	if _, ok := counts["text"]; ok {
+		t.Error("text should not count as a block")
+	}
+	// The text of these blocks is still searchable.
+	if !strings.Contains(idx.Body, "team sync") || !strings.Contains(idx.Body, "food") || !strings.Contains(idx.Body, "done") {
+		t.Errorf("body: %s", idx.Body)
+	}
+}

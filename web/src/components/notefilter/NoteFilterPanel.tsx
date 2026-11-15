@@ -1,12 +1,13 @@
 import { ReactNode, useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { SlidersHorizontal, X } from "lucide-react"
+import { SlidersHorizontal, Star, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
-import { BLOCK_KINDS, type DateField, type DatePreset, type NoteFilters, type NoteSort } from "./note-filters"
+import { BLOCK_KINDS, type DateField, type DatePreset, type NoteFilters, type NoteSort, type TaskStatus } from "./note-filters"
 
 const DATE_PRESETS: DatePreset[] = ["any", "today", "7d", "30d", "year", "custom"]
+const MIN_RATINGS = [0, 1, 2, 3, 4, 5]
 
 interface NoteFilterPanelProps {
     filters: NoteFilters
@@ -16,6 +17,8 @@ interface NoteFilterPanelProps {
     creator?: ReactNode
     /** Page-specific tag filter control; pages without a tag index omit it. */
     tags?: ReactNode
+    /** Shows the filters on block content (event date, to-dos, rating), which need the search index. */
+    contentFilters?: boolean
     /** Touch-sized controls for the bottom sheet. */
     sheet?: boolean
     /** Whether the reset button is enabled; true when anything differs from the defaults. */
@@ -75,7 +78,7 @@ const dateInputClass = (sheet: boolean) =>
         sheet ? "px-2.5 py-2 text-base" : "px-2 py-1 text-xs",
     )
 
-export function NoteFilterPanel({ filters, onChange, onReset, creator, tags, sheet = false, canReset, onClose }: NoteFilterPanelProps) {
+export function NoteFilterPanel({ filters, onChange, onReset, creator, tags, contentFilters = false, sheet = false, canReset, onClose }: NoteFilterPanelProps) {
     const { t } = useTranslation()
 
     const toggleKind = (id: string) =>
@@ -191,6 +194,65 @@ export function NoteFilterPanel({ filters, onChange, onReset, creator, tags, she
                     })}
                 </div>
             </Section>
+
+            {contentFilters && (
+                <>
+                    <Section title={t("noteFilter.eventDate")}>
+                        <div className="grid grid-cols-2 gap-2">
+                            <label className="flex flex-col gap-1 min-w-0">
+                                <span className="text-xs text-muted-foreground">{t("noteFilter.from")}</span>
+                                <input
+                                    type="date"
+                                    value={filters.eventFrom}
+                                    max={filters.eventTo || undefined}
+                                    onChange={(e) => onChange({ eventFrom: e.target.value })}
+                                    className={dateInputClass(sheet)}
+                                />
+                            </label>
+                            <label className="flex flex-col gap-1 min-w-0">
+                                <span className="text-xs text-muted-foreground">{t("noteFilter.to")}</span>
+                                <input
+                                    type="date"
+                                    value={filters.eventTo}
+                                    min={filters.eventFrom || undefined}
+                                    onChange={(e) => onChange({ eventTo: e.target.value })}
+                                    className={dateInputClass(sheet)}
+                                />
+                            </label>
+                        </div>
+                    </Section>
+
+                    <Section title={t("noteFilter.tasks")}>
+                        <Segmented<TaskStatus>
+                            sheet={sheet}
+                            value={filters.tasks}
+                            onChange={(tasks) => onChange({ tasks })}
+                            options={[
+                                { value: "any", label: t("noteFilter.tasksAny") },
+                                { value: "open", label: t("noteFilter.tasksOpen") },
+                                { value: "done", label: t("noteFilter.tasksDone") },
+                            ]}
+                        />
+                    </Section>
+
+                    <Section title={t("noteFilter.rating")}>
+                        <div className="flex flex-wrap gap-1.5">
+                            {MIN_RATINGS.map((r) => (
+                                <button
+                                    key={r}
+                                    type="button"
+                                    aria-pressed={filters.minRating === r}
+                                    onClick={() => onChange({ minRating: r })}
+                                    className={chipClass(filters.minRating === r, sheet)}
+                                >
+                                    {r > 0 && <Star size={sheet ? 15 : 13} className="shrink-0" />}
+                                    {r > 0 ? t("noteFilter.ratingAtLeast", { count: r }) : t("noteFilter.ratingAny")}
+                                </button>
+                            ))}
+                        </div>
+                    </Section>
+                </>
+            )}
 
             {tags && <Section title={t("common.tagFilter")}>{tags}</Section>}
             {creator && <Section title={t("common.creator")}>{creator}</Section>}

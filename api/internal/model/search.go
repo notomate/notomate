@@ -5,6 +5,8 @@ type NoteSearch struct {
 	NoteID      string `gorm:"primaryKey"`
 	WorkspaceID string
 	Body        string
+	TasksOpen   int // unchecked to-do items
+	TasksDone   int // checked to-do items
 }
 
 func (NoteSearch) TableName() string { return "note_search" }
@@ -31,11 +33,43 @@ type NoteLocation struct {
 	Lng         float64 `json:"lng"`
 }
 
+// NoteBlock counts the nodes of one type in a note (e.g. "image": 3).
+type NoteBlock struct {
+	WorkspaceID string `json:"-"`
+	NoteID      string `json:"-" gorm:"primaryKey"`
+	Type        string `json:"type" gorm:"primaryKey"`
+	Count       int    `json:"count"`
+}
+
+// NoteEvent is the date of a calendar block, as YYYY-MM-DD.
+type NoteEvent struct {
+	WorkspaceID string `json:"-"`
+	NoteID      string `json:"-" gorm:"primaryKey"`
+	Seq         int    `json:"-" gorm:"primaryKey;autoIncrement:false"`
+	Date        string `json:"date"`
+	Title       string `json:"title"`
+}
+
+// NoteRating is the value of a rating block, out of MaxRating stars.
+type NoteRating struct {
+	WorkspaceID string  `json:"-"`
+	NoteID      string  `json:"-" gorm:"primaryKey"`
+	Seq         int     `json:"-" gorm:"primaryKey;autoIncrement:false"`
+	Rating      float64 `json:"rating"`
+	MaxRating   float64 `json:"max_rating"`
+	Label       string  `json:"label"`
+}
+
 // NoteSearchIndex is everything the indexer stores for one note.
 type NoteSearchIndex struct {
 	Body      string
 	Tags      []NoteTag
 	Locations []NoteLocation
+	Blocks    []NoteBlock
+	Events    []NoteEvent
+	Ratings   []NoteRating
+	TasksOpen int
+	TasksDone int
 }
 
 // BBox is a coordinate range. MinLng > MaxLng means the box crosses the
@@ -55,11 +89,22 @@ type SearchFilter struct {
 	PinnedOnly  bool
 	CreatedBy   string
 	SortBy      string // "updated_at" or "created_at" (default)
-	// BlockTypes, DateField, DateFrom and DateTo work as in NoteFilter.
+	// BlockTypes, DateField, DateFrom and DateTo work as in NoteFilter, but
+	// block types are matched against the index.
 	BlockTypes []string
 	DateField  string
 	DateFrom   string
 	DateTo     string
+	// EventFrom and EventTo keep notes with a calendar block dated within
+	// them, inclusive YYYY-MM-DD; either may be empty.
+	EventFrom string
+	EventTo   string
+	// Tasks is "open" for notes with an unchecked to-do item, "done" for
+	// notes whose to-do items are all checked.
+	Tasks string
+	// MinRating keeps notes with a rating block of at least this many stars
+	// out of 5 (blocks with another maximum are scaled); 0 means no filter.
+	MinRating  float64
 	PageSize   int
 	PageNumber int
 }

@@ -114,7 +114,8 @@ func replaceNoteSearchIndex(g *gorm.DB, workspaceID, noteID string, idx model.No
 		if err := deleteNoteSearchIndex(tx, noteID); err != nil {
 			return err
 		}
-		if err := tx.Create(&model.NoteSearch{NoteID: noteID, WorkspaceID: workspaceID, Body: idx.Body}).Error; err != nil {
+		row := model.NoteSearch{NoteID: noteID, WorkspaceID: workspaceID, Body: idx.Body, TasksOpen: idx.TasksOpen, TasksDone: idx.TasksDone}
+		if err := tx.Create(&row).Error; err != nil {
 			return err
 		}
 		if len(idx.Tags) > 0 {
@@ -127,6 +128,21 @@ func replaceNoteSearchIndex(g *gorm.DB, workspaceID, noteID string, idx model.No
 				return err
 			}
 		}
+		if len(idx.Blocks) > 0 {
+			if err := tx.CreateInBatches(idx.Blocks, 200).Error; err != nil {
+				return err
+			}
+		}
+		if len(idx.Events) > 0 {
+			if err := tx.CreateInBatches(idx.Events, 200).Error; err != nil {
+				return err
+			}
+		}
+		if len(idx.Ratings) > 0 {
+			if err := tx.CreateInBatches(idx.Ratings, 200).Error; err != nil {
+				return err
+			}
+		}
 		res := tx.Model(&model.Note{}).
 			Where("id = ? AND search_indexed_at = ?", noteID, SearchIndexing).
 			Update("search_indexed_at", indexedAt)
@@ -136,8 +152,13 @@ func replaceNoteSearchIndex(g *gorm.DB, workspaceID, noteID string, idx model.No
 	return marked, err
 }
 
+// indexModels are the tables holding a note's search index rows.
+func indexModels() []any {
+	return []any{&model.NoteSearch{}, &model.NoteTag{}, &model.NoteLocation{}, &model.NoteBlock{}, &model.NoteEvent{}, &model.NoteRating{}}
+}
+
 func deleteNoteSearchIndex(tx *gorm.DB, noteID string) error {
-	for _, m := range []any{&model.NoteSearch{}, &model.NoteTag{}, &model.NoteLocation{}} {
+	for _, m := range indexModels() {
 		if err := tx.Where("note_id = ?", noteID).Delete(m).Error; err != nil {
 			return err
 		}
@@ -153,7 +174,7 @@ func DeleteNoteSearchIndex(g *gorm.DB, noteID string) error {
 // (e.g. deleted with their workspace).
 func DeleteOrphanSearchIndex(g *gorm.DB) (int64, error) {
 	var total int64
-	for _, m := range []any{&model.NoteSearch{}, &model.NoteTag{}, &model.NoteLocation{}} {
+	for _, m := range indexModels() {
 		res := g.Where("NOT EXISTS (SELECT 1 FROM notes WHERE notes.id = note_id)").Delete(m)
 		if res.Error != nil {
 			return total, res.Error
@@ -206,16 +227,29 @@ func SearchNotes(g *gorm.DB, f model.SearchFilter) ([]model.Note, error) {
 		q = q.Where("notes.created_by = ?", f.CreatedBy)
 	}
 
-	// Same rules as FindNotes: content is compact TipTap JSON, so a node
-	// shows up as "type":"<name>" (names are validated identifiers).
-	if len(f.BlockTypes) > 0 {
-		conds := make([]string, len(f.BlockTypes))
-		args := make([]any, len(f.BlockTypes))
-		for i, t := range f.BlockTypes {
-			conds[i] = "notes.content LIKE ?"
-			args[i] = `%"type":"` + t + `"%`
+	if len(f.BlockTypes) > 0 { // any of them
+		q = q.Where("EXISTS (SELECT 1 FROM note_blocks b WHERE b.note_id = notes.id AND b.type IN ?)", f.BlockTypes)
+	}
+	if f.EventFrom != "" || f.EventTo != "" {
+		cond, args := "e.note_id = notes.id", []any{}
+		if f.EventFrom != "" {
+			cond += " AND e.date >= ?"
+			args = append(args, f.EventFrom)
 		}
-		q = q.Where("("+strings.Join(conds, " OR ")+")", args...)
+		if f.EventTo != "" {
+			cond += " AND e.date <= ?"
+			args = append(args, f.EventTo)
+		}
+		q = q.Where("EXISTS (SELECT 1 FROM note_events e WHERE "+cond+")", args...)
+	}
+	switch f.Tasks {
+	case "open":
+		q = q.Where("EXISTS (SELECT 1 FROM note_search s WHERE s.note_id = notes.id AND s.tasks_open > 0)")
+	case "done":
+		q = q.Where("EXISTS (SELECT 1 FROM note_search s WHERE s.note_id = notes.id AND s.tasks_done > 0 AND s.tasks_open = 0)")
+	}
+	if f.MinRating > 0 { // rating/max_rating >= min/5, without dividing
+		q = q.Where("EXISTS (SELECT 1 FROM note_ratings r WHERE r.note_id = notes.id AND r.rating * 5 >= ? * r.max_rating)", f.MinRating)
 	}
 	// Timestamps are text in RFC3339 or Go's time.String() layout; the first
 	// 19 characters with ' ' read as 'T' compare correctly in both.

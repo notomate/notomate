@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/notomate/notomate/internal/model"
@@ -34,8 +35,12 @@ type SearchNotesResponse struct {
 //	tags     comma-separated tags; with tagMode=any one is enough, otherwise all
 //	bbox     minLng,minLat,maxLng,maxLat: notes with a location inside; a box
 //	         with minLng > maxLng crosses the antimeridian
+//	eventFrom, eventTo  notes with a calendar block dated within, YYYY-MM-DD,
+//	         both inclusive
+//	tasks    "open": notes with an unchecked to-do; "done": all checked
+//	minRating  notes with a rating block of at least this many stars out of 5
 //	creatorId, parentId, pinned, sort, types, dateField, from, to, pageSize,
-//	pageNumber as in GetNotes
+//	pageNumber as in GetNotes; types are matched against the index
 func (h Handler) SearchNotes(c echo.Context) error {
 	user := c.Get("user").(model.User)
 	var list model.NoteFilter
@@ -64,6 +69,27 @@ func (h Handler) SearchNotes(c echo.Context) error {
 	}
 	if len(f.Tags) > maxSearchTags {
 		return echo.NewHTTPError(http.StatusBadRequest, "too many tags")
+	}
+	for param, dst := range map[string]*string{"eventFrom": &f.EventFrom, "eventTo": &f.EventTo} {
+		if v := c.QueryParam(param); v != "" {
+			if _, err := time.Parse(time.DateOnly, v); err != nil {
+				return echo.NewHTTPError(http.StatusBadRequest, param+" must be a YYYY-MM-DD date")
+			}
+			*dst = v
+		}
+	}
+	switch tasks := c.QueryParam("tasks"); tasks {
+	case "", "open", "done":
+		f.Tasks = tasks
+	default:
+		return echo.NewHTTPError(http.StatusBadRequest, "tasks must be open or done")
+	}
+	if raw := c.QueryParam("minRating"); raw != "" {
+		v, err := strconv.ParseFloat(raw, 64)
+		if err != nil || v < 0 || v > 5 {
+			return echo.NewHTTPError(http.StatusBadRequest, "minRating must be a number from 0 to 5")
+		}
+		f.MinRating = v
 	}
 	if raw := c.QueryParam("bbox"); raw != "" {
 		bbox, err := parseBBox(raw)

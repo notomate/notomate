@@ -20,6 +20,7 @@ import {
 export type NoteSort = "created_at" | "updated_at"
 export type DateField = "created" | "updated"
 export type DatePreset = "any" | "today" | "7d" | "30d" | "year" | "custom"
+export type TaskStatus = "any" | "open" | "done"
 
 /** A filterable kind of block; one kind can cover several stored TipTap node types. */
 export interface BlockKind {
@@ -53,6 +54,13 @@ export interface NoteFilters {
     customFrom: string
     customTo: string
     blockKinds: string[]
+    /** Calendar block date range as `YYYY-MM-DD`, both inclusive (search only). */
+    eventFrom: string
+    eventTo: string
+    /** To-do status (search only). */
+    tasks: TaskStatus
+    /** Minimum rating in stars out of 5; 0 is any (search only). */
+    minRating: number
 }
 
 export const DEFAULT_NOTE_FILTERS: NoteFilters = {
@@ -62,6 +70,10 @@ export const DEFAULT_NOTE_FILTERS: NoteFilters = {
     customFrom: "",
     customTo: "",
     blockKinds: [],
+    eventFrom: "",
+    eventTo: "",
+    tasks: "any",
+    minRating: 0,
 }
 
 /** Query parameters the note list endpoints accept for these filters. */
@@ -71,6 +83,10 @@ export interface NoteFilterParams {
     dateField?: DateField
     from?: string
     to?: string
+    eventFrom?: string
+    eventTo?: string
+    tasks?: "open" | "done"
+    minRating?: string
 }
 
 const startOfLocalDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
@@ -110,12 +126,17 @@ export function toFilterParams(f: NoteFilters, now = new Date()): NoteFilterPara
         if (from) params.from = isoSeconds(from)
         if (to) params.to = isoSeconds(to)
     }
+    if (f.eventFrom) params.eventFrom = f.eventFrom
+    if (f.eventTo) params.eventTo = f.eventTo
+    if (f.tasks !== "any") params.tasks = f.tasks
+    if (f.minRating > 0) params.minRating = String(f.minRating)
     return params
 }
 
 /** Number of filters that differ from the defaults (sort is not counted). */
 export function countActiveFilters(f: NoteFilters): number {
-    return (f.datePreset !== "any" ? 1 : 0) + f.blockKinds.length
+    return (f.datePreset !== "any" ? 1 : 0) + f.blockKinds.length +
+        (f.eventFrom || f.eventTo ? 1 : 0) + (f.tasks !== "any" ? 1 : 0) + (f.minRating > 0 ? 1 : 0)
 }
 
 export function useNoteFilters() {

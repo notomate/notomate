@@ -100,8 +100,9 @@ const SearchPage = () => {
 
     const notes = data?.pages.flatMap((p) => p.notes) || []
     const pending = data?.pages[0]?.pending ?? 0
-    // Keyword and tag matches come from the index, which may lag behind edits.
-    const usesIndex = !!debouncedQuery || tags.length > 0
+    // Keyword, tag and block filters match the index, which may lag behind edits.
+    const usesIndex = !!debouncedQuery || tags.length > 0 || !!params.types || !!params.eventFrom ||
+        !!params.eventTo || !!params.tasks || !!params.minRating
 
     const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
         if (observerRef.current) observerRef.current.disconnect()
@@ -140,6 +141,7 @@ const SearchPage = () => {
             onReset={() => { reset(); setCreatorId(""); setTags([]) }}
             activeCount={totalActive}
             canReset={hasFilters}
+            contentFilters
             creator={
                 <SelectField
                     aria-label={t("common.creator")}

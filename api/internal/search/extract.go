@@ -1,7 +1,8 @@
 // Package search builds the structured search index of notes: their
-// normalized text, tags and coordinates. Notes whose search_indexed_at is
-// NULL are picked up by a background scanner and handed to a pool of
-// workers (see Indexer), so saving a note never waits for indexing.
+// normalized text, tags, coordinates, block types, calendar dates, ratings
+// and to-do status. Notes whose search_indexed_at is NULL are picked up by
+// a background scanner and handed to a pool of workers (see Indexer), so
+// saving a note never waits for indexing.
 package search
 
 import (
@@ -10,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -78,12 +80,20 @@ type extractor struct {
 	tags      []model.NoteTag
 	seenTags  map[string]bool
 	locations []model.NoteLocation
+	blocks    map[string]int
+	events    []model.NoteEvent
+	ratings   []model.NoteRating
+	tasksOpen int
+	tasksDone int
 }
+
+// maxBlockType keeps node type names within the indexed VARCHAR(64).
+const maxBlockType = 64
 
 // Extract builds the index of a note from its title, its TipTap JSON
 // content and the bodies of its comments.
 func Extract(workspaceID, noteID, title, content string, comments []string) model.NoteSearchIndex {
-	e := &extractor{seenTags: map[string]bool{}}
+	e := &extractor{seenTags: map[string]bool{}, blocks: map[string]int{}}
 	e.write(title)
 	e.sep()
 
@@ -109,7 +119,31 @@ func Extract(workspaceID, noteID, title, content string, comments []string) mode
 		e.locations[i].NoteID = noteID
 		e.locations[i].Seq = i
 	}
-	return model.NoteSearchIndex{Body: Normalize(e.text.String()), Tags: e.tags, Locations: e.locations}
+	for i := range e.events {
+		e.events[i].WorkspaceID = workspaceID
+		e.events[i].NoteID = noteID
+		e.events[i].Seq = i
+	}
+	for i := range e.ratings {
+		e.ratings[i].WorkspaceID = workspaceID
+		e.ratings[i].NoteID = noteID
+		e.ratings[i].Seq = i
+	}
+	blocks := make([]model.NoteBlock, 0, len(e.blocks))
+	for typ, n := range e.blocks {
+		blocks = append(blocks, model.NoteBlock{WorkspaceID: workspaceID, NoteID: noteID, Type: typ, Count: n})
+	}
+	sort.Slice(blocks, func(i, j int) bool { return blocks[i].Type < blocks[j].Type })
+	return model.NoteSearchIndex{
+		Body:      Normalize(e.text.String()),
+		Tags:      e.tags,
+		Locations: e.locations,
+		Blocks:    blocks,
+		Events:    e.events,
+		Ratings:   e.ratings,
+		TasksOpen: e.tasksOpen,
+		TasksDone: e.tasksDone,
+	}
 }
 
 func (e *extractor) write(s string) { e.text.WriteString(s) }
@@ -140,6 +174,32 @@ func (e *extractor) node(n map[string]any) {
 	}
 	e.sep()
 	attrs, _ := n["attrs"].(map[string]any)
+	if typ != "" && typ != "doc" && len(typ) <= maxBlockType {
+		e.blocks[typ]++
+	}
+	switch typ {
+	case "calendarNode":
+		// The block's date input stores a plain YYYY-MM-DD day.
+		if d := str(attrs["date"]); isDay(d) {
+			e.events = append(e.events, model.NoteEvent{Date: d, Title: str(attrs["title"])})
+		}
+	case "ratingNode":
+		rating, okRating := num(attrs["rating"])
+		maxRating, okMax := num(attrs["maxRating"])
+		if !okMax || maxRating <= 0 {
+			maxRating = 5 // the block's default
+		}
+		// A new block starts at 0 with no label: nothing rated yet.
+		if okRating && rating >= 0 && rating <= maxRating && (rating > 0 || str(attrs["label"]) != "") {
+			e.ratings = append(e.ratings, model.NoteRating{Rating: rating, MaxRating: maxRating, Label: str(attrs["label"])})
+		}
+	case "taskItem":
+		if checked, _ := attrs["checked"].(bool); checked {
+			e.tasksDone++
+		} else {
+			e.tasksOpen++
+		}
+	}
 	switch typ {
 	case "tagsNode":
 		if list, ok := attrs["tags"].([]any); ok {
@@ -274,6 +334,12 @@ func num(v any) (float64, bool) {
 		return 0, false
 	}
 	return f, true
+}
+
+// isDay reports whether s is a valid YYYY-MM-DD date.
+func isDay(s string) bool {
+	_, err := time.Parse(time.DateOnly, s)
+	return err == nil
 }
 
 func looksLikeURL(s string) bool {
