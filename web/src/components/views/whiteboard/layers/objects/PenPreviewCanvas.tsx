@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Point } from '../../tools/types';
+import { INK } from '../../ui';
 
 interface PenPreviewCanvasProps {
     points: Point[];
@@ -49,6 +50,7 @@ const PenPreviewCanvas: React.FC<PenPreviewCanvasProps> = ({
     return (
         <canvas
             ref={canvasRef}
+            className={INK}
             width={width}
             height={height}
             style={{

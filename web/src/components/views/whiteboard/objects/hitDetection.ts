@@ -1,5 +1,6 @@
 import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, WhiteboardEdgeData } from '../../../../types/view';
 import { CanvasObject, WhiteboardObject } from '../tools/types';
+import { distanceToEdge } from './edgeGeometry';
 
 export interface HitResult {
     id: string;
@@ -46,34 +47,10 @@ export const findObjectAtPosition = (
                 }
             } else if (obj.type === 'whiteboard_edge') {
                 const edgeData = data as WhiteboardEdgeData;
+                if (!edgeData?.startPoint || !edgeData?.endPoint) continue;
                 const tolerance = Math.max(5, edgeData.strokeWidth || 2);
-
-                // Point-to-line distance calculation
-                const start = edgeData.startPoint;
-                const end = edgeData.endPoint;
-
-                // Calculate distance from point to line segment
-                const lineLength = Math.sqrt(
-                    Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)
-                );
-
-                if (lineLength > 0) {
-                    // Calculate perpendicular distance
-                    const t = Math.max(0, Math.min(1,
-                        ((x - start.x) * (end.x - start.x) + (y - start.y) * (end.y - start.y)) /
-                        (lineLength * lineLength)
-                    ));
-
-                    const closestX = start.x + t * (end.x - start.x);
-                    const closestY = start.y + t * (end.y - start.y);
-
-                    const distance = Math.sqrt(
-                        Math.pow(x - closestX, 2) + Math.pow(y - closestY, 2)
-                    );
-
-                    if (distance <= tolerance) {
-                        return { id, type: 'view' };
-                    }
+                if (distanceToEdge({ x, y }, edgeData) <= tolerance) {
+                    return { id, type: 'view' };
                 }
             }
         } catch (e) {

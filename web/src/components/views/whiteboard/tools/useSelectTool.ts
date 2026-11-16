@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, WhiteboardEdgeData } from '../../../../types/view';
 import { CanvasObject, WhiteboardObject, Point, Bounds, ResizeHandle } from './types';
 
@@ -58,6 +58,10 @@ export const useSelectTool = ({
     const [resizeObjectId, setResizeObjectId] = useState<string | null>(null);
     // Store original positions for all selected objects when dragging starts
     const [dragStartPositions, setDragStartPositions] = useState<Map<string, Point>>(new Map());
+    // Pointer position at drag start; a drag only "counts" once it passes a small threshold,
+    // so a plain click on a connected edge doesn't detach it.
+    const dragOriginRef = useRef<Point | null>(null);
+    const hasMovedRef = useRef(false);
 
     const selectObject = useCallback((objectId: string, addToSelection: boolean = false) => {
         if (addToSelection) {
@@ -137,6 +141,8 @@ export const useSelectTool = ({
         if (ids.length === 0) return;
 
         setIsDragging(true);
+        dragOriginRef.current = pos;
+        hasMovedRef.current = false;
 
         // Store original positions for all objects to drag
         const positions = new Map<string, Point>();
@@ -178,6 +184,12 @@ export const useSelectTool = ({
 
     const updateDrag = useCallback((pos: Point) => {
         if (!isDragging || !dragOffset || dragStartPositions.size === 0) return;
+
+        if (!hasMovedRef.current) {
+            const origin = dragOriginRef.current;
+            if (origin && Math.hypot(pos.x - origin.x, pos.y - origin.y) < 3) return;
+            hasMovedRef.current = true;
+        }
 
         // Use dragStartPositions keys as source of truth — avoids stale selectedObjectIds closure
         const idsToMove = Array.from(dragStartPositions.keys());
@@ -230,10 +242,17 @@ export const useSelectTool = ({
                     // so we derive endPoint from newPos + original offset to avoid stale-closure drift
                     const endOffsetX = edgeData.endPoint.x - edgeData.startPoint.x;
                     const endOffsetY = edgeData.endPoint.y - edgeData.startPoint.y;
+                    // An end stays attached only if the object it's bound to moves along with
+                    // the edge; otherwise detach it, or updateConnectedEdges would snap it back.
+                    const keepStart = !!edgeData.startObjectId && dragStartPositions.has(edgeData.startObjectId);
+                    const keepEnd = !!edgeData.endObjectId && dragStartPositions.has(edgeData.endObjectId);
                     updatedObj.data = {
                         ...edgeData,
                         startPoint: newPos,
                         endPoint: { x: newPos.x + endOffsetX, y: newPos.y + endOffsetY },
+                        // Only the object link is dropped; the side is kept as the elbow's routing hint.
+                        ...(keepStart ? {} : { startObjectId: null }),
+                        ...(keepEnd ? {} : { endObjectId: null }),
                     };
                 } else {
                     updatedObj.data = {
@@ -385,7 +404,7 @@ export const useSelectTool = ({
     }, [isResizing, resizeObjectId, resizeHandle, resizeStartBounds, resizeStartData, canvasObjects, viewObjects, setCanvasObjects, setViewObjects]);
 
     const finishDragOrResize = useCallback(() => {
-        if (isDragging && dragStartPositions.size > 0) {
+        if (isDragging && dragStartPositions.size > 0 && hasMovedRef.current) {
             // Send updates for all moved objects (use dragStartPositions keys, not selectedObjectIds)
             Array.from(dragStartPositions.keys()).forEach(objectId => {
                 const canvasObj = canvasObjects.get(objectId);

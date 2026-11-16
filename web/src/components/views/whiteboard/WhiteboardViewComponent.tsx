@@ -1,11 +1,21 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { WhiteboardTextData, WhiteboardEdgeData, ViewObjectType, ConnectionPointType } from '../../../types/view';
+import { WhiteboardTextData, WhiteboardEdgeData, WhiteboardShapeData, WhiteboardStrokeData, ViewObjectType, ConnectionPointType } from '../../../types/view';
 import { useTranslation } from 'react-i18next';
 import WhiteboardToolbar from './WhiteboardToolbar';
-import WhiteboardToolProperties from './WhiteboardToolProperties';
+import WhiteboardToolProperties, { DrawingDefaults, ShapeStyle } from './WhiteboardToolProperties';
+import WhiteboardShortcutsDialog from './WhiteboardShortcutsDialog';
 import AddElementDialog from './AddElementDialog';
 import { useWhiteboardCollab } from '../../../hooks/use-whiteboard-collab';
-import { Lock, Unlock } from 'lucide-react';
+import { Minus, Plus, Maximize, Menu, Trash2, Keyboard, CircleHelp, PenLine, Undo2, Redo2 } from 'lucide-react';
+import { DropdownMenu } from 'radix-ui';
+import Tooltip from '@/components/tooltip/Tooltip';
+import { ISLAND, ISLAND_BTN } from './ui';
+
+const isEditableTarget = (target: EventTarget | null) => {
+    const el = target as HTMLElement | null;
+    if (!el) return false;
+    return el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
+};
 
 // Import modular tools and utilities
 import {
@@ -13,12 +23,14 @@ import {
     CanvasObject,
     WhiteboardObject,
     Point,
-    Bounds
+    Bounds,
+    TOOL_SHORTCUTS,
+    TOOL_NUMBERS
 } from './tools/types';
 import { useViewport } from './hooks/useViewport';
 import { usePenTool } from './tools/usePenTool';
 import { useShapeTool } from './tools/useShapeTool';
-import { useEdgeTool } from './tools/useEdgeTool';
+import { useEdgeTool, DEFAULT_EDGE_CURVE } from './tools/useEdgeTool';
 import { useTextTool } from './tools/useTextTool';
 import { useEraserTool } from './tools/useEraserTool';
 import { useSelectTool } from './tools/useSelectTool';
@@ -60,7 +72,11 @@ const WhiteboardViewComponent = ({
         isConnected,
         canvasObjects: remoteCanvasObjects,
         viewObjects: remoteViewObjects,
-        isInitialized
+        isInitialized,
+        undo,
+        redo,
+        canUndo,
+        canRedo,
     } = useWhiteboardCollab({
         viewId: viewId || '',
         workspaceId: workspaceId || '',
@@ -80,15 +96,25 @@ const WhiteboardViewComponent = ({
 
     // Tool state
     const [currentTool, setCurrentTool] = useState<Tool>('select');
-    const [currentColor, setCurrentColor] = useState('#000000');
+    const [currentColor, setCurrentColor] = useState('#1e1e1e');
     const [currentStrokeWidth, setCurrentStrokeWidth] = useState(2);
+    const [currentFill, setCurrentFill] = useState<string | null>(null);
+    const [currentRoundness, setCurrentRoundness] = useState<'sharp' | 'round'>('round');
     const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
+
+    // Dragging one end of a selected edge (to move it or re-attach it to another object)
+    const [endpointDrag, setEndpointDrag] = useState<{
+        edgeId: string;
+        end: 'start' | 'end';
+        snap: { objectId: string; connectionPoint: ConnectionPointType; position: Point } | null;
+    } | null>(null);
 
     // Lock state
     const [isLocked, setIsLocked] = useState(false);
 
     // Dialog state
     const [isAddingNote, setIsAddingNote] = useState(false);
+    const [showShortcuts, setShowShortcuts] = useState(false);
 
     // Canvas size (for PenPreviewCanvas dimensions)
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -136,6 +162,8 @@ const WhiteboardViewComponent = ({
     const shapeTool = useShapeTool({
         currentColor,
         currentStrokeWidth,
+        currentFill,
+        currentRoundness,
         setCanvasObjects,
         sendUpdate
     });
@@ -209,6 +237,21 @@ const WhiteboardViewComponent = ({
         }
     }, [isInitialized, remoteViewObjects]);
 
+    // Picking a drawing tool clears the selection, so the panel shows that tool's defaults
+    useEffect(() => {
+        if (currentTool !== 'select' && currentTool !== 'hand') {
+            setSelectedObjectIds([]);
+        }
+    }, [currentTool]);
+
+    // Drop selected ids whose objects no longer exist (after undo/redo or a remote delete)
+    useEffect(() => {
+        setSelectedObjectIds(prev => {
+            const next = prev.filter(id => canvasObjects.has(id) || viewObjects.has(id));
+            return next.length === prev.length ? prev : next;
+        });
+    }, [canvasObjects, viewObjects]);
+
     // Observe container size for PenPreviewCanvas
     useLayoutEffect(() => {
         const container = containerRef.current;
@@ -262,8 +305,10 @@ const WhiteboardViewComponent = ({
             hoverTarget: edgeTool.hoverTarget,
             color: currentColor,
             strokeWidth: currentStrokeWidth,
+            curveType: DEFAULT_EDGE_CURVE,
+            startConnectionPoint: edgeTool.edgeStartConnectionPoint,
         };
-    }, [edgeTool.isDrawing, edgeTool.edgeStartPoint, edgeTool.edgeEndPoint, edgeTool.hoverTarget, currentColor, currentStrokeWidth]);
+    }, [edgeTool.isDrawing, edgeTool.edgeStartPoint, edgeTool.edgeEndPoint, edgeTool.hoverTarget, edgeTool.edgeStartConnectionPoint, currentColor, currentStrokeWidth]);
 
     // Get pointer position in canvas/world coordinates
     const getPointerPosition = (e: React.MouseEvent | React.TouchEvent): Point | null => {
@@ -312,8 +357,8 @@ const WhiteboardViewComponent = ({
             return;
         }
 
-        // In public mode or locked mode, only allow panning
-        if (isReadOnly || isLocked) {
+        // Read-only, locked or hand tool: only allow panning
+        if (isReadOnly || isLocked || currentTool === 'hand') {
             setIsPanning(true);
             setLastPanPoint({ x: clientX, y: clientY });
             return;
@@ -323,6 +368,21 @@ const WhiteboardViewComponent = ({
 
         if (currentTool === 'select' || currentTool === 'marquee') {
             const isShiftKey = 'shiftKey' in e && e.shiftKey;
+
+            // Grab an endpoint handle of the selected edge
+            if (selectedObjectIds.length === 1) {
+                const edge = viewObjects.get(selectedObjectIds[0]);
+                if (edge?.type === 'whiteboard_edge') {
+                    const d = edge.data as WhiteboardEdgeData;
+                    const hitRadius = 10 / viewport.zoom;
+                    const near = (p: Point) => Math.hypot(pos.x - p.x, pos.y - p.y) <= hitRadius;
+                    const end = near(d.endPoint) ? 'end' : near(d.startPoint) ? 'start' : null;
+                    if (end) {
+                        setEndpointDrag({ edgeId: edge.id, end, snap: null });
+                        return;
+                    }
+                }
+            }
 
             if (selectedObjectIds.length === 1) {
                 const selectedId = selectedObjectIds[0];
@@ -387,16 +447,10 @@ const WhiteboardViewComponent = ({
                     selectTool.startDragging(pos, [clickedObject.id]);
                 }
             } else {
-                if (currentTool === 'marquee') {
-                    if (!isShiftKey) {
-                        selectTool.clearSelection();
-                    }
-                    selectTool.startSelectionBox(pos);
-                } else {
-                    setSelectedObjectIds([]);
-                    setIsPanning(true);
-                    setLastPanPoint({ x: clientX, y: clientY });
+                if (!isShiftKey) {
+                    selectTool.clearSelection();
                 }
+                selectTool.startSelectionBox(pos);
             }
         } else if (currentTool === 'pen') {
             penTool.startDrawing(pos);
@@ -414,7 +468,13 @@ const WhiteboardViewComponent = ({
         } else if (currentTool === 'note') {
             setIsAddingNote(true);
         } else if (currentTool === 'edge') {
-            edgeTool.startDrawing(pos);
+            // Snap the arrow's start onto a nearby connection point, if any
+            const startCP = findNearestConnectionPoint(pos.x, pos.y, canvasObjects, viewObjects, null, ctx);
+            if (startCP) {
+                edgeTool.startDrawing(startCP.position, startCP.objectId, startCP.connectionPoint);
+            } else {
+                edgeTool.startDrawing(pos);
+            }
         }
     };
 
@@ -439,6 +499,24 @@ const WhiteboardViewComponent = ({
         if (!pos) return;
 
         const ctx = getCtx();
+
+        if (endpointDrag) {
+            const edge = viewObjects.get(endpointDrag.edgeId);
+            if (!edge) return;
+            const d = edge.data as WhiteboardEdgeData;
+            const otherObjectId = endpointDrag.end === 'start' ? d.endObjectId : d.startObjectId;
+            const snap = findNearestConnectionPoint(pos.x, pos.y, canvasObjects, viewObjects, otherObjectId ?? null, ctx);
+            const point = snap ? snap.position : pos;
+            const updated: WhiteboardObject = {
+                ...edge,
+                data: endpointDrag.end === 'start'
+                    ? { ...d, startPoint: point, startConnectionPoint: snap?.connectionPoint ?? null }
+                    : { ...d, endPoint: point, endConnectionPoint: snap?.connectionPoint ?? null },
+            };
+            setViewObjects(prev => new Map(prev).set(edge.id, updated));
+            setEndpointDrag({ ...endpointDrag, snap });
+            return;
+        }
 
         if (selectTool.isSelecting) {
             selectTool.updateSelectionBox(pos);
@@ -513,6 +591,34 @@ const WhiteboardViewComponent = ({
         const pos = getPointerPosition(e);
         const ctx = getCtx();
 
+        if (endpointDrag) {
+            const edge = viewObjects.get(endpointDrag.edgeId);
+            if (edge) {
+                const d = edge.data as WhiteboardEdgeData;
+                const snap = endpointDrag.snap;
+                const updated: WhiteboardObject = {
+                    ...edge,
+                    data: endpointDrag.end === 'start'
+                        ? {
+                            ...d,
+                            startPoint: snap ? snap.position : d.startPoint,
+                            startObjectId: snap?.objectId ?? null,
+                            startConnectionPoint: snap?.connectionPoint ?? null,
+                        }
+                        : {
+                            ...d,
+                            endPoint: snap ? snap.position : d.endPoint,
+                            endObjectId: snap?.objectId ?? null,
+                            endConnectionPoint: snap?.connectionPoint ?? null,
+                        },
+                };
+                setViewObjects(prev => new Map(prev).set(edge.id, updated));
+                sendUpdate({ type: 'update_view_object', object: updated });
+            }
+            setEndpointDrag(null);
+            return;
+        }
+
         if (selectTool.isSelecting) {
             if (selectTool.selectionBox) {
                 const box = {
@@ -577,14 +683,21 @@ const WhiteboardViewComponent = ({
                     }
                 }
 
-                edgeTool.finishDrawing(endPos, endObjectId, endConnectionPoint);
+                const created = edgeTool.finishDrawing(endPos, endObjectId, endConnectionPoint);
+                // Back to Select after drawing an arrow (it is already selected)
+                if (created) setCurrentTool('select');
             } else {
                 edgeTool.cancelDrawing();
             }
         } else if (penTool.isDrawing) {
             penTool.finishDrawing();
         } else if (shapeTool.isDrawing) {
-            shapeTool.finishDrawing(currentTool);
+            const shapeId = shapeTool.finishDrawing(currentTool);
+            // Back to Select with the new shape selected, ready to move / restyle
+            if (shapeId) {
+                setSelectedObjectIds([shapeId]);
+                setCurrentTool('select');
+            }
         } else if (eraserTool.isErasing) {
             eraserTool.finishErasing();
         }
@@ -679,7 +792,7 @@ const WhiteboardViewComponent = ({
                 (e.currentTarget as any).twoFingerMidpoint = { x: midX, y: midY };
             }
         } else {
-            if (penTool.isDrawing || selectTool.isDragging || isPanning) {
+            if (penTool.isDrawing || selectTool.isDragging || endpointDrag || isPanning) {
                 e.preventDefault();
             }
             handlePointerMove(e);
@@ -693,7 +806,7 @@ const WhiteboardViewComponent = ({
             delete (e.currentTarget as any).pinchZoomCenter;
         }
         if (e.touches.length === 0) {
-            if (penTool.isDrawing || selectTool.isDragging || isPanning) {
+            if (penTool.isDrawing || selectTool.isDragging || endpointDrag || isPanning) {
                 e.preventDefault();
             }
             handlePointerUp(e);
@@ -775,6 +888,81 @@ const WhiteboardViewComponent = ({
         return null;
     }, [selectedObjectIds, viewObjects]);
 
+    // Style of the selected strokes / shapes (first one wins), for the property panel
+    const selectedShapeStyle = useMemo((): ShapeStyle | null => {
+        let style: ShapeStyle | null = null;
+        let fillable = false;
+        let roundable = false;
+        let roundness: 'sharp' | 'round' | undefined;
+        for (const id of selectedObjectIds) {
+            const obj = canvasObjects.get(id);
+            if (!obj) continue;
+            if (obj.type === 'shape') {
+                const d = obj.data as WhiteboardShapeData;
+                if (d.type !== 'line') fillable = true;
+                if (d.type === 'rectangle') {
+                    roundable = true;
+                    roundness ??= d.roundness ?? 'sharp';
+                }
+                style ??= {
+                    color: d.color,
+                    strokeWidth: d.strokeWidth,
+                    fill: d.filled ? (d.fillColor || d.color) : null,
+                    fillable: false,
+                    roundness: 'sharp',
+                    roundable: false,
+                };
+            } else {
+                const d = obj.data as WhiteboardStrokeData;
+                style ??= { color: d.color, strokeWidth: d.width, fill: null, fillable: false, roundness: 'sharp', roundable: false };
+            }
+        }
+        return style ? { ...style, fillable, roundable, roundness: roundness ?? 'sharp' } : null;
+    }, [selectedObjectIds, canvasObjects]);
+
+    // Apply colour / width / fill to every selected stroke and shape
+    const handleShapeStyleUpdate = useCallback((updates: Partial<DrawingDefaults>) => {
+        const changed: CanvasObject[] = [];
+        selectedObjectIds.forEach(id => {
+            const obj = canvasObjects.get(id);
+            if (!obj) return;
+            if (obj.type === 'shape') {
+                const d = obj.data as WhiteboardShapeData;
+                const next: WhiteboardShapeData = { ...d };
+                if (updates.color !== undefined) next.color = updates.color;
+                if (updates.strokeWidth !== undefined) next.strokeWidth = updates.strokeWidth;
+                if (updates.fill !== undefined && d.type !== 'line') {
+                    next.filled = updates.fill !== null;
+                    next.fillColor = updates.fill ?? undefined;
+                }
+                if (updates.roundness !== undefined && d.type === 'rectangle') {
+                    next.roundness = updates.roundness;
+                }
+                changed.push({ ...obj, data: next });
+            } else {
+                const d = obj.data as WhiteboardStrokeData;
+                const next: WhiteboardStrokeData = { ...d };
+                if (updates.color !== undefined) next.color = updates.color;
+                if (updates.strokeWidth !== undefined) next.width = updates.strokeWidth;
+                changed.push({ ...obj, data: next });
+            }
+        });
+        if (changed.length === 0) return;
+        setCanvasObjects(prev => {
+            const m = new Map(prev);
+            changed.forEach(o => m.set(o.id, o));
+            return m;
+        });
+        changed.forEach(o => sendUpdate({ type: 'update_canvas_object', object: o }));
+    }, [selectedObjectIds, canvasObjects, sendUpdate]);
+
+    const handleDefaultsChange = useCallback((updates: Partial<DrawingDefaults>) => {
+        if (updates.color !== undefined) setCurrentColor(updates.color);
+        if (updates.strokeWidth !== undefined) setCurrentStrokeWidth(updates.strokeWidth);
+        if (updates.fill !== undefined) setCurrentFill(updates.fill);
+        if (updates.roundness !== undefined) setCurrentRoundness(updates.roundness);
+    }, []);
+
     // Get cursor style
     const getCursor = useCallback(() => {
         if (selectTool.isResizing) {
@@ -787,9 +975,51 @@ const WhiteboardViewComponent = ({
             }
         }
         if (selectTool.isDragging) return 'move';
-        if (isPanning || isSpacePressed) return 'grab';
-        return 'crosshair';
-    }, [selectTool.isResizing, selectTool.resizeHandle, selectTool.isDragging, isPanning, isSpacePressed]);
+        if (endpointDrag) return 'grabbing';
+        if (isPanning) return 'grabbing';
+        if (isSpacePressed || isReadOnly || isLocked || currentTool === 'hand') return 'grab';
+        switch (currentTool) {
+            case 'select':
+            case 'marquee':
+            case 'note':
+                return 'default';
+            case 'text':
+                return 'text';
+            default:
+                return 'crosshair';
+        }
+    }, [selectTool.isResizing, selectTool.resizeHandle, selectTool.isDragging, endpointDrag, isPanning, isSpacePressed, isReadOnly, isLocked, currentTool]);
+
+    // Fit all content into the visible area
+    const handleFitToContent = useCallback(() => {
+        const container = containerRef.current;
+        if (!container) return;
+        const ctx = getCtx();
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        const ids = [...canvasObjects.keys(), ...viewObjects.keys()];
+        ids.forEach(id => {
+            const b = getObjectBounds(id, canvasObjects, viewObjects, ctx);
+            if (!b) return;
+            minX = Math.min(minX, b.x, b.x + b.width);
+            minY = Math.min(minY, b.y, b.y + b.height);
+            maxX = Math.max(maxX, b.x, b.x + b.width);
+            maxY = Math.max(maxY, b.y, b.y + b.height);
+        });
+        if (!isFinite(minX)) {
+            handleResetZoom();
+            return;
+        }
+        const { width, height } = container.getBoundingClientRect();
+        const padding = 80;
+        const contentW = Math.max(1, maxX - minX);
+        const contentH = Math.max(1, maxY - minY);
+        const zoom = Math.max(0.1, Math.min(2, Math.min((width - padding * 2) / contentW, (height - padding * 2) / contentH)));
+        setViewport({
+            zoom,
+            x: width / 2 - (minX + contentW / 2) * zoom,
+            y: height / 2 - (minY + contentH / 2) * zoom,
+        });
+    }, [canvasObjects, viewObjects, getCtx, handleResetZoom, setViewport]);
 
     // Handle note height change from NoteOverlay
     const handleNoteHeightChange = useCallback((viewObjectId: string, height: number) => {
@@ -837,16 +1067,47 @@ const WhiteboardViewComponent = ({
         }
     }, [sendUpdate]);
 
+    // True while a pointer gesture is mid-way; undo/redo would fight with it
+    const isInteracting = penTool.isDrawing || shapeTool.isDrawing || edgeTool.isDrawing ||
+        selectTool.isDragging || selectTool.isResizing || selectTool.isSelecting || !!endpointDrag;
+
     // Handle keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Delete' && selectedObjectIds.length > 0) {
+            // Never hijack keys while the user is typing (property panel, notes, dialogs)
+            if (isEditableTarget(e.target)) return;
+
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedObjectIds.length > 0 && !isReadOnly && !isLocked) {
+                e.preventDefault();
                 handleDelete();
             } else if (e.key === 'Escape') {
                 setSelectedObjectIds([]);
+            } else if (e.key === '?') {
+                setShowShortcuts(v => !v);
             } else if (e.key === ' ' && !penTool.isDrawing && !selectTool.isDragging && !selectTool.isResizing) {
                 e.preventDefault();
                 setIsSpacePressed(true);
+            } else if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) {
+                e.preventDefault();
+                if (isReadOnly || isLocked || isInteracting) return;
+                const isRedo = e.key.toLowerCase() === 'y' || e.shiftKey;
+                if (isRedo) redo(); else undo();
+            } else if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+                e.preventDefault();
+                handleZoomIn();
+            } else if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+                e.preventDefault();
+                handleZoomOut();
+            } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+                e.preventDefault();
+                handleResetZoom();
+            } else if (e.shiftKey && e.code === 'Digit1') {
+                handleFitToContent();
+            } else if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && !isReadOnly && !isLocked) {
+                const key = e.key.toUpperCase();
+                const tools = Object.keys(TOOL_SHORTCUTS) as Tool[];
+                const tool = tools.find(k => TOOL_SHORTCUTS[k] === key || TOOL_NUMBERS[k] === key);
+                if (tool) setCurrentTool(tool);
             }
         };
 
@@ -866,7 +1127,7 @@ const WhiteboardViewComponent = ({
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [selectedObjectIds, penTool.isDrawing, selectTool.isDragging, selectTool.isResizing, isPanning]);
+    }, [selectedObjectIds, penTool.isDrawing, selectTool.isDragging, selectTool.isResizing, isPanning, isReadOnly, isLocked, isInteracting, undo, redo, handleZoomIn, handleZoomOut, handleResetZoom, handleFitToContent]);
 
     // Determine loading state
     const shouldShowLoading = !disableWebSocket && !isInitialized && !(isPublic && initialCanvasObjects && initialViewObjects);
@@ -930,6 +1191,9 @@ const WhiteboardViewComponent = ({
                     edgePreview={edgePreview}
                     currentColor={currentColor}
                     currentStrokeWidth={currentStrokeWidth}
+                    currentFill={currentFill}
+                    currentRoundness={currentRoundness}
+                    snapPoint={endpointDrag?.snap?.position ?? null}
                 />
 
                 {/* [4] Event capture div — transparent, captures all pointer events */}
@@ -947,93 +1211,194 @@ const WhiteboardViewComponent = ({
 
                 {/* [5] UI overlay — sync status, zoom controls, toolbar, tool properties */}
 
-                {/* Sync status indicator */}
+                {/* Sync status — quiet dot when connected, explicit badge when not */}
                 {!isReadOnly && (
-                    <div className="absolute top-4 right-4 z-50 bg-white dark:bg-neutral-800 rounded-lg shadow-md px-3 py-2 flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                            isConnected ? 'bg-green-500' : 'bg-red-500'
-                        }`} />
-                        <span className="text-xs text-muted-foreground">
-                            {isConnected ? t('whiteboard.connected') || 'Connected' : t('whiteboard.disconnected') || 'Disconnected'}
-                        </span>
-                    </div>
+                    <Tooltip text={isConnected ? t('whiteboard.connected') : t('whiteboard.disconnected')} side="left">
+                        <div
+                            className={`absolute top-3 right-3 z-50 flex h-9 items-center gap-2 px-3 ${ISLAND} ${
+                                isConnected ? '' : '!bg-red-50 dark:!bg-red-950/80'
+                            }`}
+                            role="status"
+                        >
+                            <span className="relative flex h-2 w-2">
+                                {!isConnected && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />}
+                                <span className={`relative inline-flex h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+                            </span>
+                            {!isConnected && (
+                                <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                                    {t('whiteboard.disconnected')}
+                                </span>
+                            )}
+                        </div>
+                    </Tooltip>
                 )}
 
-                {/* Zoom controls and lock button */}
-                <div className="absolute bottom-24 sm:bottom-4 right-4 z-50 bg-white dark:bg-neutral-800 rounded-lg shadow-md p-2 flex flex-col gap-2">
-                    {!isReadOnly && (
-                        <>
-                            <button
-                                onClick={() => setIsLocked(!isLocked)}
-                                className={`p-2 rounded transition-colors flex justify-center ${
-                                    isLocked
-                                        ? 'bg-primary-light text-foreground'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                }`}
-                                title={isLocked ? (t('whiteboard.unlock') || 'Unlock') : (t('whiteboard.lock') || 'Lock')}
+                {/* Main menu (top-left) */}
+                {!isReadOnly && (
+                    <DropdownMenu.Root>
+                        <Tooltip text={t('whiteboard.menu')} side="right">
+                            <DropdownMenu.Trigger asChild>
+                                <button
+                                    type="button"
+                                    aria-label={t('whiteboard.menu')}
+                                    className={`absolute left-3 top-3 z-50 ${ISLAND} ${ISLAND_BTN} data-[state=open]:bg-primary-light`}
+                                >
+                                    <Menu size={17} strokeWidth={1.75} />
+                                </button>
+                            </DropdownMenu.Trigger>
+                        </Tooltip>
+                        <DropdownMenu.Portal>
+                            <DropdownMenu.Content
+                                align="start"
+                                sideOffset={8}
+                                className={`${ISLAND} z-popover min-w-[13rem] p-1.5 text-sm`}
                             >
-                                {isLocked ? <Lock size={16} /> : <Unlock size={16} />}
+                                <DropdownMenu.Item className={menuItem} onSelect={handleFitToContent}>
+                                    <Maximize size={15} />
+                                    <span className="flex-1">{t('whiteboard.fitToScreen')}</span>
+                                    <kbd className={kbd}>Shift 1</kbd>
+                                </DropdownMenu.Item>
+                                <DropdownMenu.Item className={menuItem} onSelect={() => setShowShortcuts(true)}>
+                                    <Keyboard size={15} />
+                                    <span className="flex-1">{t('whiteboard.shortcuts')}</span>
+                                    <kbd className={kbd}>?</kbd>
+                                </DropdownMenu.Item>
+                                <DropdownMenu.Separator className="my-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+                                <DropdownMenu.Item
+                                    className={`${menuItem} text-red-600 data-[highlighted]:bg-red-50 dark:text-red-400 dark:data-[highlighted]:bg-red-900/30`}
+                                    onSelect={handleClear}
+                                    disabled={isLocked}
+                                >
+                                    <Trash2 size={15} />
+                                    <span className="flex-1">{t('whiteboard.clear')}</span>
+                                </DropdownMenu.Item>
+                            </DropdownMenu.Content>
+                        </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
+                )}
+
+                {/* Zoom + undo/redo controls (bottom-left) */}
+                <div className="absolute bottom-[4.25rem] sm:bottom-3 left-3 z-50 flex items-center gap-2">
+                <div className={`flex items-center p-1 ${ISLAND}`}>
+                    <Tooltip text={`${t('whiteboard.zoomOut')} (Ctrl −)`} side="top">
+                        <button type="button" onClick={handleZoomOut} aria-label={t('whiteboard.zoomOut')} className={`${ISLAND_BTN} !h-8 !w-8`}>
+                            <Minus size={15} />
+                        </button>
+                    </Tooltip>
+                    <Tooltip text={`${t('whiteboard.resetZoom')} (Ctrl 0)`} side="top">
+                        <button
+                            type="button"
+                            onClick={handleResetZoom}
+                            className="h-8 min-w-[3.5rem] rounded-md px-1 text-xs font-medium tabular-nums text-neutral-700 transition-colors hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                        >
+                            {Math.round(viewport.zoom * 100)}%
+                        </button>
+                    </Tooltip>
+                    <Tooltip text={`${t('whiteboard.zoomIn')} (Ctrl +)`} side="top">
+                        <button type="button" onClick={handleZoomIn} aria-label={t('whiteboard.zoomIn')} className={`${ISLAND_BTN} !h-8 !w-8`}>
+                            <Plus size={15} />
+                        </button>
+                    </Tooltip>
+                    <div className="mx-1 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
+                    <Tooltip text={`${t('whiteboard.fitToScreen')} (Shift 1)`} side="top">
+                        <button type="button" onClick={handleFitToContent} aria-label={t('whiteboard.fitToScreen')} className={`${ISLAND_BTN} !h-8 !w-8`}>
+                            <Maximize size={14} />
+                        </button>
+                    </Tooltip>
+                </div>
+                {!isReadOnly && (
+                    <div className={`flex items-center p-1 ${ISLAND}`}>
+                        <Tooltip text={`${t('whiteboard.undo')} (Ctrl Z)`} side="top">
+                            <button
+                                type="button"
+                                onClick={undo}
+                                disabled={!canUndo || isLocked}
+                                aria-label={t('whiteboard.undo')}
+                                className={`${ISLAND_BTN} !h-8 !w-8`}
+                            >
+                                <Undo2 size={15} />
                             </button>
-                            <div className="border-t border-neutral-200 dark:border-neutral-600 my-1" />
-                        </>
-                    )}
-                    <button
-                        onClick={handleZoomIn}
-                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium"
-                        title={t('whiteboard.zoomIn') || 'Zoom In'}
-                    >
-                        +
-                    </button>
-                    <button
-                        onClick={handleResetZoom}
-                        className="p-1 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs font-medium"
-                        title={t('whiteboard.resetZoom') || 'Reset Zoom'}
-                    >
-                        {Math.round(viewport.zoom * 100)}%
-                    </button>
-                    <button
-                        onClick={handleZoomOut}
-                        className="p-2 bg-neutral-100 dark:bg-neutral-700 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-sm font-medium"
-                        title={t('whiteboard.zoomOut') || 'Zoom Out'}
-                    >
-                        −
-                    </button>
+                        </Tooltip>
+                        <Tooltip text={`${t('whiteboard.redo')} (Ctrl Shift Z)`} side="top">
+                            <button
+                                type="button"
+                                onClick={redo}
+                                disabled={!canRedo || isLocked}
+                                aria-label={t('whiteboard.redo')}
+                                className={`${ISLAND_BTN} !h-8 !w-8`}
+                            >
+                                <Redo2 size={15} />
+                            </button>
+                        </Tooltip>
+                    </div>
+                )}
                 </div>
 
-                {/* Toolbar and tool properties (hidden when locked or read-only) */}
-                {!isLocked && !isReadOnly && (
-                    <>
-                        <WhiteboardToolbar
-                            currentTool={currentTool}
-                            setCurrentTool={setCurrentTool}
-                            isPublic={isPublic}
-                            onClear={handleClear}
-                        />
+                {/* Help (bottom-right) */}
+                {!isReadOnly && (
+                    <Tooltip text={`${t('whiteboard.shortcuts')} (?)`} side="left">
+                        <button
+                            type="button"
+                            onClick={() => setShowShortcuts(true)}
+                            aria-label={t('whiteboard.shortcuts')}
+                            className={`absolute bottom-3 right-3 z-50 hidden sm:flex ${ISLAND} ${ISLAND_BTN}`}
+                        >
+                            <CircleHelp size={17} strokeWidth={1.75} />
+                        </button>
+                    </Tooltip>
+                )}
 
+                {/* Toolbar (visible while locked so it can be unlocked; tools are disabled) */}
+                {!isReadOnly && (
+                    <WhiteboardToolbar
+                        currentTool={currentTool}
+                        setCurrentTool={setCurrentTool}
+                        isLocked={isLocked}
+                        onToggleLock={() => setIsLocked(v => !v)}
+                    />
+                )}
+
+                {/* Property panel, below the menu button */}
+                {!isLocked && !isReadOnly && (
+                    <div className="absolute left-0 top-12 bottom-0 pointer-events-none z-50 [&>*]:pointer-events-auto">
                         <WhiteboardToolProperties
                             currentTool={currentTool}
-                            currentColor={currentColor}
-                            setCurrentColor={setCurrentColor}
-                            currentStrokeWidth={currentStrokeWidth}
-                            setCurrentStrokeWidth={setCurrentStrokeWidth}
                             isPublic={isPublic}
+                            defaults={{ color: currentColor, strokeWidth: currentStrokeWidth, fill: currentFill, roundness: currentRoundness }}
+                            onDefaultsChange={handleDefaultsChange}
+                            selectionCount={selectedObjectIds.length}
+                            onDelete={handleDelete}
+                            selectedShapeStyle={selectedShapeStyle}
+                            onShapeStyleUpdate={handleShapeStyleUpdate}
                             selectedTextData={getSelectedTextData()}
                             onTextUpdate={handleTextPropertyUpdate}
                             selectedEdgeData={getSelectedEdgeData()}
                             onEdgeUpdate={handleEdgePropertyUpdate}
                         />
-                    </>
+                    </div>
                 )}
 
                 {/* Empty state */}
                 {canvasObjects.size === 0 && viewObjects.size === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 35 }}>
-                        <div className="text-muted-foreground">
-                            {t('whiteboard.emptyState') || 'Start drawing or add notes'}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-6" style={{ zIndex: 35 }}>
+                        <div className="flex flex-col items-center gap-3 text-center">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-200/60 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                                <PenLine size={22} />
+                            </div>
+                            <div className="text-sm font-medium text-neutral-600 dark:text-neutral-300">
+                                {t('whiteboard.emptyState')}
+                            </div>
+                            {!isReadOnly && (
+                                <div className="max-w-xs text-xs text-muted-foreground">
+                                    {t('whiteboard.emptyStateHint')}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
             </div>
+
+            <WhiteboardShortcutsDialog open={showShortcuts} onOpenChange={setShowShortcuts} />
 
             {!isReadOnly && workspaceId && viewId && (
                 <AddElementDialog
@@ -1047,5 +1412,8 @@ const WhiteboardViewComponent = ({
         </>
     );
 };
+
+const menuItem = 'flex cursor-pointer select-none items-center gap-2.5 rounded-md px-2.5 py-1.5 text-neutral-700 outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[highlighted]:bg-neutral-100 dark:text-neutral-200 dark:data-[highlighted]:bg-neutral-700';
+const kbd = 'rounded border border-neutral-200 px-1 font-sans text-[10px] text-neutral-400 dark:border-neutral-600';
 
 export default WhiteboardViewComponent;

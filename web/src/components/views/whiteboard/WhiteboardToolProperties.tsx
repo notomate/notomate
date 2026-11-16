@@ -1,350 +1,557 @@
-import { Bold, Italic, Underline } from 'lucide-react';
+import { ReactNode, useState } from 'react';
+import { Popover } from 'radix-ui';
+import { Bold, Italic, Underline, Trash2, Minus, MoveRight, MoveLeft, MoveHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Tool } from './tools/types';
 import { WhiteboardTextData, WhiteboardEdgeData } from '../../../types/view';
+import { ISLAND, INK } from './ui';
+
+/** Style shared by the selected strokes / shapes (taken from the first one). */
+export interface ShapeStyle {
+    color: string;
+    strokeWidth: number;
+    fill: string | null;
+    /** True when at least one selected object is a rectangle or circle. */
+    fillable: boolean;
+    roundness: 'sharp' | 'round';
+    /** True when at least one selected object is a rectangle. */
+    roundable: boolean;
+}
+
+export interface DrawingDefaults {
+    color: string;
+    strokeWidth: number;
+    fill: string | null;
+    roundness: 'sharp' | 'round';
+}
 
 interface WhiteboardToolPropertiesProps {
     currentTool: Tool;
-    currentColor: string;
-    setCurrentColor: (color: string) => void;
-    currentStrokeWidth: number;
-    setCurrentStrokeWidth: (width: number) => void;
     isPublic?: boolean;
-    // Text properties
+    defaults: DrawingDefaults;
+    onDefaultsChange: (updates: Partial<DrawingDefaults>) => void;
+    selectionCount: number;
+    onDelete: () => void;
+    selectedShapeStyle?: ShapeStyle | null;
+    onShapeStyleUpdate?: (updates: Partial<DrawingDefaults>) => void;
     selectedTextData?: WhiteboardTextData | null;
     onTextUpdate?: (updates: Partial<WhiteboardTextData>) => void;
-    // Edge properties
     selectedEdgeData?: WhiteboardEdgeData | null;
     onEdgeUpdate?: (updates: Partial<WhiteboardEdgeData>) => void;
 }
 
+// --- Palettes ---
+
+const STROKE_QUICK = ['#1e1e1e', '#e03131', '#2f9e44', '#1971c2', '#f08c00'];
+const STROKE_FULL = [
+    '#1e1e1e', '#495057', '#868e96', '#ced4da', '#ffffff',
+    '#e03131', '#c2255c', '#9c36b5', '#6741d9', '#1971c2',
+    '#0c8599', '#099268', '#2f9e44', '#f08c00', '#e8590c',
+];
+const BG_QUICK: (string | null)[] = [null, '#ffc9c9', '#b2f2bb', '#a5d8ff', '#ffec99'];
+const BG_FULL: (string | null)[] = [
+    null, '#f1f3f5', '#e9ecef', '#ced4da', '#ffffff',
+    '#ffc9c9', '#fcc2d7', '#eebefa', '#d0bfff', '#a5d8ff',
+    '#99e9f2', '#96f2d7', '#b2f2bb', '#ffec99', '#ffd8a8',
+];
+
+const STROKE_WIDTHS = [1, 2, 4, 8];
+const FONT_SIZES = [
+    { value: 16, label: 'S' },
+    { value: 24, label: 'M' },
+    { value: 32, label: 'L' },
+    { value: 48, label: 'XL' },
+];
+
+const DRAWING_TOOLS: Tool[] = ['pen', 'rectangle', 'circle', 'line', 'edge'];
+const FILLABLE_TOOLS: Tool[] = ['rectangle', 'circle'];
+
+const CHECKER = 'repeating-conic-gradient(#d4d4d4 0% 25%, #ffffff 0% 50%) 50% / 8px 8px';
+
 const WhiteboardToolProperties = ({
     currentTool,
-    currentColor,
-    setCurrentColor,
-    currentStrokeWidth,
-    setCurrentStrokeWidth,
     isPublic = false,
+    defaults,
+    onDefaultsChange,
+    selectionCount,
+    onDelete,
+    selectedShapeStyle,
+    onShapeStyleUpdate,
     selectedTextData,
     onTextUpdate,
     selectedEdgeData,
-    onEdgeUpdate
+    onEdgeUpdate,
 }: WhiteboardToolPropertiesProps) => {
     const { t } = useTranslation();
 
-    const strokeWidths = [1, 2, 4, 6, 8];
-    const commonColors = ['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'];
-    const fontFamilies: { value: 'sans-serif' | 'serif' | 'monospace'; label: string }[] = [
-        { value: 'sans-serif', label: t('whiteboard.sansSerif') || 'Sans-serif' },
-        { value: 'serif', label: t('whiteboard.serif') || 'Serif' },
-        { value: 'monospace', label: t('whiteboard.monospace') || 'Monospace' },
-    ];
-    const fontSizes = [12, 16, 20, 24, 32, 48, 64];
+    const hasSelection = selectionCount > 0;
+    const showToolDefaults = !hasSelection && (DRAWING_TOOLS.includes(currentTool) || currentTool === 'text');
 
-    const curveTypes: { value: 'straight' | 'bezier' | 'elbow'; label: string }[] = [
-        { value: 'straight', label: t('whiteboard.straight') || 'Straight' },
-        { value: 'bezier', label: t('whiteboard.bezier') || 'Bezier' },
-        { value: 'elbow', label: t('whiteboard.elbow') || 'Elbow' },
-    ];
-
-    const arrowTypes: { value: 'none' | 'end' | 'start' | 'both'; label: string }[] = [
-        { value: 'none', label: t('whiteboard.arrowNone') || 'None' },
-        { value: 'end', label: t('whiteboard.arrowEnd') || 'End' },
-        { value: 'start', label: t('whiteboard.arrowStart') || 'Start' },
-        { value: 'both', label: t('whiteboard.arrowBoth') || 'Both' },
-    ];
-
-    const lineStyles: { value: 'solid' | 'dashed' | 'dotted'; label: string }[] = [
-        { value: 'solid', label: t('whiteboard.solid') || 'Solid' },
-        { value: 'dashed', label: t('whiteboard.dashed') || 'Dashed' },
-        { value: 'dotted', label: t('whiteboard.dotted') || 'Dotted' },
-    ];
-
-    const showColorPicker = currentTool === 'pen' || currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line' || currentTool === 'text' || currentTool === 'edge';
-    const showStrokeWidth = currentTool === 'pen' || currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line' || currentTool === 'edge';
-    const showTextProperties = selectedTextData && onTextUpdate;
-    const showEdgeProperties = selectedEdgeData && onEdgeUpdate;
-
-    if (isPublic || (!showColorPicker && !showStrokeWidth && !showTextProperties && !showEdgeProperties)) {
+    if (isPublic || (!hasSelection && !showToolDefaults)) {
         return null;
     }
 
+    const labels = {
+        stroke: t('whiteboard.stroke'),
+        background: t('whiteboard.background'),
+        strokeWidth: t('whiteboard.strokeWidth'),
+        custom: t('whiteboard.customColor'),
+        transparent: t('whiteboard.transparent'),
+        edges: t('whiteboard.edges'),
+        sharp: t('whiteboard.sharp'),
+        round: t('whiteboard.round'),
+    };
+
     return (
-        <div className="absolute top-4 left-4 bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-3 z-50 border border-neutral-200 dark:border-neutral-700 max-h-[calc(100vh-120px)] overflow-y-auto">
-            <div className="flex flex-col gap-3">
-                {/* Text properties - show when text is selected */}
-                {showTextProperties && (
+        <div
+            className={`${ISLAND} absolute left-3 top-3 z-50 w-[13.25rem] max-h-[calc(100%-5.5rem)] sm:max-h-[calc(100%-1.5rem)] overflow-y-auto p-3`}
+        >
+            <div className="flex flex-col gap-3.5">
+                {/* ---- Defaults for the active drawing tool ---- */}
+                {showToolDefaults && (
                     <>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            {t('whiteboard.textProperties') || 'Text'}
-                        </div>
+                        <Section label={labels.stroke}>
+                            <ColorRow
+                                quick={STROKE_QUICK}
+                                full={STROKE_FULL}
+                                value={defaults.color}
+                                onChange={(c) => onDefaultsChange({ color: c ?? defaults.color })}
+                                customLabel={labels.custom}
+                                transparentLabel={labels.transparent}
+                            />
+                        </Section>
+                        {FILLABLE_TOOLS.includes(currentTool) && (
+                            <Section label={labels.background}>
+                                <ColorRow
+                                    quick={BG_QUICK}
+                                    full={BG_FULL}
+                                    value={defaults.fill}
+                                    onChange={(c) => onDefaultsChange({ fill: c })}
+                                    customLabel={labels.custom}
+                                    transparentLabel={labels.transparent}
+                                />
+                            </Section>
+                        )}
+                        {currentTool !== 'text' && (
+                            <Section label={labels.strokeWidth}>
+                                <StrokeWidthRow value={defaults.strokeWidth} onChange={(w) => onDefaultsChange({ strokeWidth: w })} />
+                            </Section>
+                        )}
+                        {currentTool === 'rectangle' && (
+                            <Section label={labels.edges}>
+                                <EdgesRow value={defaults.roundness} onChange={(r) => onDefaultsChange({ roundness: r })} sharp={labels.sharp} round={labels.round} />
+                            </Section>
+                        )}
+                    </>
+                )}
 
-                        {/* Text Content */}
-                        <input
-                            type="text"
-                            value={selectedTextData.text || ''}
-                            onChange={(e) => onTextUpdate({ text: e.target.value })}
-                            placeholder={t('whiteboard.defaultText') || 'Text'}
-                            className="w-full px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                        />
+                {/* ---- Selected strokes / shapes ---- */}
+                {selectedShapeStyle && onShapeStyleUpdate && (
+                    <>
+                        <Section label={labels.stroke}>
+                            <ColorRow
+                                quick={STROKE_QUICK}
+                                full={STROKE_FULL}
+                                value={selectedShapeStyle.color}
+                                onChange={(c) => c && onShapeStyleUpdate({ color: c })}
+                                customLabel={labels.custom}
+                                transparentLabel={labels.transparent}
+                            />
+                        </Section>
+                        {selectedShapeStyle.fillable && (
+                            <Section label={labels.background}>
+                                <ColorRow
+                                    quick={BG_QUICK}
+                                    full={BG_FULL}
+                                    value={selectedShapeStyle.fill}
+                                    onChange={(c) => onShapeStyleUpdate({ fill: c })}
+                                    customLabel={labels.custom}
+                                    transparentLabel={labels.transparent}
+                                />
+                            </Section>
+                        )}
+                        <Section label={labels.strokeWidth}>
+                            <StrokeWidthRow value={selectedShapeStyle.strokeWidth} onChange={(w) => onShapeStyleUpdate({ strokeWidth: w })} />
+                        </Section>
+                        {selectedShapeStyle.roundable && (
+                            <Section label={labels.edges}>
+                                <EdgesRow value={selectedShapeStyle.roundness} onChange={(r) => onShapeStyleUpdate({ roundness: r })} sharp={labels.sharp} round={labels.round} />
+                            </Section>
+                        )}
+                    </>
+                )}
 
-                        {/* Font Family */}
-                        <select
-                            value={selectedTextData.fontFamily || 'sans-serif'}
-                            onChange={(e) => onTextUpdate({ fontFamily: e.target.value as 'sans-serif' | 'serif' | 'monospace' })}
-                            className="w-full px-2 py-1 text-sm border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                        >
-                            {fontFamilies.map((font) => (
-                                <option key={font.value} value={font.value}>
-                                    {font.label}
-                                </option>
-                            ))}
-                        </select>
+                {/* ---- Selected edge (arrow) ---- */}
+                {selectedEdgeData && onEdgeUpdate && (
+                    <>
+                        <Section label={labels.stroke}>
+                            <ColorRow
+                                quick={STROKE_QUICK}
+                                full={STROKE_FULL}
+                                value={selectedEdgeData.color || '#1e1e1e'}
+                                onChange={(c) => c && onEdgeUpdate({ color: c })}
+                                customLabel={labels.custom}
+                                transparentLabel={labels.transparent}
+                            />
+                        </Section>
+                        <Section label={labels.strokeWidth}>
+                            <StrokeWidthRow value={selectedEdgeData.strokeWidth} onChange={(w) => onEdgeUpdate({ strokeWidth: w })} />
+                        </Section>
+                        <Section label={t('whiteboard.lineStyle')}>
+                            <ButtonRow
+                                value={selectedEdgeData.lineStyle ?? 'solid'}
+                                onChange={(v) => onEdgeUpdate({ lineStyle: v })}
+                                options={[
+                                    { value: 'solid', title: t('whiteboard.solid'), icon: <LineIcon /> },
+                                    { value: 'dashed', title: t('whiteboard.dashed'), icon: <LineIcon dash="4 3" /> },
+                                    { value: 'dotted', title: t('whiteboard.dotted'), icon: <LineIcon dash="0.5 3.5" /> },
+                                ]}
+                            />
+                        </Section>
+                        <Section label={t('whiteboard.curveType')}>
+                            <ButtonRow
+                                value={selectedEdgeData.curveType ?? 'straight'}
+                                onChange={(v) => onEdgeUpdate({ curveType: v })}
+                                options={[
+                                    { value: 'straight', title: t('whiteboard.straight'), icon: <PathIcon d="M3 15 L15 3" /> },
+                                    { value: 'bezier', title: t('whiteboard.bezier'), icon: <PathIcon d="M3 15 C 3 6, 15 12, 15 3" /> },
+                                    { value: 'elbow', title: t('whiteboard.elbow'), icon: <PathIcon d="M3 15 L3 9 L15 9 L15 3" /> },
+                                ]}
+                            />
+                        </Section>
+                        <Section label={t('whiteboard.arrowType')}>
+                            <ButtonRow
+                                value={selectedEdgeData.arrowType ?? 'end'}
+                                onChange={(v) => onEdgeUpdate({ arrowType: v })}
+                                options={[
+                                    { value: 'none', title: t('whiteboard.arrowNone'), icon: <Minus size={16} /> },
+                                    { value: 'end', title: t('whiteboard.arrowEnd'), icon: <MoveRight size={16} /> },
+                                    { value: 'start', title: t('whiteboard.arrowStart'), icon: <MoveLeft size={16} /> },
+                                    { value: 'both', title: t('whiteboard.arrowBoth'), icon: <MoveHorizontal size={16} /> },
+                                ]}
+                            />
+                        </Section>
+                    </>
+                )}
 
-                        {/* Font Size */}
-                        <div className="flex flex-wrap gap-1">
-                            {fontSizes.map((size) => (
-                                <button
-                                    key={size}
-                                    onClick={() => onTextUpdate({ fontSize: size })}
-                                    className={`px-2 py-1 text-xs rounded transition-colors ${selectedTextData.fontSize === size
-                                            ? 'bg-primary-light text-foreground'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                        }`}
+                {/* ---- Selected text ---- */}
+                {selectedTextData && onTextUpdate && (
+                    <>
+                        <Section label={t('whiteboard.textContent')}>
+                            <input
+                                type="text"
+                                value={selectedTextData.text || ''}
+                                onChange={(e) => onTextUpdate({ text: e.target.value })}
+                                placeholder={t('whiteboard.defaultText')}
+                                className="h-8 w-full rounded-md border border-neutral-200 bg-white px-2 text-sm text-neutral-900 outline-none transition-colors focus:border-primary dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                            />
+                        </Section>
+                        <Section label={labels.stroke}>
+                            <ColorRow
+                                quick={STROKE_QUICK}
+                                full={STROKE_FULL}
+                                value={selectedTextData.color || '#1e1e1e'}
+                                onChange={(c) => c && onTextUpdate({ color: c })}
+                                customLabel={labels.custom}
+                                transparentLabel={labels.transparent}
+                            />
+                        </Section>
+                        <Section label={t('whiteboard.fontFamily')}>
+                            <ButtonRow
+                                value={selectedTextData.fontFamily || 'sans-serif'}
+                                onChange={(v) => onTextUpdate({ fontFamily: v })}
+                                options={[
+                                    { value: 'sans-serif', title: t('whiteboard.sansSerif'), icon: <span className="font-sans text-sm">Aa</span> },
+                                    { value: 'serif', title: t('whiteboard.serif'), icon: <span className="font-serif text-sm">Aa</span> },
+                                    { value: 'monospace', title: t('whiteboard.monospace'), icon: <span className="font-mono text-sm">Aa</span> },
+                                ]}
+                            />
+                        </Section>
+                        <Section label={t('whiteboard.fontSize')}>
+                            <ButtonRow
+                                value={selectedTextData.fontSize}
+                                onChange={(v) => onTextUpdate({ fontSize: v })}
+                                options={FONT_SIZES.map((s) => ({
+                                    value: s.value,
+                                    title: `${s.value}px`,
+                                    icon: <span className="text-xs font-medium">{s.label}</span>,
+                                }))}
+                            />
+                        </Section>
+                        <Section label={t('whiteboard.textStyle')}>
+                            <div className="flex gap-1">
+                                <PropButton
+                                    active={selectedTextData.fontWeight === 'bold'}
+                                    onClick={() => onTextUpdate({ fontWeight: selectedTextData.fontWeight === 'bold' ? 'normal' : 'bold' })}
+                                    title={t('whiteboard.bold')}
                                 >
-                                    {size}
-                                </button>
-                            ))}
-                        </div>
+                                    <Bold size={15} />
+                                </PropButton>
+                                <PropButton
+                                    active={selectedTextData.fontStyle === 'italic'}
+                                    onClick={() => onTextUpdate({ fontStyle: selectedTextData.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                                    title={t('whiteboard.italic')}
+                                >
+                                    <Italic size={15} />
+                                </PropButton>
+                                <PropButton
+                                    active={selectedTextData.textDecoration === 'underline'}
+                                    onClick={() => onTextUpdate({ textDecoration: selectedTextData.textDecoration === 'underline' ? 'none' : 'underline' })}
+                                    title={t('whiteboard.underline')}
+                                >
+                                    <Underline size={15} />
+                                </PropButton>
+                            </div>
+                        </Section>
+                    </>
+                )}
 
-                        {/* Style Buttons */}
+                {/* ---- Actions ---- */}
+                {hasSelection && (
+                    <Section label={t('whiteboard.actions')}>
                         <div className="flex gap-1">
-                            <button
-                                onClick={() => onTextUpdate({ fontWeight: selectedTextData.fontWeight === 'bold' ? 'normal' : 'bold' })}
-                                className={`p-2 rounded transition-colors ${selectedTextData.fontWeight === 'bold'
-                                        ? 'bg-primary-light text-foreground'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                    }`}
-                                title={t('whiteboard.bold') || 'Bold'}
-                            >
-                                <Bold size={14} />
-                            </button>
-                            <button
-                                onClick={() => onTextUpdate({ fontStyle: selectedTextData.fontStyle === 'italic' ? 'normal' : 'italic' })}
-                                className={`p-2 rounded transition-colors ${selectedTextData.fontStyle === 'italic'
-                                        ? 'bg-primary-light text-foreground'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                    }`}
-                                title={t('whiteboard.italic') || 'Italic'}
-                            >
-                                <Italic size={14} />
-                            </button>
-                            <button
-                                onClick={() => onTextUpdate({ textDecoration: selectedTextData.textDecoration === 'underline' ? 'none' : 'underline' })}
-                                className={`p-2 rounded transition-colors ${selectedTextData.textDecoration === 'underline'
-                                        ? 'bg-primary-light text-foreground'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                    }`}
-                                title={t('whiteboard.underline') || 'Underline'}
-                            >
-                                <Underline size={14} />
-                            </button>
+                            <PropButton active={false} onClick={onDelete} title={`${t('whiteboard.delete')} (Del)`} danger>
+                                <Trash2 size={15} />
+                            </PropButton>
                         </div>
-
-                        {/* Text Color */}
-                        <div className="flex flex-wrap gap-1">
-                            {commonColors.map((color) => (
-                                <button
-                                    key={color}
-                                    onClick={() => onTextUpdate({ color })}
-                                    className={`w-6 h-6 rounded border-2 transition-all ${selectedTextData.color === color
-                                            ? 'border-primary scale-110'
-                                            : 'border-neutral-300 dark:border-neutral-600 hover:scale-105'
-                                        }`}
-                                    style={{ backgroundColor: color }}
-                                    title={color}
-                                />
-                            ))}
-                            <input
-                                type="color"
-                                value={selectedTextData.color || '#000000'}
-                                onChange={(e) => onTextUpdate({ color: e.target.value })}
-                                className="w-6 h-6 rounded border-2 border-neutral-300 dark:border-neutral-600 cursor-pointer"
-                                title={t('whiteboard.customColor') || 'Custom Color'}
-                            />
-                        </div>
-
-                    </>
-                )}
-
-                {/* Edge properties - show when edge is selected */}
-                {showEdgeProperties && (
-                    <>
-                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            {t('whiteboard.edgeProperties') || 'Edge Properties'}
-                        </div>
-
-                        {/* Curve Type */}
-                        <div className="flex flex-col gap-1">
-                            <div className="text-xs text-muted-foreground">
-                                {t('whiteboard.curveType') || 'Curve Type'}
-                            </div>
-                            <div className="flex gap-1">
-                                {curveTypes.map((type) => (
-                                    <button
-                                        key={type.value}
-                                        onClick={() => onEdgeUpdate({ curveType: type.value })}
-                                        className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.curveType === type.value
-                                            ? 'bg-primary-light text-foreground'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                            }`}
-                                    >
-                                        {type.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Arrow Type */}
-                        <div className="flex flex-col gap-1">
-                            <div className="text-xs text-muted-foreground">
-                                {t('whiteboard.arrowType') || 'Arrow Type'}
-                            </div>
-                            <div className="flex gap-1">
-                                {arrowTypes.map((type) => (
-                                    <button
-                                        key={type.value}
-                                        onClick={() => onEdgeUpdate({ arrowType: type.value })}
-                                        className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.arrowType === type.value
-                                            ? 'bg-primary-light text-foreground'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                            }`}
-                                    >
-                                        {type.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Line Style */}
-                        <div className="flex flex-col gap-1">
-                            <div className="text-xs text-muted-foreground">
-                                {t('whiteboard.lineStyle') || 'Line Style'}
-                            </div>
-                            <div className="flex gap-1">
-                                {lineStyles.map((style) => (
-                                    <button
-                                        key={style.value}
-                                        onClick={() => onEdgeUpdate({ lineStyle: style.value })}
-                                        className={`px-2 py-1 text-xs rounded transition-colors ${selectedEdgeData.lineStyle === style.value
-                                            ? 'bg-primary-light text-foreground'
-                                            : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                            }`}
-                                    >
-                                        {style.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Edge Color */}
-                        <div className="flex flex-wrap gap-1">
-                            {commonColors.map((color) => (
-                                <button
-                                    key={color}
-                                    onClick={() => onEdgeUpdate({ color })}
-                                    className={`w-6 h-6 rounded border-2 transition-all ${selectedEdgeData.color === color
-                                        ? 'border-primary scale-110'
-                                        : 'border-neutral-300 dark:border-neutral-600 hover:scale-105'
-                                        }`}
-                                    style={{ backgroundColor: color }}
-                                    title={color}
-                                />
-                            ))}
-                            <input
-                                type="color"
-                                value={selectedEdgeData.color || '#000000'}
-                                onChange={(e) => onEdgeUpdate({ color: e.target.value })}
-                                className="w-6 h-6 rounded border-2 border-neutral-300 dark:border-neutral-600 cursor-pointer"
-                                title={t('whiteboard.customColor') || 'Custom Color'}
-                            />
-                        </div>
-
-                        {/* Edge Stroke Width */}
-                        <div className="flex flex-wrap gap-1">
-                            {strokeWidths.map((width) => (
-                                <button
-                                    key={width}
-                                    onClick={() => onEdgeUpdate({ strokeWidth: width })}
-                                    className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${selectedEdgeData.strokeWidth === width
-                                        ? 'bg-primary-light text-foreground'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                        }`}
-                                    title={`${width}px`}
-                                >
-                                    <div
-                                        className="rounded-full bg-current"
-                                        style={{ width: `${width * 2}px`, height: `${width * 2}px` }}
-                                    />
-                                </button>
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {/* Color picker - for drawing tools */}
-                {showColorPicker && !showTextProperties && !showEdgeProperties && (
-                    <div className="flex flex-col gap-1">
-                        <div className="flex flex-col gap-1">
-                            {commonColors.map((color) => (
-                                <button
-                                    key={color}
-                                    onClick={() => setCurrentColor(color)}
-                                    className={`w-6 h-6 rounded border-2 transition-all ${currentColor === color
-                                        ? 'border-primary scale-110'
-                                        : 'border-neutral-300 dark:border-neutral-600 hover:scale-105'
-                                        }`}
-                                    style={{ backgroundColor: color }}
-                                    title={color}
-                                />
-                            ))}
-                            <input
-                                type="color"
-                                value={currentColor}
-                                onChange={(e) => setCurrentColor(e.target.value)}
-                                className="w-6 h-6 rounded border-2 border-neutral-300 dark:border-neutral-600 cursor-pointer"
-                                title={t('whiteboard.customColor') || 'Custom Color'}
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Stroke width */}
-                {showStrokeWidth && !showEdgeProperties && (
-                    <div className="flex flex-col gap-1">
-                        <div className="flex flex-col gap-1">
-                            {strokeWidths.map((width) => (
-                                <button
-                                    key={width}
-                                    onClick={() => setCurrentStrokeWidth(width)}
-                                    className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${currentStrokeWidth === width
-                                        ? 'bg-primary-light text-foreground'
-                                        : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                                        }`}
-                                    title={`${width}px`}
-                                >
-                                    <div
-                                        className="rounded-full bg-current"
-                                        style={{ width: `${width * 2}px`, height: `${width * 2}px` }}
-                                    />
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                    </Section>
                 )}
             </div>
         </div>
     );
 };
+
+// --- Building blocks ---
+
+const Section = ({ label, children }: { label: string; children: ReactNode }) => (
+    <div className="flex flex-col gap-1.5">
+        <div className="text-xs text-neutral-500 dark:text-neutral-400">{label}</div>
+        {children}
+    </div>
+);
+
+const PropButton = ({
+    active,
+    onClick,
+    title,
+    danger = false,
+    children,
+}: {
+    active: boolean;
+    onClick: () => void;
+    title: string;
+    danger?: boolean;
+    children: ReactNode;
+}) => (
+    <button
+        type="button"
+        onClick={onClick}
+        title={title}
+        aria-label={title}
+        aria-pressed={active}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors ${
+            active
+                ? 'bg-primary-light text-primary ring-1 ring-primary dark:text-primary-300'
+                : danger
+                    ? 'bg-neutral-100 text-neutral-700 hover:bg-red-50 hover:text-red-600 dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-red-900/40 dark:hover:text-red-400'
+                    : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600'
+        }`}
+    >
+        {children}
+    </button>
+);
+
+function ButtonRow<T extends string | number>({
+    value,
+    onChange,
+    options,
+}: {
+    value: T | undefined;
+    onChange: (value: T) => void;
+    options: { value: T; title: string; icon: ReactNode }[];
+}) {
+    return (
+        <div className="flex gap-1">
+            {options.map((opt) => (
+                <PropButton key={String(opt.value)} active={value === opt.value} onClick={() => onChange(opt.value)} title={opt.title}>
+                    {opt.icon}
+                </PropButton>
+            ))}
+        </div>
+    );
+}
+
+const StrokeWidthRow = ({ value, onChange }: { value: number | undefined; onChange: (w: number) => void }) => (
+    <ButtonRow
+        value={value}
+        onChange={onChange}
+        options={STROKE_WIDTHS.map((w) => ({
+            value: w,
+            title: `${w}px`,
+            icon: (
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                    <line x1="3" y1="9" x2="15" y2="9" stroke="currentColor" strokeLinecap="round" strokeWidth={Math.min(6, 0.75 + w * 0.7)} />
+                </svg>
+            ),
+        }))}
+    />
+);
+
+const EdgesRow = ({ value, onChange, sharp, round }: { value: 'sharp' | 'round'; onChange: (r: 'sharp' | 'round') => void; sharp: string; round: string }) => (
+    <ButtonRow
+        value={value}
+        onChange={onChange}
+        options={[
+            { value: 'sharp', title: sharp, icon: <PathIcon d="M4 14 V4 H14" /> },
+            { value: 'round', title: round, icon: <PathIcon d="M4 14 V9 A5 5 0 0 1 9 4 H14" /> },
+        ]}
+    />
+);
+
+const Swatch = ({
+    color,
+    active,
+    onClick,
+    title,
+    size = 'h-6 w-6',
+}: {
+    color: string | null;
+    active: boolean;
+    onClick: () => void;
+    title: string;
+    size?: string;
+}) => (
+    <button
+        type="button"
+        onClick={onClick}
+        title={title}
+        aria-label={title}
+        aria-pressed={active}
+        className={`${size} shrink-0 overflow-hidden rounded-md border border-black/10 transition-transform hover:scale-110 dark:border-white/15 ${
+            active ? 'ring-2 ring-primary ring-offset-1 ring-offset-white dark:ring-offset-neutral-800' : ''
+        }`}
+    >
+        {/* Fill gets the canvas's dark-mode ink filter so swatches match what is drawn */}
+        <span className={`block h-full w-full ${color ? INK : ''}`} style={{ background: color ?? CHECKER }} />
+    </button>
+);
+
+const sameColor = (a: string | null, b: string | null) => (a ?? '').toLowerCase() === (b ?? '').toLowerCase();
+
+/** Quick swatches + a "current colour" button that opens the full palette. */
+const ColorRow = ({
+    quick,
+    full,
+    value,
+    onChange,
+    customLabel,
+    transparentLabel,
+}: {
+    quick: (string | null)[];
+    full: (string | null)[];
+    value: string | null;
+    onChange: (color: string | null) => void;
+    customLabel: string;
+    transparentLabel: string;
+}) => {
+    const [open, setOpen] = useState(false);
+    const [hex, setHex] = useState('');
+    const titleOf = (c: string | null) => c ?? transparentLabel;
+
+    return (
+        <div className="flex items-center gap-1.5">
+            {quick.map((c) => (
+                <Swatch key={c ?? 'none'} color={c} active={sameColor(c, value)} onClick={() => onChange(c)} title={titleOf(c)} />
+            ))}
+            <div className="mx-0.5 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
+            <Popover.Root
+                open={open}
+                onOpenChange={(o) => {
+                    setOpen(o);
+                    if (o) setHex((value ?? '').replace('#', ''));
+                }}
+            >
+                <Popover.Trigger asChild>
+                    <button
+                        type="button"
+                        title={customLabel}
+                        aria-label={customLabel}
+                        className="h-7 w-7 shrink-0 overflow-hidden rounded-md border border-black/10 shadow-sm transition-transform hover:scale-105 dark:border-white/15"
+                    >
+                        <span className={`block h-full w-full ${value ? INK : ''}`} style={{ background: value ?? CHECKER }} />
+                    </button>
+                </Popover.Trigger>
+                <Popover.Portal>
+                    <Popover.Content
+                        side="right"
+                        align="start"
+                        sideOffset={14}
+                        collisionPadding={12}
+                        className={`${ISLAND} z-popover w-[11.5rem] p-3`}
+                    >
+                        <div className="grid grid-cols-[repeat(5,1.75rem)] gap-1.5">
+                            {full.map((c) => (
+                                <Swatch
+                                    key={c ?? 'none'}
+                                    color={c}
+                                    active={sameColor(c, value)}
+                                    onClick={() => {
+                                        onChange(c);
+                                        setOpen(false);
+                                    }}
+                                    title={titleOf(c)}
+                                    size="h-7 w-7"
+                                />
+                            ))}
+                        </div>
+                        <div className="mt-3 flex items-center gap-1.5">
+                            <div className="flex h-8 min-w-0 flex-1 items-center rounded-md border border-neutral-200 bg-white px-2 text-sm focus-within:border-primary dark:border-neutral-600 dark:bg-neutral-900">
+                                <span className="text-neutral-400">#</span>
+                                <input
+                                    value={hex}
+                                    onChange={(e) => {
+                                        const v = e.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+                                        setHex(v);
+                                        if (v.length === 6 || v.length === 3) onChange(`#${v.toLowerCase()}`);
+                                    }}
+                                    className="min-w-0 flex-1 bg-transparent pl-1 font-mono text-neutral-900 outline-none dark:text-neutral-100"
+                                    aria-label="Hex"
+                                />
+                            </div>
+                            <label
+                                title={customLabel}
+                                className="relative h-8 w-8 shrink-0 cursor-pointer overflow-hidden rounded-md border border-black/10 dark:border-white/15"
+                                style={{ background: 'conic-gradient(#e03131, #f08c00, #ffec99, #2f9e44, #1971c2, #9c36b5, #e03131)' }}
+                            >
+                                <input
+                                    type="color"
+                                    value={value && /^#[0-9a-f]{6}$/i.test(value) ? value : '#1e1e1e'}
+                                    onChange={(e) => {
+                                        onChange(e.target.value);
+                                        setHex(e.target.value.replace('#', ''));
+                                    }}
+                                    className="absolute inset-0 cursor-pointer opacity-0"
+                                    aria-label={customLabel}
+                                />
+                            </label>
+                        </div>
+                    </Popover.Content>
+                </Popover.Portal>
+            </Popover.Root>
+        </div>
+    );
+};
+
+const LineIcon = ({ dash }: { dash?: string }) => (
+    <svg width="18" height="18" viewBox="0 0 18 18">
+        <line x1="2.5" y1="9" x2="15.5" y2="9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray={dash} />
+    </svg>
+);
+
+const PathIcon = ({ d }: { d: string }) => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d={d} stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
 
 export default WhiteboardToolProperties;

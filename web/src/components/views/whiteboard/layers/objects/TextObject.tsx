@@ -1,6 +1,7 @@
 import React from 'react';
 import { WhiteboardTextData } from '../../../../../types/view';
 import { Viewport } from '../../tools/types';
+import { INK } from '../../ui';
 
 interface TextObjectProps {
     data: WhiteboardTextData;
@@ -21,6 +22,7 @@ const TextObject: React.FC<TextObjectProps> = ({ data, viewport }) => {
 
     return (
         <div
+            className={isPlaceholder ? undefined : INK}
             style={{
                 position: 'absolute',
                 left: screenLeft,

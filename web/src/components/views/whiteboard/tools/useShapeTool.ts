@@ -5,6 +5,9 @@ import { CanvasObject, Point, Tool, generateId } from './types';
 interface UseShapeToolOptions {
     currentColor: string;
     currentStrokeWidth: number;
+    /** Background colour for rectangles/circles; null = transparent. */
+    currentFill?: string | null;
+    currentRoundness?: 'sharp' | 'round';
     setCanvasObjects: React.Dispatch<React.SetStateAction<Map<string, CanvasObject>>>;
     sendUpdate: (update: any) => void;
 }
@@ -15,13 +18,16 @@ interface UseShapeToolReturn {
     isDrawing: boolean;
     startDrawing: (pos: Point) => void;
     continueDrawing: (pos: Point) => void;
-    finishDrawing: (tool: Tool) => void;
+    /** Returns the new shape's id, or null if nothing was created (e.g. a plain click). */
+    finishDrawing: (tool: Tool) => string | null;
     renderPreview: (ctx: CanvasRenderingContext2D, tool: Tool) => void;
 }
 
 export const useShapeTool = ({
     currentColor,
     currentStrokeWidth,
+    currentFill = null,
+    currentRoundness = 'round',
     setCanvasObjects,
     sendUpdate
 }: UseShapeToolOptions): UseShapeToolReturn => {
@@ -41,8 +47,11 @@ export const useShapeTool = ({
         }
     }, [isDrawing]);
 
-    const finishDrawing = useCallback((tool: Tool) => {
-        if (startPoint && currentPoint) {
+    const finishDrawing = useCallback((tool: Tool): string | null => {
+        let createdId: string | null = null;
+        const dragged = !!startPoint && !!currentPoint &&
+            Math.hypot(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y) >= 3;
+        if (startPoint && currentPoint && dragged) {
             const shapeType = tool as 'rectangle' | 'circle' | 'line';
             const shapeData: WhiteboardShapeData = {
                 type: shapeType,
@@ -53,7 +62,10 @@ export const useShapeTool = ({
                 },
                 color: currentColor,
                 strokeWidth: currentStrokeWidth,
-                filled: false
+                ...(currentFill && shapeType !== 'line'
+                    ? { filled: true, fillColor: currentFill }
+                    : { filled: false }),
+                ...(shapeType === 'rectangle' ? { roundness: currentRoundness } : {}),
             };
             const id = generateId();
             const newObject: CanvasObject = {
@@ -64,12 +76,14 @@ export const useShapeTool = ({
 
             setCanvasObjects(prev => new Map(prev).set(id, newObject));
             sendUpdate({ type: 'add_canvas_object', object: newObject });
+            createdId = id;
         }
 
         setIsDrawing(false);
         setStartPoint(null);
         setCurrentPoint(null);
-    }, [startPoint, currentPoint, currentColor, currentStrokeWidth, setCanvasObjects, sendUpdate]);
+        return createdId;
+    }, [startPoint, currentPoint, currentColor, currentStrokeWidth, currentFill, currentRoundness, setCanvasObjects, sendUpdate]);
 
     const renderPreview = useCallback((ctx: CanvasRenderingContext2D, tool: Tool) => {
         if (!isDrawing || !startPoint || !currentPoint) return;

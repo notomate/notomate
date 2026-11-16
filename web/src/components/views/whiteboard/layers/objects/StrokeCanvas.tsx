@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { WhiteboardStrokeData } from '../../../../../types/view';
 import { Viewport } from '../../tools/types';
+import { INK } from '../../ui';
 
 interface StrokeCanvasProps {
     data: WhiteboardStrokeData;
@@ -68,6 +69,7 @@ const StrokeCanvas: React.FC<StrokeCanvasProps> = ({ data, viewport }) => {
     return (
         <canvas
             ref={canvasRef}
+            className={INK}
             width={canvasWidth}
             height={canvasHeight}
             style={{

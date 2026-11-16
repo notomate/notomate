@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { WhiteboardShapeData } from '../../../../../types/view';
 import { Viewport } from '../../tools/types';
+import { INK, rectCornerRadius } from '../../ui';
 
 interface ShapeCanvasProps {
     data: WhiteboardShapeData;
@@ -73,11 +74,17 @@ const ShapeCanvas: React.FC<ShapeCanvasProps> = ({ data, viewport }) => {
             const ry = toY(Math.min(data.position.y, data.position.y + data.dimensions.height));
             const rw = Math.abs(data.dimensions.width) * zoom;
             const rh = Math.abs(data.dimensions.height) * zoom;
-            if (data.filled) {
-                ctx.fillStyle = color;
-                ctx.fillRect(rx, ry, rw, rh);
+            ctx.beginPath();
+            if (data.roundness === 'round') {
+                ctx.roundRect(rx, ry, rw, rh, rectCornerRadius(data.dimensions.width, data.dimensions.height) * zoom);
+            } else {
+                ctx.rect(rx, ry, rw, rh);
             }
-            ctx.strokeRect(rx, ry, rw, rh);
+            if (data.filled) {
+                ctx.fillStyle = data.fillColor || color;
+                ctx.fill();
+            }
+            ctx.stroke();
         } else if (data.type === 'circle') {
             const radius = Math.sqrt(
                 Math.pow(data.dimensions.width, 2) + Math.pow(data.dimensions.height, 2)
@@ -85,7 +92,7 @@ const ShapeCanvas: React.FC<ShapeCanvasProps> = ({ data, viewport }) => {
             ctx.beginPath();
             ctx.arc(toX(data.position.x), toY(data.position.y), radius * zoom, 0, 2 * Math.PI);
             if (data.filled) {
-                ctx.fillStyle = color;
+                ctx.fillStyle = data.fillColor || color;
                 ctx.fill();
             }
             ctx.stroke();
@@ -104,6 +111,7 @@ const ShapeCanvas: React.FC<ShapeCanvasProps> = ({ data, viewport }) => {
     return (
         <canvas
             ref={canvasRef}
+            className={INK}
             width={canvasWidth}
             height={canvasHeight}
             style={{

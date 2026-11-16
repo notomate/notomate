@@ -1,6 +1,8 @@
 import React from 'react';
-import { WhiteboardEdgeData } from '../../../../types/view';
+import { WhiteboardEdgeData, ConnectionPointType } from '../../../../types/view';
 import { WhiteboardObject, Viewport, Bounds, Point } from '../tools/types';
+import { INK, rectCornerRadius } from '../ui';
+import { getEdgePath, getEdgeArrowAngles } from '../objects/edgeGeometry';
 
 interface HoverTarget {
     objectId: string;
@@ -20,6 +22,8 @@ interface EdgePreview {
     hoverTarget: HoverTarget | null;
     color: string;
     strokeWidth: number;
+    curveType: WhiteboardEdgeData['curveType'];
+    startConnectionPoint: ConnectionPointType | null;
 }
 
 interface SelectionBox {
@@ -40,50 +44,14 @@ interface OverlayLayerProps {
     edgePreview: EdgePreview | null;
     currentColor: string;
     currentStrokeWidth: number;
+    currentFill?: string | null;
+    currentRoundness?: 'sharp' | 'round';
+    /** Connection point an edge endpoint will snap to while being dragged. */
+    snapPoint?: Point | null;
 }
 
-// Compute SVG path d attribute for an edge
-const computeEdgePath = (data: WhiteboardEdgeData): string => {
-    const sx = data.startPoint.x;
-    const sy = data.startPoint.y;
-    const ex = data.endPoint.x;
-    const ey = data.endPoint.y;
-
-    if (data.curveType === 'bezier') {
-        const midX = (sx + ex) / 2;
-        const midY = (sy + ey) / 2;
-        return `M ${sx} ${sy} Q ${midX} ${sy} ${midX} ${midY} Q ${midX} ${ey} ${ex} ${ey}`;
-    }
-    if (data.curveType === 'elbow') {
-        const midX = (sx + ex) / 2;
-        return `M ${sx} ${sy} L ${midX} ${sy} L ${midX} ${ey} L ${ex} ${ey}`;
-    }
-    // straight (default)
-    return `M ${sx} ${sy} L ${ex} ${ey}`;
-};
-
-// Arrow angle computation matching canvas renderEdge logic
-const getArrowAngles = (data: WhiteboardEdgeData): { startAngle: number; endAngle: number } => {
-    const sx = data.startPoint.x;
-    const sy = data.startPoint.y;
-    const ex = data.endPoint.x;
-    const ey = data.endPoint.y;
-
-    if (data.curveType === 'bezier') {
-        const midX = (sx + ex) / 2;
-        const startAngle = Math.atan2(0, midX - sx) + Math.PI;
-        const endAngle = Math.atan2(ey - ey, ex - midX); // approaching ex,ey from midX,ey
-        return { startAngle, endAngle };
-    }
-    if (data.curveType === 'elbow') {
-        const midX = (sx + ex) / 2;
-        const startAngle = sx < midX ? Math.PI : 0;
-        const endAngle = ex > midX ? 0 : Math.PI;
-        return { startAngle, endAngle };
-    }
-    const angle = Math.atan2(ey - sy, ex - sx);
-    return { startAngle: angle + Math.PI, endAngle: angle };
-};
+const computeEdgePath = getEdgePath;
+const getArrowAngles = getEdgeArrowAngles;
 
 interface ArrowHeadProps {
     x: number;
@@ -130,13 +98,19 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
     edgePreview,
     currentColor,
     currentStrokeWidth,
+    currentFill = null,
+    currentRoundness = 'round',
+    snapPoint = null,
 }) => {
     const zoom = viewport.zoom;
     const arrowSize = 10;
     const handleSize = 8 / zoom;
     const cpRadius = 6 / zoom;
-    const strokeInv = 2 / zoom;
-    const dashArr = `${5 / zoom} ${5 / zoom}`;
+    const strokeInv = 1.5 / zoom;
+    const handleRadius = 2 / zoom;
+    // Outline padding; capped so handles stay inside checkResizeHandle's 10-unit tolerance
+    const selPad = Math.min(6 / zoom, 5);
+    const SEL = { stroke: 'var(--primary)' };
 
     return (
         <svg
@@ -165,6 +139,7 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
 
                     return (
                         <g key={id}>
+                            <g className={INK}>
                             <path
                                 d={pathD}
                                 stroke={color}
@@ -181,13 +156,14 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
                             {(data.arrowType === 'end' || data.arrowType === 'both') && (
                                 <ArrowHead x={data.endPoint.x} y={data.endPoint.y} angle={endAngle} size={arrowSize} color={color} />
                             )}
+                            </g>
                             {/* Selected edge handles */}
                             {isSelected && (
                                 <>
                                     <circle cx={data.startPoint.x} cy={data.startPoint.y} r={handleSize / 2}
-                                        fill="#3b82f6" stroke="#ffffff" strokeWidth={strokeInv} />
+                                        fill="#ffffff" style={SEL} strokeWidth={strokeInv} />
                                     <circle cx={data.endPoint.x} cy={data.endPoint.y} r={handleSize / 2}
-                                        fill="#3b82f6" stroke="#ffffff" strokeWidth={strokeInv} />
+                                        fill="#ffffff" style={SEL} strokeWidth={strokeInv} />
                                 </>
                             )}
                         </g>
@@ -205,20 +181,24 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
 
                     return (
                         <g key={`sel-${id}`}>
-                            {/* Dashed selection border */}
+                            {/* Selection border */}
                             <rect
-                                x={bounds.x - 5}
-                                y={bounds.y - 5}
-                                width={bounds.width + 10}
-                                height={bounds.height + 10}
+                                x={bounds.x - selPad}
+                                y={bounds.y - selPad}
+                                width={bounds.width + selPad * 2}
+                                height={bounds.height + selPad * 2}
                                 fill="none"
-                                stroke="#3b82f6"
+                                style={SEL}
                                 strokeWidth={strokeInv}
-                                strokeDasharray={dashArr}
                             />
                             {/* Corner resize handles */}
                             {CORNERS.map(c => {
-                                const p = c.getPos(bounds);
+                                const p = c.getPos({
+                                    x: bounds.x - selPad,
+                                    y: bounds.y - selPad,
+                                    width: bounds.width + selPad * 2,
+                                    height: bounds.height + selPad * 2,
+                                });
                                 return (
                                     <rect
                                         key={c.key}
@@ -226,8 +206,9 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
                                         y={p.y - handleSize / 2}
                                         width={handleSize}
                                         height={handleSize}
-                                        fill="#3b82f6"
-                                        stroke="#ffffff"
+                                        rx={handleRadius}
+                                        fill="#ffffff"
+                                        style={SEL}
                                         strokeWidth={strokeInv}
                                     />
                                 );
@@ -240,10 +221,11 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
                                         key={cp.key}
                                         cx={p.x}
                                         cy={p.y}
-                                        r={cpRadius}
-                                        fill="#10b981"
-                                        stroke="#ffffff"
+                                        r={cpRadius * 0.75}
+                                        fill="#ffffff"
+                                        style={SEL}
                                         strokeWidth={strokeInv}
+                                        opacity={0.9}
                                     />
                                 );
                             })}
@@ -260,10 +242,8 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
                     return (
                         <rect
                             x={x} y={y} width={w} height={h}
-                            fill="rgba(59,130,246,0.1)"
-                            stroke="#3b82f6"
+                            style={{ fill: 'color-mix(in srgb, var(--primary) 8%, transparent)', stroke: 'var(--primary)' }}
                             strokeWidth={strokeInv}
-                            strokeDasharray={dashArr}
                         />
                     );
                 })()}
@@ -274,15 +254,17 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
                     const previewStyle = {
                         stroke: currentColor,
                         strokeWidth: currentStrokeWidth,
-                        fill: 'none',
+                        fill: tool !== 'line' && currentFill ? currentFill : 'none',
                         strokeLinecap: 'round' as const,
+                        className: INK,
                     };
                     if (tool === 'rectangle') {
                         const x = Math.min(sp.x, cp.x);
                         const y = Math.min(sp.y, cp.y);
                         const w = Math.abs(cp.x - sp.x);
                         const h = Math.abs(cp.y - sp.y);
-                        return <rect x={x} y={y} width={w} height={h} {...previewStyle} />;
+                        const r = currentRoundness === 'round' ? rectCornerRadius(w, h) : 0;
+                        return <rect x={x} y={y} width={w} height={h} rx={r} ry={r} {...previewStyle} />;
                     }
                     if (tool === 'circle') {
                         const radius = Math.sqrt(Math.pow(cp.x - sp.x, 2) + Math.pow(cp.y - sp.y, 2));
@@ -294,27 +276,48 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
                     return null;
                 })()}
 
+                {/* Snap indicator while dragging an edge endpoint */}
+                {snapPoint && (
+                    <circle
+                        cx={snapPoint.x}
+                        cy={snapPoint.y}
+                        r={12}
+                        style={{ fill: 'color-mix(in srgb, var(--primary) 20%, transparent)', stroke: 'var(--primary)' }}
+                        strokeWidth={strokeInv * 1.5}
+                    />
+                )}
+
                 {/* Edge tool preview */}
                 {edgePreview && (() => {
                     const { startPoint: sp, endPoint: ep, hoverTarget, color, strokeWidth: sw } = edgePreview;
-                    const angle = Math.atan2(ep.y - sp.y, ep.x - sp.x);
+                    const previewShape = {
+                        startPoint: sp,
+                        endPoint: ep,
+                        curveType: edgePreview.curveType,
+                        startConnectionPoint: edgePreview.startConnectionPoint,
+                        endConnectionPoint: hoverTarget?.connectionPoint ?? null,
+                    };
+                    const { endAngle: angle } = getEdgeArrowAngles(previewShape);
                     return (
                         <g>
-                            <line
-                                x1={sp.x} y1={sp.y} x2={ep.x} y2={ep.y}
+                            <g className={INK}>
+                            <path
+                                d={getEdgePath(previewShape)}
                                 stroke={color}
                                 strokeWidth={sw}
+                                fill="none"
                                 strokeLinecap="round"
+                                strokeLinejoin="round"
                             />
                             <ArrowHead x={ep.x} y={ep.y} angle={angle} size={arrowSize} color={color} />
+                            </g>
                             {/* Snap indicator at hover target */}
                             {hoverTarget && (
                                 <circle
                                     cx={hoverTarget.position.x}
                                     cy={hoverTarget.position.y}
                                     r={12}
-                                    fill="rgba(16,185,129,0.3)"
-                                    stroke="#10b981"
+                                    style={{ fill: 'color-mix(in srgb, var(--primary) 20%, transparent)', stroke: 'var(--primary)' }}
                                     strokeWidth={strokeInv * 1.5}
                                 />
                             )}

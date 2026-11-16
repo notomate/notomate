@@ -2,6 +2,9 @@ import { useState, useCallback } from 'react';
 import { WhiteboardEdgeData, ConnectionPointType } from '../../../../types/view';
 import { WhiteboardObject, Point, generateId } from './types';
 
+/** Curve style for newly drawn edges. */
+export const DEFAULT_EDGE_CURVE: WhiteboardEdgeData['curveType'] = 'elbow';
+
 interface UseEdgeToolOptions {
     currentColor: string;
     currentStrokeWidth: number;
@@ -25,7 +28,8 @@ interface UseEdgeToolReturn {
     hoverTarget: HoverTarget | null;
     startDrawing: (pos: Point, startObjectId?: string | null, startConnectionPoint?: ConnectionPointType | null) => void;
     continueDrawing: (pos: Point, hoverTarget?: HoverTarget | null) => void;
-    finishDrawing: (endPos: Point, endObjectId?: string | null, endConnectionPoint?: ConnectionPointType | null) => void;
+    /** Returns true when an edge was created (false if it was too short). */
+    finishDrawing: (endPos: Point, endObjectId?: string | null, endConnectionPoint?: ConnectionPointType | null) => boolean;
     cancelDrawing: () => void;
     renderPreview: (ctx: CanvasRenderingContext2D) => void;
 }
@@ -73,6 +77,7 @@ export const useEdgeTool = ({
         endObjectId: string | null = null,
         endConnectionPoint: ConnectionPointType | null = null
     ) => {
+        let created = false;
         if (edgeStartPoint) {
             const distance = Math.sqrt(
                 Math.pow(endPos.x - edgeStartPoint.x, 2) +
@@ -88,7 +93,7 @@ export const useEdgeTool = ({
                     endConnectionPoint: endConnectionPoint,
                     startPoint: { ...edgeStartPoint },
                     endPoint: { ...endPos },
-                    curveType: 'straight',
+                    curveType: DEFAULT_EDGE_CURVE,
                     arrowType: 'end',
                     lineStyle: 'solid',
                     color: currentColor,
@@ -105,10 +110,12 @@ export const useEdgeTool = ({
                 setViewObjects(prev => new Map(prev).set(id, newObject));
                 sendUpdate({ type: 'add_view_object', object: newObject });
                 setSelectedObjectId(id);
+                created = true;
             }
         }
 
         cancelDrawing();
+        return created;
     }, [edgeStartPoint, edgeStartObjectId, edgeStartConnectionPoint, currentColor, currentStrokeWidth, setViewObjects, sendUpdate, setSelectedObjectId]);
 
     const cancelDrawing = useCallback(() => {

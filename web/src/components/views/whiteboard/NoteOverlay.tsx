@@ -78,10 +78,8 @@ const NoteOverlay: React.FC<NoteOverlayProps> = ({ viewObjectId, name, position,
         >
             <div
                 ref={contentRef}
-                className={`bg-yellow-50 dark:bg-yellow-900/20 rounded-lg shadow-md p-4 select-text ${
-                    isSelected
-                        ? 'border-3 border-blue-500 border-dashed'
-                        : 'border-2 border-yellow-400 dark:border-yellow-600'
+                className={`rounded-md border border-yellow-300/80 bg-yellow-100 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.06)] select-text dark:border-yellow-700/60 dark:bg-yellow-900/30 ${
+                    isSelected ? 'outline outline-[1.5px] outline-offset-[6px] outline-primary' : ''
                 }`}
                 style={{ width: `${width}px` }}
             >
@@ -93,7 +91,7 @@ const NoteOverlay: React.FC<NoteOverlayProps> = ({ viewObjectId, name, position,
             {connectionPoints.map((point) => (
                 <div
                     key={point.label}
-                    className="absolute w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-sm"
+                    className="absolute h-2.5 w-2.5 rounded-full border-[1.5px] border-primary bg-white"
                     style={{
                         left: `${point.x}px`,
                         top: `${point.y}px`,

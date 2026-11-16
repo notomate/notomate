@@ -129,6 +129,10 @@ export interface WhiteboardShapeData {
   color: string;
   strokeWidth: number;
   filled?: boolean;
+  /** Background fill; falls back to `color` when `filled` is set without it. */
+  fillColor?: string;
+  /** Rectangle corners; undefined = sharp (shapes created before this option). */
+  roundness?: 'sharp' | 'round';
 }
 
 export interface WhiteboardTextData {

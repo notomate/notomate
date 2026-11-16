@@ -1,70 +1,102 @@
-import { Pen, Square, Circle, Minus, Type, FileText, Hand, Eraser, Trash2, SquareDashedMousePointer } from 'lucide-react';
+import { Fragment } from 'react';
+import { Pen, Square, Circle, Minus, Type, StickyNote, MousePointer2, Eraser, Hand, MoveUpRight, Lock, LockOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Tool } from './tools/types';
+import Tooltip from '@/components/tooltip/Tooltip';
+import { Tool, TOOL_SHORTCUTS, TOOL_NUMBERS } from './tools/types';
+import { ISLAND, ISLAND_BTN, ISLAND_BTN_ACTIVE } from './ui';
 
 export type { Tool } from './tools/types';
 
 interface WhiteboardToolbarProps {
     currentTool: Tool;
     setCurrentTool: (tool: Tool) => void;
-    isPublic?: boolean;
-    onClear?: () => void;
+    isLocked: boolean;
+    onToggleLock: () => void;
 }
+
+type ToolDef = { id: Tool; icon: React.ReactNode; label: string };
+
+const ICON = { size: 17, strokeWidth: 1.75 };
 
 const WhiteboardToolbar = ({
     currentTool,
     setCurrentTool,
-    isPublic = false,
-    onClear
+    isLocked,
+    onToggleLock,
 }: WhiteboardToolbarProps) => {
     const { t } = useTranslation();
 
-    const tools: { id: Tool; icon: React.ReactNode; label: string }[] = [
-        { id: 'select', icon: <Hand size={18} />, label: t('whiteboard.select') || 'Select' },
-        { id: 'marquee', icon: <SquareDashedMousePointer size={18} />, label: t('whiteboard.marquee') || 'Marquee Select' },
-        { id: 'pen', icon: <Pen size={18} />, label: t('whiteboard.pen') || 'Pen' },
-        { id: 'eraser', icon: <Eraser size={18} />, label: t('whiteboard.eraser') || 'Eraser' },
-        { id: 'rectangle', icon: <Square size={18} />, label: t('whiteboard.rectangle') || 'Rectangle' },
-        { id: 'circle', icon: <Circle size={18} />, label: t('whiteboard.circle') || 'Circle' },
-        { id: 'line', icon: <Minus size={18} />, label: t('whiteboard.line') || 'Line' },
-        { id: 'text', icon: <Type size={18} />, label: t('whiteboard.text') || 'Text' },
-        { id: 'note', icon: <FileText size={18} />, label: t('whiteboard.note') || 'Note' },
+    const groups: ToolDef[][] = [
+        [
+            { id: 'hand', icon: <Hand {...ICON} />, label: t('whiteboard.hand') },
+            { id: 'select', icon: <MousePointer2 {...ICON} />, label: t('whiteboard.select') },
+        ],
+        [
+            { id: 'rectangle', icon: <Square {...ICON} />, label: t('whiteboard.rectangle') },
+            { id: 'circle', icon: <Circle {...ICON} />, label: t('whiteboard.circle') },
+            { id: 'edge', icon: <MoveUpRight {...ICON} />, label: t('whiteboard.edge') },
+            { id: 'line', icon: <Minus {...ICON} />, label: t('whiteboard.line') },
+            { id: 'pen', icon: <Pen {...ICON} />, label: t('whiteboard.pen') },
+            { id: 'text', icon: <Type {...ICON} />, label: t('whiteboard.text') },
+            { id: 'note', icon: <StickyNote {...ICON} />, label: t('whiteboard.note') },
+            { id: 'eraser', icon: <Eraser {...ICON} />, label: t('whiteboard.eraser') },
+        ],
     ];
 
-    if (isPublic) {
-        return null;
-    }
+    const tooltipFor = (tool: Tool, label: string) => {
+        const keys = [TOOL_SHORTCUTS[tool], TOOL_NUMBERS[tool]].filter(Boolean).join(' / ');
+        return keys ? `${label} — ${keys}` : label;
+    };
+
+    const lockLabel = isLocked ? t('whiteboard.unlock') : t('whiteboard.lock');
 
     return (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-2 z-50 border border-neutral-200 dark:border-neutral-700">
-            <div className="flex items-center gap-1">
-                {tools.map((tool) => (
+        <div
+            className={`${ISLAND} absolute left-1/2 z-50 -translate-x-1/2 bottom-3 sm:bottom-auto sm:top-3 max-w-[calc(100%-1.5rem)] overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
+            role="toolbar"
+            aria-label={t('whiteboard.tools')}
+        >
+            <div className="flex items-center gap-0.5">
+                <Tooltip text={lockLabel} side="bottom">
                     <button
-                        key={tool.id}
-                        onClick={() => setCurrentTool(tool.id)}
-                        className={`p-2 rounded transition-colors ${
-                            currentTool === tool.id
-                                ? 'bg-primary-light text-foreground'
-                                : 'bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                        }`}
-                        title={tool.label}
+                        type="button"
+                        onClick={onToggleLock}
+                        aria-label={lockLabel}
+                        aria-pressed={isLocked}
+                        className={`${ISLAND_BTN} ${isLocked ? ISLAND_BTN_ACTIVE : ''}`}
                     >
-                        {tool.icon}
+                        {isLocked ? <Lock {...ICON} /> : <LockOpen {...ICON} />}
                     </button>
-                ))}
+                </Tooltip>
 
-                {/* Separator */}
-                {onClear && (
-                    <>
-                        <button
-                            onClick={onClear}
-                            className="p-2 rounded transition-colors bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50"
-                            title={t('whiteboard.clear') || 'Clear All'}
-                        >
-                            <Trash2 size={18} />
-                        </button>
-                    </>
-                )}
+                {groups.map((group, gi) => (
+                    <Fragment key={gi}>
+                        <div className="mx-1 h-5 w-px shrink-0 bg-neutral-200 dark:bg-neutral-700" />
+                        {group.map((tool) => {
+                            const active = isLocked ? tool.id === 'hand' : currentTool === tool.id;
+                            const num = TOOL_NUMBERS[tool.id];
+                            return (
+                                <Tooltip key={tool.id} text={tooltipFor(tool.id, tool.label)} side="bottom">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentTool(tool.id)}
+                                        disabled={isLocked && tool.id !== 'hand'}
+                                        aria-label={tool.label}
+                                        aria-pressed={active}
+                                        className={`${ISLAND_BTN} relative ${active ? ISLAND_BTN_ACTIVE : ''}`}
+                                    >
+                                        {tool.icon}
+                                        {num && (
+                                            <span className="pointer-events-none absolute bottom-[3px] right-[4px] hidden text-[9px] leading-none text-neutral-400 sm:block dark:text-neutral-500">
+                                                {num}
+                                            </span>
+                                        )}
+                                    </button>
+                                </Tooltip>
+                            );
+                        })}
+                    </Fragment>
+                ))}
             </div>
         </div>
     );

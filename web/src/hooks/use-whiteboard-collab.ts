@@ -33,6 +33,9 @@ export function useWhiteboardCollab(options: UseWhiteboardCollabOptions) {
   const yDocRef = useRef<Y.Doc | null>(null)
   const yCanvasRef = useRef<Y.Map<any> | null>(null)
   const yViewObjectsRef = useRef<Y.Map<any> | null>(null)
+  const undoManagerRef = useRef<Y.UndoManager | null>(null)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
 
   const [isConnected, setIsConnected] = useState(false)
   const [isSynced, setIsSynced] = useState(false)
@@ -51,6 +54,20 @@ export function useWhiteboardCollab(options: UseWhiteboardCollabOptions) {
     yDocRef.current = yDoc
     yCanvasRef.current = yCanvas
     yViewObjectsRef.current = yViewObjs
+
+    // Per-user undo history. Y.UndoManager only tracks transactions with a `null`
+    // origin, i.e. this client's own edits — remote updates applied by the
+    // provider are never undone. Edits within captureTimeout are merged into one
+    // step (e.g. typing in the text panel, or the batch sent when a drag ends).
+    const undoManager = new Y.UndoManager([yCanvas, yViewObjs], { captureTimeout: 400 })
+    undoManagerRef.current = undoManager
+    const updateUndoState = () => {
+      setCanUndo(undoManager.undoStack.length > 0)
+      setCanRedo(undoManager.redoStack.length > 0)
+    }
+    undoManager.on('stack-item-added', updateUndoState)
+    undoManager.on('stack-item-popped', updateUndoState)
+    undoManager.on('stack-cleared', updateUndoState)
 
     // Build WebSocket URL
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
@@ -118,6 +135,10 @@ export function useWhiteboardCollab(options: UseWhiteboardCollabOptions) {
     }
 
     return () => {
+      undoManager.destroy()
+      undoManagerRef.current = null
+      setCanUndo(false)
+      setCanRedo(false)
       yCanvas.unobserveDeep(canvasObserver)
       yViewObjs.unobserveDeep(viewObjectsObserver)
       provider.destroy()
@@ -180,6 +201,16 @@ export function useWhiteboardCollab(options: UseWhiteboardCollabOptions) {
     }
   }, [isPublic])
 
+  const undo = useCallback(() => {
+    if (isPublic) return
+    undoManagerRef.current?.undo()
+  }, [isPublic])
+
+  const redo = useCallback(() => {
+    if (isPublic) return
+    undoManagerRef.current?.redo()
+  }, [isPublic])
+
   // Compatibility: sendUpdate wrapper for easy migration
   const sendUpdate = useCallback((message: any) => {
     if (isPublic) return
@@ -220,6 +251,10 @@ export function useWhiteboardCollab(options: UseWhiteboardCollabOptions) {
     canvasObjects,
     viewObjects,
     sendUpdate,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     addCanvasObject,
     updateCanvasObject,
     deleteCanvasObject,
