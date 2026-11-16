@@ -30,7 +30,7 @@ import {
 import { useViewport } from './hooks/useViewport';
 import { usePenTool } from './tools/usePenTool';
 import { useShapeTool } from './tools/useShapeTool';
-import { useEdgeTool, DEFAULT_EDGE_CURVE } from './tools/useEdgeTool';
+import { useEdgeTool, DEFAULT_EDGE_CURVE, DEFAULT_EDGE_ROUNDNESS } from './tools/useEdgeTool';
 import { useTextTool } from './tools/useTextTool';
 import { useEraserTool } from './tools/useEraserTool';
 import { useSelectTool } from './tools/useSelectTool';
@@ -306,6 +306,7 @@ const WhiteboardViewComponent = ({
             color: currentColor,
             strokeWidth: currentStrokeWidth,
             curveType: DEFAULT_EDGE_CURVE,
+            roundness: DEFAULT_EDGE_ROUNDNESS,
             startConnectionPoint: edgeTool.edgeStartConnectionPoint,
         };
     }, [edgeTool.isDrawing, edgeTool.edgeStartPoint, edgeTool.edgeEndPoint, edgeTool.hoverTarget, edgeTool.edgeStartConnectionPoint, currentColor, currentStrokeWidth]);

@@ -23,6 +23,7 @@ interface EdgePreview {
     color: string;
     strokeWidth: number;
     curveType: WhiteboardEdgeData['curveType'];
+    roundness: WhiteboardEdgeData['roundness'];
     startConnectionPoint: ConnectionPointType | null;
 }
 
@@ -294,6 +295,7 @@ const OverlayLayer: React.FC<OverlayLayerProps> = ({
                         startPoint: sp,
                         endPoint: ep,
                         curveType: edgePreview.curveType,
+                        roundness: edgePreview.roundness,
                         startConnectionPoint: edgePreview.startConnectionPoint,
                         endConnectionPoint: hoverTarget?.connectionPoint ?? null,
                     };

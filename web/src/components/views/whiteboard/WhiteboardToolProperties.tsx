@@ -219,6 +219,11 @@ const WhiteboardToolProperties = ({
                                 ]}
                             />
                         </Section>
+                        {selectedEdgeData.curveType === 'elbow' && (
+                            <Section label={labels.edges}>
+                                <EdgesRow value={selectedEdgeData.roundness ?? 'sharp'} onChange={(r) => onEdgeUpdate({ roundness: r })} sharp={labels.sharp} round={labels.round} />
+                            </Section>
+                        )}
                         <Section label={t('whiteboard.arrowType')}>
                             <ButtonRow
                                 value={selectedEdgeData.arrowType ?? 'end'}

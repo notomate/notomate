@@ -169,6 +169,8 @@ export interface WhiteboardEdgeData {
   startPoint: { x: number; y: number };
   endPoint: { x: number; y: number };
   curveType: 'straight' | 'bezier' | 'elbow';
+  /** Elbow corners; undefined = sharp (edges created before this option). */
+  roundness?: 'sharp' | 'round';
   arrowType: 'none' | 'end' | 'start' | 'both';
   lineStyle: 'solid' | 'dashed' | 'dotted';
   color: string;

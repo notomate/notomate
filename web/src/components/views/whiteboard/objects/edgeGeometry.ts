@@ -1,7 +1,7 @@
 import { WhiteboardEdgeData, ConnectionPointType } from '../../../../types/view';
 import { Point } from '../tools/types';
 
-type EdgeShape = Pick<WhiteboardEdgeData, 'startPoint' | 'endPoint' | 'curveType'> & {
+type EdgeShape = Pick<WhiteboardEdgeData, 'startPoint' | 'endPoint' | 'curveType' | 'roundness'> & {
     startConnectionPoint?: ConnectionPointType | null;
     endConnectionPoint?: ConnectionPointType | null;
 };
@@ -149,6 +149,36 @@ const routeElbow = (d: EdgeShape): Point[] => {
     return best ?? [s, e];
 };
 
+/** Corner radius for rounded elbow edges (shrunk on short segments). */
+const ELBOW_RADIUS = 16;
+
+/**
+ * Splits an orthogonal route into straight runs and rounded corners: for every
+ * interior vertex, the points where the curve leaves the incoming segment and
+ * joins the outgoing one. The vertex itself is the quadratic control point.
+ */
+const roundedCorners = (pts: Point[]): { from: Point; corner: Point; to: Point }[] => {
+    const out: { from: Point; corner: Point; to: Point }[] = [];
+    for (let i = 1; i < pts.length - 1; i++) {
+        const a = pts[i - 1];
+        const c = pts[i];
+        const b = pts[i + 1];
+        const lenIn = Math.hypot(c.x - a.x, c.y - a.y);
+        const lenOut = Math.hypot(b.x - c.x, b.y - c.y);
+        if (lenIn < 1e-6 || lenOut < 1e-6) continue;
+        // Interior segments are shared by two corners, so each gets at most half
+        const maxIn = i === 1 ? lenIn : lenIn / 2;
+        const maxOut = i === pts.length - 2 ? lenOut : lenOut / 2;
+        const r = Math.min(ELBOW_RADIUS, maxIn, maxOut);
+        out.push({
+            from: { x: c.x + ((a.x - c.x) / lenIn) * r, y: c.y + ((a.y - c.y) / lenIn) * r },
+            corner: c,
+            to: { x: c.x + ((b.x - c.x) / lenOut) * r, y: c.y + ((b.y - c.y) / lenOut) * r },
+        });
+    }
+    return out;
+};
+
 const quad = (p0: Point, c: Point, p1: Point, steps: number): Point[] => {
     const pts: Point[] = [];
     for (let i = 1; i <= steps; i++) {
@@ -168,7 +198,14 @@ export const getEdgePolyline = (d: EdgeShape): Point[] => {
     const e = d.endPoint;
 
     if (d.curveType === 'elbow') {
-        return routeElbow(d);
+        const pts = routeElbow(d);
+        if (d.roundness !== 'round') return pts;
+        const out: Point[] = [pts[0]];
+        for (const { from, corner, to } of roundedCorners(pts)) {
+            out.push(from, ...quad(from, corner, to, 6));
+        }
+        out.push(pts[pts.length - 1]);
+        return out;
     }
 
     if (d.curveType === 'bezier') {
@@ -191,6 +228,16 @@ export const getEdgePath = (d: EdgeShape): string => {
         const midX = (s.x + e.x) / 2;
         const midY = (s.y + e.y) / 2;
         return `M ${s.x} ${s.y} Q ${midX} ${s.y} ${midX} ${midY} Q ${midX} ${e.y} ${e.x} ${e.y}`;
+    }
+    if (d.curveType === 'elbow' && d.roundness === 'round') {
+        const pts = routeElbow(d);
+        const parts = [`M ${pts[0].x} ${pts[0].y}`];
+        for (const { from, corner, to } of roundedCorners(pts)) {
+            parts.push(`L ${from.x} ${from.y}`, `Q ${corner.x} ${corner.y} ${to.x} ${to.y}`);
+        }
+        const last = pts[pts.length - 1];
+        parts.push(`L ${last.x} ${last.y}`);
+        return parts.join(' ');
     }
     return getEdgePolyline(d)
         .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)

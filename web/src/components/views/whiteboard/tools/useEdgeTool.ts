@@ -5,6 +5,9 @@ import { WhiteboardObject, Point, generateId } from './types';
 /** Curve style for newly drawn edges. */
 export const DEFAULT_EDGE_CURVE: WhiteboardEdgeData['curveType'] = 'elbow';
 
+/** Corner style for newly drawn edges. */
+export const DEFAULT_EDGE_ROUNDNESS: NonNullable<WhiteboardEdgeData['roundness']> = 'round';
+
 interface UseEdgeToolOptions {
     currentColor: string;
     currentStrokeWidth: number;
@@ -94,6 +97,7 @@ export const useEdgeTool = ({
                     startPoint: { ...edgeStartPoint },
                     endPoint: { ...endPos },
                     curveType: DEFAULT_EDGE_CURVE,
+                    roundness: DEFAULT_EDGE_ROUNDNESS,
                     arrowType: 'end',
                     lineStyle: 'solid',
                     color: currentColor,
