@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 
 export type NoteSort = "created_at" | "updated_at"
+export type SortOrder = "desc" | "asc"
 export type DateField = "created" | "updated"
 export type DatePreset = "any" | "today" | "7d" | "30d" | "year" | "custom"
 export type TaskStatus = "any" | "open" | "done"
@@ -48,6 +49,8 @@ export const BLOCK_KINDS: BlockKind[] = [
 
 export interface NoteFilters {
     sort: NoteSort
+    /** Newest first (default) or oldest first. */
+    order: SortOrder
     dateField: DateField
     datePreset: DatePreset
     /** Custom range as local `YYYY-MM-DD` dates, both inclusive. */
@@ -65,6 +68,7 @@ export interface NoteFilters {
 
 export const DEFAULT_NOTE_FILTERS: NoteFilters = {
     sort: "created_at",
+    order: "desc",
     dateField: "created",
     datePreset: "any",
     customFrom: "",
@@ -79,6 +83,7 @@ export const DEFAULT_NOTE_FILTERS: NoteFilters = {
 /** Query parameters the note list endpoints accept for these filters. */
 export interface NoteFilterParams {
     sort?: NoteSort
+    order?: "asc"
     types?: string
     dateField?: DateField
     from?: string
@@ -118,6 +123,7 @@ const isoSeconds = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z")
 export function toFilterParams(f: NoteFilters, now = new Date()): NoteFilterParams {
     const params: NoteFilterParams = {}
     if (f.sort !== "created_at") params.sort = f.sort
+    if (f.order === "asc") params.order = "asc"
     const types = BLOCK_KINDS.filter((k) => f.blockKinds.includes(k.id)).flatMap((k) => k.nodeTypes)
     if (types.length) params.types = types.join(",")
     const { from, to } = dateRange(f, now)
@@ -133,7 +139,7 @@ export function toFilterParams(f: NoteFilters, now = new Date()): NoteFilterPara
     return params
 }
 
-/** Number of filters that differ from the defaults (sort is not counted). */
+/** Number of filters that differ from the defaults (sort and order are not counted). */
 export function countActiveFilters(f: NoteFilters): number {
     return (f.datePreset !== "any" ? 1 : 0) + f.blockKinds.length +
         (f.eventFrom || f.eventTo ? 1 : 0) + (f.tasks !== "any" ? 1 : 0) + (f.minRating > 0 ? 1 : 0)
@@ -146,5 +152,6 @@ export function useNoteFilters() {
     const params = useMemo(() => toFilterParams(filters, new Date(day)), [filters, day])
     const update = (patch: Partial<NoteFilters>) => setFilters((prev) => ({ ...prev, ...patch }))
     const reset = () => setFilters(DEFAULT_NOTE_FILTERS)
-    return { filters, params, update, reset, activeCount: countActiveFilters(filters) }
+    const sortChanged = filters.sort !== DEFAULT_NOTE_FILTERS.sort || filters.order !== DEFAULT_NOTE_FILTERS.order
+    return { filters, params, update, reset, activeCount: countActiveFilters(filters), sortChanged }
 }

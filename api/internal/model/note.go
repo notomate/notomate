@@ -10,6 +10,7 @@ type NoteFilter struct {
 	// search index.
 	Terms       []string
 	SortBy      string // "updated_at" or "created_at" (default)
+	SortAsc     bool   // oldest first; newest first by default
 	ParentID    string // filter by parent note id; use "null" to get root notes
 	PinnedOnly  bool   // filter to only pinned notes
 	CreatedBy   string // filter by creator user id

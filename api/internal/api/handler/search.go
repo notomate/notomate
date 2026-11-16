@@ -57,6 +57,7 @@ func (h Handler) SearchNotes(c echo.Context) error {
 		PinnedOnly:  c.QueryParam("pinned") == "true",
 		CreatedBy:   list.CreatedBy,
 		SortBy:      list.SortBy,
+		SortAsc:     list.SortAsc,
 		BlockTypes:  list.BlockTypes,
 		DateField:   list.DateField,
 		DateFrom:    list.DateFrom,

@@ -89,6 +89,7 @@ type SearchFilter struct {
 	PinnedOnly  bool
 	CreatedBy   string
 	SortBy      string // "updated_at" or "created_at" (default)
+	SortAsc     bool   // oldest first; newest first by default
 	// BlockTypes, DateField, DateFrom and DateTo work as in NoteFilter, but
 	// block types are matched against the index.
 	BlockTypes []string

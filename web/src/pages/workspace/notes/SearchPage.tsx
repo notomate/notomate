@@ -42,7 +42,7 @@ const SearchPage = () => {
     const [creatorId, setCreatorId] = useState("")
     const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
-    const { filters, params, update, reset, activeCount } = useNoteFilters()
+    const { filters, params, update, reset, activeCount, sortChanged } = useNoteFilters()
     const observerRef = useRef<IntersectionObserver | null>(null)
     const scrollRef = useRef<HTMLDivElement | null>(null)
 
@@ -117,7 +117,7 @@ const SearchPage = () => {
 
     const selectedMember = members.find((m) => m.user_id === creatorId)
     const totalActive = activeCount + (creatorId ? 1 : 0) + tags.length
-    const hasFilters = totalActive > 0 || filters.sort !== "created_at"
+    const hasFilters = totalActive > 0 || sortChanged
     const chips = (selectedMember || tags.length > 0) && (
         <>
             {selectedMember && (

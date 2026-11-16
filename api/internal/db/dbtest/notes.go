@@ -1,6 +1,7 @@
 package dbtest
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/notomate/notomate/internal/db"
@@ -73,6 +74,35 @@ func FindNotes(t *testing.T, s db.DB) {
 	} {
 		if got := find(c.f); got != c.want {
 			t.Errorf("%s: got %q want %q", c.name, got, c.want)
+		}
+	}
+
+	// Sort order: newest first by default, oldest first with SortAsc.
+	ordered := func(f model.NoteFilter) string {
+		t.Helper()
+		f.PageSize, f.PageNumber = 10, 1
+		notes, err := s.FindNotes(inWS(f))
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := make([]string, len(notes))
+		for i, n := range notes {
+			out[i] = n.ID
+		}
+		return strings.Join(out, ",")
+	}
+	for _, c := range []struct {
+		name string
+		f    model.NoteFilter
+		want string
+	}{
+		{"created desc", model.NoteFilter{}, "view,todo,img"},
+		{"created asc", model.NoteFilter{SortAsc: true}, "img,todo,view"},
+		{"updated desc", model.NoteFilter{SortBy: "updated_at"}, "img,view,todo"},
+		{"updated asc", model.NoteFilter{SortBy: "updated_at", SortAsc: true}, "todo,view,img"},
+	} {
+		if got := ordered(c.f); got != c.want {
+			t.Errorf("order %s: got %q want %q", c.name, got, c.want)
 		}
 	}
 }

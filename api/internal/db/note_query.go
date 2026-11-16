@@ -54,8 +54,12 @@ func FindNotes(g *gorm.DB, f model.NoteFilter) ([]model.Note, error) {
 	if f.SortBy == "updated_at" {
 		sortCol = "notes.updated_at"
 	}
+	dir := " DESC"
+	if f.SortAsc {
+		dir = " ASC"
+	}
 	var notes []model.Note
-	err := q.Order(sortCol + " DESC").Order("notes.id").
+	err := q.Order(sortCol + dir).Order("notes.id").
 		Offset((f.PageNumber - 1) * f.PageSize).
 		Limit(f.PageSize).
 		Find(&notes).Error

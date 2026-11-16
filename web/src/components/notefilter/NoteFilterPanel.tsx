@@ -4,7 +4,7 @@ import { SlidersHorizontal, Star, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { cn } from "@/lib/utils"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
-import { BLOCK_KINDS, type DateField, type DatePreset, type NoteFilters, type NoteSort, type TaskStatus } from "./note-filters"
+import { BLOCK_KINDS, type DateField, type DatePreset, type NoteFilters, type NoteSort, type SortOrder, type TaskStatus } from "./note-filters"
 
 const DATE_PRESETS: DatePreset[] = ["any", "today", "7d", "30d", "year", "custom"]
 const MIN_RATINGS = [0, 1, 2, 3, 4, 5]
@@ -122,6 +122,15 @@ export function NoteFilterPanel({ filters, onChange, onReset, creator, tags, con
                     options={[
                         { value: "created_at", label: t("noteFilter.sortCreated") },
                         { value: "updated_at", label: t("noteFilter.sortUpdated") },
+                    ]}
+                />
+                <Segmented<SortOrder>
+                    sheet={sheet}
+                    value={filters.order}
+                    onChange={(order) => onChange({ order })}
+                    options={[
+                        { value: "desc", label: t("noteFilter.sortNewest") },
+                        { value: "asc", label: t("noteFilter.sortOldest") },
                     ]}
                 />
             </Section>

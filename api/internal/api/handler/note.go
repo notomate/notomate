@@ -95,13 +95,14 @@ var blockTypePattern = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9]{0,63}$`)
 const maxBlockTypes = 32
 
 // applyNoteListFilters reads the filters shared by the note list endpoints:
-// sort, creatorId, types (comma-separated TipTap node types, matching any),
+// sort, order ("asc" for oldest first; newest first otherwise), creatorId, types (comma-separated TipTap node types, matching any),
 // dateField ("created" or "updated") and from/to (RFC3339 instants, to exclusive).
 func applyNoteListFilters(c echo.Context, f *model.NoteFilter) error {
 	f.SortBy = "created_at"
 	if c.QueryParam("sort") == "updated_at" {
 		f.SortBy = "updated_at"
 	}
+	f.SortAsc = c.QueryParam("order") == "asc"
 	f.CreatedBy = c.QueryParam("creatorId")
 
 	if types := c.QueryParam("types"); types != "" {

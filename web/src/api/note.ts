@@ -19,7 +19,7 @@ export interface NoteData {
 
 
 /** Optional list filters (sort, block types, date range); see `toFilterParams`. */
-export type NoteListFilterParams = Partial<Record<'sort' | 'types' | 'dateField' | 'from' | 'to' | 'eventFrom' | 'eventTo' | 'tasks' | 'minRating', string>>;
+export type NoteListFilterParams = Partial<Record<'sort' | 'order' | 'types' | 'dateField' | 'from' | 'to' | 'eventFrom' | 'eventTo' | 'tasks' | 'minRating', string>>;
 
 const applyFilterParams = (params: URLSearchParams, filters?: NoteListFilterParams) => {
   for (const [key, value] of Object.entries(filters ?? {})) {

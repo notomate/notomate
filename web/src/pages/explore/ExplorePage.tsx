@@ -28,7 +28,7 @@ const ExplorePage: React.FC = () => {
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [creator, setCreator] = useState<CreatorFilter | null>(null);
-    const { filters, params, update, reset, activeCount } = useNoteFilters();
+    const { filters, params, update, reset, activeCount, sortChanged } = useNoteFilters();
     const totalActive = activeCount + (creator ? 1 : 0);
 
     useEffect(() => {
@@ -151,7 +151,7 @@ const ExplorePage: React.FC = () => {
                             onFiltersChange={update}
                             onReset={() => { reset(); setCreator(null); }}
                             activeCount={totalActive}
-                            canReset={totalActive > 0 || filters.sort !== 'created_at'}
+                            canReset={totalActive > 0 || sortChanged}
                             creator={creator
                                 ? <div><CreatorFilterChip creator={creator} onClear={() => setCreator(null)} /></div>
                                 : <p className="text-xs text-muted-foreground">{t("noteFilter.creatorHint")}</p>}
