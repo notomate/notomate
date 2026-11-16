@@ -93,6 +93,49 @@ type UpdateViewDataRequest struct {
 }
 type UpdateViewDataResponse struct{}
 
+// View objects (whiteboard text/edges/notes, calendar slots, map markers, ...).
+// The collab server persists a whiteboard's Y.Doc "view-objects" map through
+// these RPCs, so they must stay in sync with collab/src/grpc/client.js.
+
+type ViewObjectData struct {
+	ID        string `json:"id"`
+	ViewID    string `json:"view_id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	Data      string `json:"data"`
+	CreatedAt string `json:"created_at"`
+	CreatedBy string `json:"created_by"`
+	UpdatedAt string `json:"updated_at"`
+	UpdatedBy string `json:"updated_by"`
+}
+
+type GetViewObjectsRequest struct {
+	ViewID string `json:"view_id"`
+}
+type GetViewObjectsResponse struct {
+	Objects []ViewObjectData `json:"objects"`
+}
+
+type CreateViewObjectRequest struct {
+	Object ViewObjectData `json:"object"`
+}
+type CreateViewObjectResponse struct{}
+
+type UpdateViewObjectRequest struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	Data      string `json:"data"`
+	UpdatedBy string `json:"updated_by"`
+	UpdatedAt string `json:"updated_at"`
+}
+type UpdateViewObjectResponse struct{}
+
+type DeleteViewObjectRequest struct {
+	ID string `json:"id"`
+}
+type DeleteViewObjectResponse struct{}
+
 // ---------- Service interface ----------
 
 type CollabServiceServer interface {
@@ -103,6 +146,10 @@ type CollabServiceServer interface {
 	GetView(ctx context.Context, req *GetViewRequest) (*GetViewResponse, error)
 	UpdateNote(ctx context.Context, req *UpdateNoteRequest) (*UpdateNoteResponse, error)
 	UpdateViewData(ctx context.Context, req *UpdateViewDataRequest) (*UpdateViewDataResponse, error)
+	GetViewObjects(ctx context.Context, req *GetViewObjectsRequest) (*GetViewObjectsResponse, error)
+	CreateViewObject(ctx context.Context, req *CreateViewObjectRequest) (*CreateViewObjectResponse, error)
+	UpdateViewObject(ctx context.Context, req *UpdateViewObjectRequest) (*UpdateViewObjectResponse, error)
+	DeleteViewObject(ctx context.Context, req *DeleteViewObjectRequest) (*DeleteViewObjectResponse, error)
 }
 
 // ---------- Unary handler wrappers ----------
@@ -155,6 +202,18 @@ func registerCollabServiceServer(s *grpc.Server, srv CollabServiceServer) {
 			}),
 			makeHandler("/collab.CollabService/UpdateViewData", func(ctx context.Context, req *UpdateViewDataRequest) (interface{}, error) {
 				return srv.UpdateViewData(ctx, req)
+			}),
+			makeHandler("/collab.CollabService/GetViewObjects", func(ctx context.Context, req *GetViewObjectsRequest) (interface{}, error) {
+				return srv.GetViewObjects(ctx, req)
+			}),
+			makeHandler("/collab.CollabService/CreateViewObject", func(ctx context.Context, req *CreateViewObjectRequest) (interface{}, error) {
+				return srv.CreateViewObject(ctx, req)
+			}),
+			makeHandler("/collab.CollabService/UpdateViewObject", func(ctx context.Context, req *UpdateViewObjectRequest) (interface{}, error) {
+				return srv.UpdateViewObject(ctx, req)
+			}),
+			makeHandler("/collab.CollabService/DeleteViewObject", func(ctx context.Context, req *DeleteViewObjectRequest) (interface{}, error) {
+				return srv.DeleteViewObject(ctx, req)
 			}),
 		},
 		Streams:  []grpc.StreamDesc{},
@@ -322,6 +381,80 @@ func (s *collabServer) UpdateViewData(ctx context.Context, req *UpdateViewDataRe
 		return nil, status.Errorf(codes.Internal, "update view: %v", err)
 	}
 	return &UpdateViewDataResponse{}, nil
+}
+
+func (s *collabServer) GetViewObjects(ctx context.Context, req *GetViewObjectsRequest) (*GetViewObjectsResponse, error) {
+	if req.ViewID == "" {
+		return nil, status.Error(codes.InvalidArgument, "view_id is required")
+	}
+	objs, err := s.db.FindViewObjects(model.ViewObjectFilter{ViewID: req.ViewID})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "find view objects: %v", err)
+	}
+	result := make([]ViewObjectData, len(objs))
+	for i, o := range objs {
+		result[i] = ViewObjectData{
+			ID:        o.ID,
+			ViewID:    o.ViewID,
+			Name:      o.Name,
+			Type:      o.Type,
+			Data:      o.Data,
+			CreatedAt: o.CreatedAt,
+			CreatedBy: o.CreatedBy,
+			UpdatedAt: o.UpdatedAt,
+			UpdatedBy: o.UpdatedBy,
+		}
+	}
+	return &GetViewObjectsResponse{Objects: result}, nil
+}
+
+func (s *collabServer) CreateViewObject(ctx context.Context, req *CreateViewObjectRequest) (*CreateViewObjectResponse, error) {
+	o := req.Object
+	if o.ID == "" || o.ViewID == "" {
+		return nil, status.Error(codes.InvalidArgument, "object id and view_id are required")
+	}
+	if err := s.db.CreateViewObject(model.ViewObject{
+		ID:        o.ID,
+		ViewID:    o.ViewID,
+		Name:      o.Name,
+		Type:      o.Type,
+		Data:      o.Data,
+		CreatedAt: o.CreatedAt,
+		CreatedBy: o.CreatedBy,
+		UpdatedAt: o.UpdatedAt,
+		UpdatedBy: o.UpdatedBy,
+	}); err != nil {
+		return nil, status.Errorf(codes.Internal, "create view object: %v", err)
+	}
+	return &CreateViewObjectResponse{}, nil
+}
+
+func (s *collabServer) UpdateViewObject(ctx context.Context, req *UpdateViewObjectRequest) (*UpdateViewObjectResponse, error) {
+	if req.ID == "" {
+		return nil, status.Error(codes.InvalidArgument, "id is required")
+	}
+	// GORM Updates skips zero-value fields, so empty fields are left unchanged.
+	if err := s.db.UpdateViewObject(model.ViewObject{
+		ID:        req.ID,
+		Name:      req.Name,
+		Type:      req.Type,
+		Data:      req.Data,
+		UpdatedBy: req.UpdatedBy,
+		UpdatedAt: req.UpdatedAt,
+	}); err != nil {
+		return nil, status.Errorf(codes.Internal, "update view object: %v", err)
+	}
+	return &UpdateViewObjectResponse{}, nil
+}
+
+func (s *collabServer) DeleteViewObject(ctx context.Context, req *DeleteViewObjectRequest) (*DeleteViewObjectResponse, error) {
+	if req.ID == "" {
+		return nil, status.Error(codes.InvalidArgument, "id is required")
+	}
+	if err := s.db.DeleteViewObject(model.ViewObject{ID: req.ID}); err != nil {
+		return nil, status.Errorf(codes.Internal, "delete view object: %v", err)
+	}
+	return &DeleteViewObjectResponse{}, nil
 }
 
 // ---------- Start ----------

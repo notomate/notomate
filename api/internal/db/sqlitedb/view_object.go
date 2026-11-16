@@ -58,11 +58,17 @@ func (s SqliteDB) FindViewObjects(f model.ViewObjectFilter) ([]model.ViewObject,
 		query = query.Where(strings.Join(conds, " AND "), args...)
 	}
 
-	err := query.
-		Order("created_at ASC").
-		Offset((f.PageNumber - 1) * f.PageSize).
-		Limit(f.PageSize).
-		Find(&objects).Error
+	query = query.Order("created_at ASC")
+	// PageSize <= 0 means "all objects" (the collab server loads a whole board).
+	if f.PageSize > 0 {
+		page := f.PageNumber
+		if page < 1 {
+			page = 1
+		}
+		query = query.Offset((page - 1) * f.PageSize).Limit(f.PageSize)
+	}
+
+	err := query.Find(&objects).Error
 
 	return objects, err
 }
