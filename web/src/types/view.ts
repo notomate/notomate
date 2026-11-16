@@ -133,7 +133,17 @@ export interface WhiteboardShapeData {
   fillColor?: string;
   /** Rectangle corners; undefined = sharp (shapes created before this option). */
   roundness?: 'sharp' | 'round';
+  /** Label centred inside a rectangle or circle, drawn in the stroke colour. */
+  text?: string;
+  fontSize?: number;
+  fontFamily?: 'sans-serif' | 'serif' | 'monospace';
+  fontWeight?: 'normal' | 'bold';
+  fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline';
 }
+
+/** Font settings shared by text objects and shape labels. */
+export type WhiteboardTextStyle = Pick<WhiteboardTextData, 'fontSize' | 'fontFamily' | 'fontWeight' | 'fontStyle' | 'textDecoration'>;
 
 export interface WhiteboardTextData {
   position: { x: number; y: number };

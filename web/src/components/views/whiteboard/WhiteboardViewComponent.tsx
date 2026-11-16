@@ -1,15 +1,16 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { WhiteboardTextData, WhiteboardEdgeData, WhiteboardShapeData, WhiteboardStrokeData, ViewObjectType, ConnectionPointType } from '../../../types/view';
+import { WhiteboardTextData, WhiteboardEdgeData, WhiteboardShapeData, WhiteboardStrokeData, WhiteboardTextStyle, ViewObjectType, ConnectionPointType } from '../../../types/view';
 import { useTranslation } from 'react-i18next';
 import WhiteboardToolbar from './WhiteboardToolbar';
 import WhiteboardToolProperties, { DrawingDefaults, ShapeStyle } from './WhiteboardToolProperties';
 import WhiteboardShortcutsDialog from './WhiteboardShortcutsDialog';
 import AddElementDialog from './AddElementDialog';
+import InlineTextEditor from './InlineTextEditor';
 import { useWhiteboardCollab } from '../../../hooks/use-whiteboard-collab';
 import { Minus, Plus, Maximize, Menu, Trash2, Keyboard, CircleHelp, PenLine, Undo2, Redo2 } from 'lucide-react';
 import { DropdownMenu } from 'radix-ui';
 import Tooltip from '@/components/tooltip/Tooltip';
-import { ISLAND, ISLAND_BTN } from './ui';
+import { ISLAND, ISLAND_BTN, SHAPE_TEXT_SIZE, isTextableShape } from './ui';
 
 const isEditableTarget = (target: EventTarget | null) => {
     const el = target as HTMLElement | null;
@@ -109,6 +110,9 @@ const WhiteboardViewComponent = ({
         snap: { objectId: string; connectionPoint: ConnectionPointType; position: Point } | null;
     } | null>(null);
 
+    // Object whose text is being edited in place (shape label or text object)
+    const [editing, setEditing] = useState<{ id: string; kind: 'shape' | 'text' } | null>(null);
+
     // Lock state
     const [isLocked, setIsLocked] = useState(false);
 
@@ -178,7 +182,6 @@ const WhiteboardViewComponent = ({
 
     const textTool = useTextTool({
         currentColor,
-        defaultText: t('whiteboard.defaultText') || 'Text',
         setViewObjects,
         setSelectedObjectId: (id: string | null) => setSelectedObjectIds(id ? [id] : []),
         sendUpdate
@@ -250,6 +253,7 @@ const WhiteboardViewComponent = ({
             const next = prev.filter(id => canvasObjects.has(id) || viewObjects.has(id));
             return next.length === prev.length ? prev : next;
         });
+        setEditing(prev => (prev && !canvasObjects.has(prev.id) && !viewObjects.has(prev.id) ? null : prev));
     }, [canvasObjects, viewObjects]);
 
     // Observe container size for PenPreviewCanvas
@@ -465,7 +469,11 @@ const WhiteboardViewComponent = ({
         } else if (currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line') {
             shapeTool.startDrawing(pos);
         } else if (currentTool === 'text') {
-            textTool.createText(pos);
+            // Keep the click from stealing focus from the editor that opens below
+            e.preventDefault();
+            const id = textTool.createText(pos);
+            setCurrentTool('select');
+            setEditing({ id, kind: 'text' });
         } else if (currentTool === 'note') {
             setIsAddingNote(true);
         } else if (currentTool === 'edge') {
@@ -742,7 +750,7 @@ const WhiteboardViewComponent = ({
             setLastPanPoint({ x: distance, y: midY });
             (e.currentTarget as any).twoFingerMidpoint = { x: midX, y: midY };
         } else {
-            if (currentTool === 'pen' || currentTool === 'eraser' ||
+            if (currentTool === 'pen' || currentTool === 'eraser' || currentTool === 'text' ||
                 currentTool === 'rectangle' || currentTool === 'circle' || currentTool === 'line') {
                 e.preventDefault();
             }
@@ -812,6 +820,61 @@ const WhiteboardViewComponent = ({
             }
             handlePointerUp(e);
         }
+    };
+
+    /** Opens the inline editor for a shape (rectangle / circle) or text object; false if it takes no text. */
+    const startTextEdit = (id: string): boolean => {
+        const shape = canvasObjects.get(id);
+        if (shape?.type === 'shape' && isTextableShape(shape.data as WhiteboardShapeData)) {
+            setSelectedObjectIds([id]);
+            setEditing({ id, kind: 'shape' });
+            return true;
+        }
+        if (viewObjects.get(id)?.type === 'whiteboard_text') {
+            setSelectedObjectIds([id]);
+            setEditing({ id, kind: 'text' });
+            return true;
+        }
+        return false;
+    };
+
+    const commitTextEdit = (text: string) => {
+        if (!editing) return;
+        const { id, kind } = editing;
+        setEditing(null);
+        if (kind === 'shape') {
+            const obj = canvasObjects.get(id);
+            if (!obj || obj.type !== 'shape') return;
+            const d = obj.data as WhiteboardShapeData;
+            if ((d.text ?? '') === text) return;
+            const updated: CanvasObject = { ...obj, data: { ...d, text } };
+            setCanvasObjects(prev => new Map(prev).set(id, updated));
+            sendUpdate({ type: 'update_canvas_object', object: updated });
+        } else {
+            const obj = viewObjects.get(id);
+            if (!obj || obj.type !== 'whiteboard_text') return;
+            if (!text.trim()) {
+                // An empty text object is just noise: drop it
+                eraserTool.eraseObject(id);
+                setSelectedObjectIds(prev => prev.filter(x => x !== id));
+            } else if ((obj.data as WhiteboardTextData).text !== text) {
+                textTool.updateText(id, { text }, viewObjects);
+            }
+        }
+    };
+
+    // Double-click: edit the text of a shape / text object, or add text on empty canvas
+    const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (isReadOnly || isLocked || currentTool !== 'select' || isSpacePressed) return;
+        const pos = screenToCanvas(e.clientX, e.clientY);
+        const hit = findObjectAtPosition(pos.x, pos.y, canvasObjects, viewObjects, getCtx());
+        if (hit) {
+            startTextEdit(hit.id);
+            return;
+        }
+        // Centre the new line of text on the pointer (its position is the baseline)
+        const id = textTool.createText({ x: pos.x, y: pos.y + 12 });
+        setEditing({ id, kind: 'text' });
     };
 
     // Clear all
@@ -895,6 +958,7 @@ const WhiteboardViewComponent = ({
         let fillable = false;
         let roundable = false;
         let roundness: 'sharp' | 'round' | undefined;
+        let textStyle: WhiteboardTextStyle | null = null;
         for (const id of selectedObjectIds) {
             const obj = canvasObjects.get(id);
             if (!obj) continue;
@@ -905,6 +969,15 @@ const WhiteboardViewComponent = ({
                     roundable = true;
                     roundness ??= d.roundness ?? 'sharp';
                 }
+                if (isTextableShape(d)) {
+                    textStyle ??= {
+                        fontSize: d.fontSize || SHAPE_TEXT_SIZE,
+                        fontFamily: d.fontFamily || 'sans-serif',
+                        fontWeight: d.fontWeight || 'normal',
+                        fontStyle: d.fontStyle || 'normal',
+                        textDecoration: d.textDecoration || 'none',
+                    };
+                }
                 style ??= {
                     color: d.color,
                     strokeWidth: d.strokeWidth,
@@ -912,13 +985,14 @@ const WhiteboardViewComponent = ({
                     fillable: false,
                     roundness: 'sharp',
                     roundable: false,
+                    textStyle: null,
                 };
             } else {
                 const d = obj.data as WhiteboardStrokeData;
-                style ??= { color: d.color, strokeWidth: d.width, fill: null, fillable: false, roundness: 'sharp', roundable: false };
+                style ??= { color: d.color, strokeWidth: d.width, fill: null, fillable: false, roundness: 'sharp', roundable: false, textStyle: null };
             }
         }
-        return style ? { ...style, fillable, roundable, roundness: roundness ?? 'sharp' } : null;
+        return style ? { ...style, fillable, roundable, roundness: roundness ?? 'sharp', textStyle } : null;
     }, [selectedObjectIds, canvasObjects]);
 
     // Apply colour / width / fill to every selected stroke and shape
@@ -947,6 +1021,23 @@ const WhiteboardViewComponent = ({
                 if (updates.strokeWidth !== undefined) next.width = updates.strokeWidth;
                 changed.push({ ...obj, data: next });
             }
+        });
+        if (changed.length === 0) return;
+        setCanvasObjects(prev => {
+            const m = new Map(prev);
+            changed.forEach(o => m.set(o.id, o));
+            return m;
+        });
+        changed.forEach(o => sendUpdate({ type: 'update_canvas_object', object: o }));
+    }, [selectedObjectIds, canvasObjects, sendUpdate]);
+
+    // Apply font settings to the labels of every selected rectangle / circle
+    const handleShapeTextUpdate = useCallback((updates: Partial<WhiteboardTextStyle>) => {
+        const changed: CanvasObject[] = [];
+        selectedObjectIds.forEach(id => {
+            const obj = canvasObjects.get(id);
+            if (obj?.type !== 'shape' || !isTextableShape(obj.data as WhiteboardShapeData)) return;
+            changed.push({ ...obj, data: { ...obj.data, ...updates } });
         });
         if (changed.length === 0) return;
         setCanvasObjects(prev => {
@@ -1063,9 +1154,8 @@ const WhiteboardViewComponent = ({
         setViewObjects(prev => new Map(prev).set(element.id, newViewObject));
         sendUpdate({ type: 'add_view_object', object: newViewObject });
 
-        if (element.type === 'whiteboard_note') {
-            setCurrentTool('select');
-        }
+        setCurrentTool('select');
+        setSelectedObjectIds([element.id]);
     }, [sendUpdate]);
 
     // True while a pointer gesture is mid-way; undo/redo would fight with it
@@ -1078,7 +1168,9 @@ const WhiteboardViewComponent = ({
             // Never hijack keys while the user is typing (property panel, notes, dialogs)
             if (isEditableTarget(e.target)) return;
 
-            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedObjectIds.length > 0 && !isReadOnly && !isLocked) {
+            if (e.key === 'Enter' && selectedObjectIds.length === 1 && !isReadOnly && !isLocked && !isInteracting) {
+                if (startTextEdit(selectedObjectIds[0])) e.preventDefault();
+            } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedObjectIds.length > 0 && !isReadOnly && !isLocked) {
                 e.preventDefault();
                 handleDelete();
             } else if (e.key === 'Escape') {
@@ -1128,7 +1220,7 @@ const WhiteboardViewComponent = ({
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [selectedObjectIds, penTool.isDrawing, selectTool.isDragging, selectTool.isResizing, isPanning, isReadOnly, isLocked, isInteracting, undo, redo, handleZoomIn, handleZoomOut, handleResetZoom, handleFitToContent]);
+    }, [selectedObjectIds, canvasObjects, viewObjects, penTool.isDrawing, selectTool.isDragging, selectTool.isResizing, isPanning, isReadOnly, isLocked, isInteracting, undo, redo, handleZoomIn, handleZoomOut, handleResetZoom, handleFitToContent]);
 
     // Determine loading state
     const shouldShowLoading = !disableWebSocket && !isInitialized && !(isPublic && initialCanvasObjects && initialViewObjects);
@@ -1166,6 +1258,7 @@ const WhiteboardViewComponent = ({
                     isPublic={isPublic}
                     selectedObjectIds={selectedObjectIds}
                     onNoteHeightChange={handleNoteHeightChange}
+                    editingId={editing?.id ?? null}
                 />
 
                 {/* Pen preview canvas (outside transform, applies viewport internally) */}
@@ -1208,7 +1301,20 @@ const WhiteboardViewComponent = ({
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                     onWheel={handleWheel}
+                    onDoubleClick={handleDoubleClick}
                 />
+
+                {/* In-place text editor for a shape label or text object */}
+                {editing && !isReadOnly && (() => {
+                    if (editing.kind === 'shape') {
+                        const obj = canvasObjects.get(editing.id);
+                        if (obj?.type !== 'shape') return null;
+                        return <InlineTextEditor key={editing.id} kind="shape" data={obj.data as WhiteboardShapeData} viewport={viewport} onCommit={commitTextEdit} />;
+                    }
+                    const obj = viewObjects.get(editing.id);
+                    if (obj?.type !== 'whiteboard_text') return null;
+                    return <InlineTextEditor key={editing.id} kind="text" data={obj.data as WhiteboardTextData} viewport={viewport} onCommit={commitTextEdit} />;
+                })()}
 
                 {/* [5] UI overlay — sync status, zoom controls, toolbar, tool properties */}
 
@@ -1371,6 +1477,7 @@ const WhiteboardViewComponent = ({
                             onDelete={handleDelete}
                             selectedShapeStyle={selectedShapeStyle}
                             onShapeStyleUpdate={handleShapeStyleUpdate}
+                            onShapeTextUpdate={handleShapeTextUpdate}
                             selectedTextData={getSelectedTextData()}
                             onTextUpdate={handleTextPropertyUpdate}
                             selectedEdgeData={getSelectedEdgeData()}
@@ -1406,7 +1513,11 @@ const WhiteboardViewComponent = ({
                     workspaceId={workspaceId}
                     viewId={viewId}
                     isOpen={isAddingNote}
-                    onOpenChange={setIsAddingNote}
+                    onOpenChange={(open) => {
+                        setIsAddingNote(open);
+                        // Closing the picker (added or cancelled) ends the note tool
+                        if (!open) setCurrentTool('select');
+                    }}
                     onElementAdded={handleElementAdded}
                 />
             )}

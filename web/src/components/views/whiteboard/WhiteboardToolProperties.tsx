@@ -3,7 +3,7 @@ import { Popover } from 'radix-ui';
 import { Bold, Italic, Underline, Trash2, Minus, MoveRight, MoveLeft, MoveHorizontal } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Tool } from './tools/types';
-import { WhiteboardTextData, WhiteboardEdgeData } from '../../../types/view';
+import { WhiteboardTextData, WhiteboardEdgeData, WhiteboardTextStyle } from '../../../types/view';
 import { ISLAND, INK } from './ui';
 
 /** Style shared by the selected strokes / shapes (taken from the first one). */
@@ -16,6 +16,8 @@ export interface ShapeStyle {
     roundness: 'sharp' | 'round';
     /** True when at least one selected object is a rectangle. */
     roundable: boolean;
+    /** Label font of the first selected rectangle / circle; null when none is selected. */
+    textStyle: WhiteboardTextStyle | null;
 }
 
 export interface DrawingDefaults {
@@ -34,6 +36,7 @@ interface WhiteboardToolPropertiesProps {
     onDelete: () => void;
     selectedShapeStyle?: ShapeStyle | null;
     onShapeStyleUpdate?: (updates: Partial<DrawingDefaults>) => void;
+    onShapeTextUpdate?: (updates: Partial<WhiteboardTextStyle>) => void;
     selectedTextData?: WhiteboardTextData | null;
     onTextUpdate?: (updates: Partial<WhiteboardTextData>) => void;
     selectedEdgeData?: WhiteboardEdgeData | null;
@@ -77,6 +80,7 @@ const WhiteboardToolProperties = ({
     onDelete,
     selectedShapeStyle,
     onShapeStyleUpdate,
+    onShapeTextUpdate,
     selectedTextData,
     onTextUpdate,
     selectedEdgeData,
@@ -178,6 +182,9 @@ const WhiteboardToolProperties = ({
                                 <EdgesRow value={selectedShapeStyle.roundness} onChange={(r) => onShapeStyleUpdate({ roundness: r })} sharp={labels.sharp} round={labels.round} />
                             </Section>
                         )}
+                        {selectedShapeStyle.textStyle && onShapeTextUpdate && (
+                            <TextStyleSections value={selectedShapeStyle.textStyle} onChange={onShapeTextUpdate} />
+                        )}
                     </>
                 )}
 
@@ -261,53 +268,7 @@ const WhiteboardToolProperties = ({
                                 transparentLabel={labels.transparent}
                             />
                         </Section>
-                        <Section label={t('whiteboard.fontFamily')}>
-                            <ButtonRow
-                                value={selectedTextData.fontFamily || 'sans-serif'}
-                                onChange={(v) => onTextUpdate({ fontFamily: v })}
-                                options={[
-                                    { value: 'sans-serif', title: t('whiteboard.sansSerif'), icon: <span className="font-sans text-sm">Aa</span> },
-                                    { value: 'serif', title: t('whiteboard.serif'), icon: <span className="font-serif text-sm">Aa</span> },
-                                    { value: 'monospace', title: t('whiteboard.monospace'), icon: <span className="font-mono text-sm">Aa</span> },
-                                ]}
-                            />
-                        </Section>
-                        <Section label={t('whiteboard.fontSize')}>
-                            <ButtonRow
-                                value={selectedTextData.fontSize}
-                                onChange={(v) => onTextUpdate({ fontSize: v })}
-                                options={FONT_SIZES.map((s) => ({
-                                    value: s.value,
-                                    title: `${s.value}px`,
-                                    icon: <span className="text-xs font-medium">{s.label}</span>,
-                                }))}
-                            />
-                        </Section>
-                        <Section label={t('whiteboard.textStyle')}>
-                            <div className="flex gap-1">
-                                <PropButton
-                                    active={selectedTextData.fontWeight === 'bold'}
-                                    onClick={() => onTextUpdate({ fontWeight: selectedTextData.fontWeight === 'bold' ? 'normal' : 'bold' })}
-                                    title={t('whiteboard.bold')}
-                                >
-                                    <Bold size={15} />
-                                </PropButton>
-                                <PropButton
-                                    active={selectedTextData.fontStyle === 'italic'}
-                                    onClick={() => onTextUpdate({ fontStyle: selectedTextData.fontStyle === 'italic' ? 'normal' : 'italic' })}
-                                    title={t('whiteboard.italic')}
-                                >
-                                    <Italic size={15} />
-                                </PropButton>
-                                <PropButton
-                                    active={selectedTextData.textDecoration === 'underline'}
-                                    onClick={() => onTextUpdate({ textDecoration: selectedTextData.textDecoration === 'underline' ? 'none' : 'underline' })}
-                                    title={t('whiteboard.underline')}
-                                >
-                                    <Underline size={15} />
-                                </PropButton>
-                            </div>
-                        </Section>
+                        <TextStyleSections value={selectedTextData} onChange={onTextUpdate} />
                     </>
                 )}
 
@@ -327,6 +288,62 @@ const WhiteboardToolProperties = ({
 };
 
 // --- Building blocks ---
+
+/** Font family, size and bold / italic / underline, for text objects and shape labels. */
+const TextStyleSections = ({ value, onChange }: { value: WhiteboardTextStyle; onChange: (updates: Partial<WhiteboardTextStyle>) => void }) => {
+    const { t } = useTranslation();
+    return (
+        <>
+            <Section label={t('whiteboard.fontFamily')}>
+                <ButtonRow
+                    value={value.fontFamily || 'sans-serif'}
+                    onChange={(v) => onChange({ fontFamily: v })}
+                    options={[
+                        { value: 'sans-serif', title: t('whiteboard.sansSerif'), icon: <span className="font-sans text-sm">Aa</span> },
+                        { value: 'serif', title: t('whiteboard.serif'), icon: <span className="font-serif text-sm">Aa</span> },
+                        { value: 'monospace', title: t('whiteboard.monospace'), icon: <span className="font-mono text-sm">Aa</span> },
+                    ]}
+                />
+            </Section>
+            <Section label={t('whiteboard.fontSize')}>
+                <ButtonRow
+                    value={value.fontSize}
+                    onChange={(v) => onChange({ fontSize: v })}
+                    options={FONT_SIZES.map((s) => ({
+                        value: s.value,
+                        title: `${s.value}px`,
+                        icon: <span className="text-xs font-medium">{s.label}</span>,
+                    }))}
+                />
+            </Section>
+            <Section label={t('whiteboard.textStyle')}>
+                <div className="flex gap-1">
+                    <PropButton
+                        active={value.fontWeight === 'bold'}
+                        onClick={() => onChange({ fontWeight: value.fontWeight === 'bold' ? 'normal' : 'bold' })}
+                        title={t('whiteboard.bold')}
+                    >
+                        <Bold size={15} />
+                    </PropButton>
+                    <PropButton
+                        active={value.fontStyle === 'italic'}
+                        onClick={() => onChange({ fontStyle: value.fontStyle === 'italic' ? 'normal' : 'italic' })}
+                        title={t('whiteboard.italic')}
+                    >
+                        <Italic size={15} />
+                    </PropButton>
+                    <PropButton
+                        active={value.textDecoration === 'underline'}
+                        onClick={() => onChange({ textDecoration: value.textDecoration === 'underline' ? 'none' : 'underline' })}
+                        title={t('whiteboard.underline')}
+                    >
+                        <Underline size={15} />
+                    </PropButton>
+                </div>
+            </Section>
+        </>
+    );
+};
 
 const Section = ({ label, children }: { label: string; children: ReactNode }) => (
     <div className="flex flex-col gap-1.5">

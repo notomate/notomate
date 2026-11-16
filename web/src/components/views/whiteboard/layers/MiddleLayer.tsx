@@ -4,6 +4,7 @@ import { WhiteboardStrokeData, WhiteboardShapeData, WhiteboardTextData, Whiteboa
 import StrokeCanvas from './objects/StrokeCanvas';
 import ShapeCanvas from './objects/ShapeCanvas';
 import TextObject from './objects/TextObject';
+import ShapeLabel from './objects/ShapeLabel';
 import NoteOverlay from '../NoteOverlay';
 
 interface MiddleLayerProps {
@@ -15,6 +16,8 @@ interface MiddleLayerProps {
     isPublic?: boolean;
     selectedObjectIds: string[];
     onNoteHeightChange: (viewObjectId: string, height: number) => void;
+    /** Object whose text is open in the inline editor (its own rendering is hidden). */
+    editingId?: string | null;
 }
 
 const MiddleLayer: React.FC<MiddleLayerProps> = ({
@@ -25,6 +28,7 @@ const MiddleLayer: React.FC<MiddleLayerProps> = ({
     viewId,
     selectedObjectIds,
     onNoteHeightChange,
+    editingId,
 }) => {
     return (
         // Plain container — each child computes its own screen position
@@ -38,7 +42,13 @@ const MiddleLayer: React.FC<MiddleLayerProps> = ({
                     return <StrokeCanvas key={id} data={obj.data as WhiteboardStrokeData} viewport={viewport} />;
                 }
                 if (obj.type === 'shape') {
-                    return <ShapeCanvas key={id} data={obj.data as WhiteboardShapeData} viewport={viewport} />;
+                    const data = obj.data as WhiteboardShapeData;
+                    return (
+                        <React.Fragment key={id}>
+                            <ShapeCanvas data={data} viewport={viewport} />
+                            {id !== editingId && <ShapeLabel data={data} viewport={viewport} />}
+                        </React.Fragment>
+                    );
                 }
                 return null;
             })}
@@ -46,6 +56,7 @@ const MiddleLayer: React.FC<MiddleLayerProps> = ({
             {/* Text and notes */}
             {Array.from(viewObjects.entries()).map(([id, obj]) => {
                 if (obj.type === 'whiteboard_text') {
+                    if (id === editingId) return null;
                     return <TextObject key={id} data={obj.data as WhiteboardTextData} viewport={viewport} />;
                 }
                 if (obj.type === 'whiteboard_note') {

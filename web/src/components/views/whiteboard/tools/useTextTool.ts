@@ -4,20 +4,19 @@ import { WhiteboardObject, Point, generateId } from './types';
 
 interface UseTextToolOptions {
     currentColor: string;
-    defaultText: string;
     setViewObjects: React.Dispatch<React.SetStateAction<Map<string, WhiteboardObject>>>;
     setSelectedObjectId: (id: string | null) => void;
     sendUpdate: (update: any) => void;
 }
 
 interface UseTextToolReturn {
-    createText: (pos: Point) => void;
+    /** Creates an empty text object at `pos` and returns its id. */
+    createText: (pos: Point) => string;
     updateText: (objectId: string, updates: Partial<WhiteboardTextData>, viewObjects: Map<string, WhiteboardObject>) => void;
 }
 
 export const useTextTool = ({
     currentColor,
-    defaultText,
     setViewObjects,
     setSelectedObjectId,
     sendUpdate
@@ -25,7 +24,7 @@ export const useTextTool = ({
     const createText = useCallback((pos: Point) => {
         const textData: WhiteboardTextData = {
             position: pos,
-            text: defaultText,
+            text: '',
             color: currentColor,
             fontSize: 24,
             fontFamily: 'sans-serif',
@@ -44,7 +43,8 @@ export const useTextTool = ({
         setViewObjects(prev => new Map(prev).set(id, newObject));
         sendUpdate({ type: 'add_view_object', object: newObject });
         setSelectedObjectId(id);
-    }, [currentColor, defaultText, setViewObjects, sendUpdate, setSelectedObjectId]);
+        return id;
+    }, [currentColor, setViewObjects, sendUpdate, setSelectedObjectId]);
 
     const updateText = useCallback((
         objectId: string,
