@@ -1,0 +1,52 @@
+# notomate-search-indexer: rebuilds the note search index in the background.
+# The api flags changed notes; this pod polls for them, so a crash or heavy
+# indexing here never affects the api. No ports, nothing connects to it.
+#
+# It reads the same database as the api. With the default SQLite on the
+# notomate-api-data PVC it mounts that volume, so it must run on the api's
+# node (RWO; local-path volumes are node-bound anyway, the affinity below
+# also covers attachable RWO storage). SQLite runs in WAL mode with a busy
+# timeout, so the two processes share the file safely. With MySQL/Postgres,
+# set DB_DRIVER/DB_DSN on both Deployments and drop the volume and affinity.
+#
+# Tuning (defaults shown): SEARCH_WORKERS=2, SEARCH_SCAN_INTERVAL_SECONDS=3,
+# SEARCH_BATCH_SIZE=100.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notomate-search-indexer
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notomate-search-indexer
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: notomate-search-indexer
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: notomate-api
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: search-indexer
+          image: notomate/notomate-search-indexer
+          volumeMounts:
+            - name: data
+              mountPath: /usr/local/app/bin
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: notomate-api-data

@@ -4,6 +4,7 @@ Kustomize base for running notomate on Kubernetes (k3s works out of the box).
 
 ```
 deploy/k8s/base/   api, collab, messaging, mcp, nginx (Deployment + Service each)
+                   search-indexer (Deployment only, no Service)
 ```
 
 The base is environment-neutral: no namespace, and the images are the
@@ -44,6 +45,8 @@ images:
     newTag: 1.2.3
   - name: notomate/notomate-mcp
     newTag: 1.2.3
+  - name: notomate/notomate-search-indexer
+    newTag: 1.2.3
   - name: notomate/notomate-nginx
     newTag: 1.2.3
 ```
@@ -82,6 +85,7 @@ spec:
         - notomate/notomate-collab=ghcr.io/<owner>/notomate-collab:main
         - notomate/notomate-messaging=ghcr.io/<owner>/notomate-messaging:main
         - notomate/notomate-mcp=ghcr.io/<owner>/notomate-mcp:main
+        - notomate/notomate-search-indexer=ghcr.io/<owner>/notomate-search-indexer:main
         - notomate/notomate-nginx=ghcr.io/<owner>/notomate-nginx:main
   destination:
     server: https://kubernetes.default.svc
@@ -130,6 +134,12 @@ spec:
           manifestTargets:
             kustomize:
               name: notomate/notomate-mcp
+        - alias: search-indexer
+          imageName: ghcr.io/<owner>/notomate-search-indexer
+          commonUpdateSettings: *settings
+          manifestTargets:
+            kustomize:
+              name: notomate/notomate-search-indexer
         - alias: nginx
           imageName: ghcr.io/<owner>/notomate-nginx
           commonUpdateSettings: *settings
@@ -147,6 +157,11 @@ For private packages add `pullSecret: pullsecret:argocd/<secret>` to the
   hence a single replica with `Recreate`. Switching to MySQL/Postgres/S3 (see
   `docker/docker-compose.yml`, `docker/docker-compose.postgres.yml`, `docker/docker-compose.minio.yml`)
   is what it would take to scale it out.
+- `notomate-search-indexer` reads the same database. On SQLite it mounts the
+  `notomate-api-data` PVC and is pinned to the api's node; with MySQL/Postgres
+  give both Deployments the same `DB_DRIVER`/`DB_DSN` and drop the volume and
+  affinity. Without it, edited notes never get reindexed and search falls
+  behind.
 - Images are built for `linux/amd64` only (the Go build in `Dockerfile`
   hardcodes `GOARCH=amd64`).
 - Render locally: `kubectl kustomize deploy/k8s/base`

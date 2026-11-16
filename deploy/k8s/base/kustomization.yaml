@@ -10,4 +10,5 @@ resources:
   - collab.yaml
   - messaging.yaml
   - mcp.yaml
+  - search-indexer.yaml
   - nginx.yaml
