@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next"
-import { useNavigate } from "react-router-dom"
+import { Navigate, useNavigate, useParams } from "react-router-dom"
 import { useMutation } from "@tanstack/react-query"
 import { useTheme, Theme } from "@/providers/Theme"
 import { useCurrentUserStore } from "@/stores/current-user"
@@ -10,7 +10,7 @@ import { useState, useEffect, useRef } from "react"
 import { updatePreferences, uploadAvatar, removeAvatar, updateEmail, changePassword } from "@/api/user"
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, APIKeyScope, CreateAPIKeyRequest } from "@/api/apikey"
 import { listOAuthGrants, deleteOAuthGrant, OAuthGrant } from "@/api/oauth"
-import McpSettingsTab from "./McpSettingsTab"
+import McpSettingsTab from "@/components/user/McpSettingsTab"
 import { SelectField } from "@/components/ui/select-field"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
@@ -20,17 +20,15 @@ import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
 import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera, X, User as UserIcon, Palette, KeyRound, Plug, Users, Server, type LucideIcon } from "lucide-react"
 
-interface UserSettingsModalProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-}
-
 // A full-access key has an empty scope, which a select option cannot hold.
 const FULL_ACCESS_OPTION = "full"
 
 type SettingsTab = 'account' | 'preferences' | 'apiKeys' | 'mcp' | 'users' | 'system'
 
-const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
+const SETTINGS_TABS: SettingsTab[] = ['account', 'preferences', 'apiKeys', 'mcp', 'users', 'system']
+const OWNER_TABS: SettingsTab[] = ['users', 'system']
+
+const AccountSettingsPage = () => {
     const { user, fetchUser, resetCurrentUser } = useCurrentUserStore()
     const { resetWorkspaces } = useWorkspaceStore()
     const { t, i18n } = useTranslation()
@@ -47,8 +45,16 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     const [ownPasswordSaving, setOwnPasswordSaving] = useState(false)
 
     // Tab state
-    const [activeTab, setActiveTab] = useState<SettingsTab>('account')
+    const { section } = useParams<{ section: string }>()
     const isOwner = user?.role === 'owner'
+    const isValidTab = SETTINGS_TABS.includes(section as SettingsTab)
+        && (isOwner || !OWNER_TABS.includes(section as SettingsTab))
+    const activeTab: SettingsTab = isValidTab ? section as SettingsTab : 'account'
+    const setActiveTab = (tab: SettingsTab) => navigate(`/account/${tab}`)
+    // Save only when the user changes a preference here; the theme provider
+    // also updates these values when it loads the saved ones.
+    const [prefsDirty, setPrefsDirty] = useState(0)
+    const markPrefsChanged = () => setPrefsDirty(n => n + 1)
 
     // Preferences state
     const themes: Theme[] = ["light", "dark"]
@@ -112,11 +118,13 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     // Preferences handlers
     const handleSelectedLangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         i18n.changeLanguage(e.target.value)
+        markPrefsChanged()
     }
 
     const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newTheme = e.target.value as Theme
         setTheme(newTheme)
+        markPrefsChanged()
     }
 
     const savePreferences = async () => {
@@ -468,7 +476,6 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
         mutationFn: () => signOut(),
         onSuccess: () => {
             try {
-                onOpenChange(false)
                 resetWorkspaces()
                 resetCurrentUser()
                 navigate("/")
@@ -479,28 +486,28 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     })
 
     useEffect(() => {
-        if (!user || !open) return
+        if (!user || prefsDirty === 0) return
         savePreferences()
-    }, [theme, i18n.language, primaryColor])
+    }, [prefsDirty])
 
     useEffect(() => {
-        if (open && activeTab === 'apiKeys') {
+        if (activeTab === 'apiKeys') {
             loadAPIKeys()
         }
-        if (open && activeTab === 'users' && isOwner) {
+        if (activeTab === 'users' && isOwner) {
             loadUsers()
         }
-    }, [open, activeTab, isOwner])
+    }, [activeTab, isOwner])
+
+    if (user && section && !isValidTab) {
+        return <Navigate to="/account/account" replace />
+    }
 
     return (
         <>
-            <Modal
-                open={open}
-                onOpenChange={onOpenChange}
-                title={t("menu.settings")}
-                hideTitle
-                className="max-w-[800px] h-[85vh] flex flex-col"
-            >
+            <div className="h-full flex flex-col">
+                <div className="w-full max-w-[1000px] mx-auto flex flex-col flex-1 min-h-0 p-4 md:p-6">
+                <h1 className="text-xl font-semibold mb-4 md:mb-6 shrink-0">{t("menu.settings")}</h1>
                         <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0">
                         {/* Section picker: a side list when there is room, otherwise a select */}
                         <nav className="hidden md:flex flex-col gap-0.5 w-52 shrink-0">
@@ -694,7 +701,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                 {PRESET_COLORS.map((color) => (
                                                     <button
                                                         key={color.value}
-                                                        onClick={() => setPrimaryColor(color.value)}
+                                                        onClick={() => { setPrimaryColor(color.value); markPrefsChanged() }}
                                                         className="relative w-8 h-8 rounded-full border-2 transition-all hover:scale-110"
                                                         style={{
                                                             backgroundColor: color.value,
@@ -717,7 +724,7 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                                                 <input
                                                     type="color"
                                                     value={primaryColor}
-                                                    onChange={(e) => setPrimaryColor(e.target.value)}
+                                                    onChange={(e) => { setPrimaryColor(e.target.value); markPrefsChanged() }}
                                                     className="w-12 h-8 rounded border cursor-pointer"
                                                 />
                                                 <span className="text-sm font-mono text-muted-foreground">
@@ -932,14 +939,14 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                             )}
                         </div>
                         </div>
-            </Modal>
+                </div>
+            </div>
 
             {/* Change Own Password Dialog */}
             <Modal
                 open={showOwnPasswordDialog}
                 onOpenChange={setShowOwnPasswordDialog}
                 title={t("pages.preferences.changePassword")}
-                nested
             >
                         <div className="space-y-4">
                             <div className="space-y-2">
@@ -988,7 +995,6 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                 open={showCreationDialog}
                 onOpenChange={setShowCreationDialog}
                 title={t("pages.preferences.createNewKey")}
-                nested
             >
                         {createdKey ? (
                             <div className="space-y-4">
@@ -1087,7 +1093,6 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                 open={showUserDialog}
                 onOpenChange={setShowUserDialog}
                 title={t("pages.preferences.createUser")}
-                nested
             >
                         <div className="space-y-4">
                             <div className="space-y-2">
@@ -1167,7 +1172,6 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
                 open={showPasswordDialog}
                 onOpenChange={setShowPasswordDialog}
                 title={t("pages.preferences.changePassword")}
-                nested
             >
                         <div className="space-y-4">
                             <div className="space-y-2">
@@ -1212,4 +1216,4 @@ const UserSettingsModal = ({ open, onOpenChange }: UserSettingsModalProps) => {
     )
 }
 
-export default UserSettingsModal
+export default AccountSettingsPage

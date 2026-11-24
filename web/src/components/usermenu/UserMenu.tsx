@@ -3,8 +3,6 @@ import { Settings, Info, Compass } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { useCurrentUserStore } from "@/stores/current-user"
-import UserSettingsModal from "@/components/user/UserSettingsModal"
-import AboutModal from "@/components/user/AboutModal"
 import Avatar from "@/components/avatar/Avatar"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
 import { menuIconClass, menuItemClass, menuListClass, menuSurfaceClass } from "@/components/ui/menu"
@@ -14,8 +12,6 @@ const UserMenu = () => {
     const { t } = useTranslation()
     const { user } = useCurrentUserStore()
     const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
-    const [isAboutModalOpen, setIsAboutModalOpen] = useState(false)
     const isLg = useIsLg()
     const menuRef = useRef<HTMLDivElement>(null)
     const buttonRef = useRef<HTMLButtonElement>(null)
@@ -36,20 +32,22 @@ const UserMenu = () => {
 
     const menuContent = (
         <div className={menuListClass}>
-            <button
-                onClick={() => { setIsUserSettingsOpen(true); setIsMenuOpen(false) }}
+            <Link
+                to="/account"
+                onClick={() => setIsMenuOpen(false)}
                 className={menuItemClass(!isLg)}
             >
                 <span className={menuIconClass()}><Settings size={16} /></span>
                 {t("menu.settings")}
-            </button>
-            <button
-                onClick={() => { setIsAboutModalOpen(true); setIsMenuOpen(false) }}
+            </Link>
+            <Link
+                to="/about"
+                onClick={() => setIsMenuOpen(false)}
                 className={menuItemClass(!isLg)}
             >
                 <span className={menuIconClass()}><Info size={16} /></span>
                 {t("menu.about")}
-            </button>
+            </Link>
             <Link
                 to="/explore"
                 onClick={() => setIsMenuOpen(false)}
@@ -85,9 +83,6 @@ const UserMenu = () => {
             <BottomSheet open={!isLg && isMenuOpen} onOpenChange={setIsMenuOpen}>
                 {menuContent}
             </BottomSheet>
-
-            <UserSettingsModal open={isUserSettingsOpen} onOpenChange={setIsUserSettingsOpen} />
-            <AboutModal open={isAboutModalOpen} onOpenChange={setIsAboutModalOpen} />
         </>
     )
 }

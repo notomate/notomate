@@ -32,6 +32,9 @@ import MapMarkerDetailPage from './pages/workspace/map/MapMarkerDetailPage';
 import KanbanPage from './pages/workspace/kanban/KanbanPage';
 import WhiteboardPage from './pages/workspace/whiteboard/WhiteboardPage';
 import SpreadsheetPage from './pages/workspace/spreadsheet/SpreadsheetPage';
+import AccountSettingsPage from './pages/account/AccountSettingsPage';
+import AboutPage from './pages/about/AboutPage';
+import PublicLayout from './components/publiclayout/PublicLayout';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import useScrollToTop from '@/hooks/use-scrolltotop';
@@ -72,8 +75,15 @@ function App() {
         <Route path='signin' element={<SignIn />}></Route>
         <Route path='signup' element={<SignUp />}></Route>
         <Route path='oauth/authorize' element={<OAuthAuthorize />} />
-        <Route path='explore' element={<ExplorePage />}>
-          <Route path='notes/:noteId' element={<ExploreNotePage />} />
+        <Route element={<PublicLayout />}>
+          <Route path='explore' element={<ExplorePage />}>
+            <Route path='notes/:noteId' element={<ExploreNotePage />} />
+          </Route>
+          <Route path='about' element={<AboutPage />} />
+          <Route element={<RequireAuth />}>
+            <Route path='account' element={<Navigate to="/account/account" replace />} />
+            <Route path='account/:section' element={<AccountSettingsPage />} />
+          </Route>
         </Route>
         <Route path='/' element={<RequireAuth />}>
           <Route index element={<Navigate to="/workspaces" replace />} />
