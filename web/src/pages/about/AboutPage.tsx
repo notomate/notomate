@@ -11,7 +11,6 @@ const AboutPage = () => {
     return (
         <div className="h-full overflow-y-auto">
             <div className="w-full max-w-[640px] p-4 md:p-6">
-                <h1 className="text-xl font-semibold mb-6">{t("menu.about")}</h1>
                 <div className="space-y-3">
                     <div className="flex items-center gap-3">
                         <img src={logo} className="w-8 h-8 dark:invert" alt="logo" />

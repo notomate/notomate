@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LogIn, ArrowLeft, Info, Compass, PanelRight } from 'lucide-react';
+import { LogIn, ArrowLeft, Info, Compass, PanelRight, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import UserMenu from '@/components/usermenu/UserMenu';
 import MobileTopBar from '@/components/mobiletopbar/MobileTopBar';
@@ -57,6 +57,24 @@ const PublicLayout = () => {
                         <Compass className="shrink-0 size-4 lg:size-3.5" />
                         <span className="leading-snug">{t("menu.explore")}</span>
                     </Link>
+                    {user && (
+                        <Link
+                            to="/account"
+                            onClick={closeSidebar}
+                            className={pathname.startsWith("/account") ? navItemActiveClass : navItemClass}
+                        >
+                            <Settings className="shrink-0 size-4 lg:size-3.5" />
+                            <span className="leading-snug">{t("menu.settings")}</span>
+                        </Link>
+                    )}
+                    <Link
+                        to="/about"
+                        onClick={closeSidebar}
+                        className={pathname.startsWith("/about") ? navItemActiveClass : navItemClass}
+                    >
+                        <Info className="shrink-0 size-4 lg:size-3.5" />
+                        <span className="leading-snug">{t("menu.about")}</span>
+                    </Link>
                     {authChecked && (
                         user ? (
                             <Link to="/" className={navItemClass}>
@@ -72,20 +90,11 @@ const PublicLayout = () => {
                     )}
                 </nav>
 
-                <div className="shrink-0 p-2 border-t border-neutral-200 dark:border-neutral-700">
-                    {user ? (
+                {user && (
+                    <div className="shrink-0 p-2 border-t border-neutral-200 dark:border-neutral-700">
                         <UserMenu />
-                    ) : (
-                        <Link
-                            to="/about"
-                            onClick={closeSidebar}
-                            className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm text-gray-700 dark:text-gray-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left"
-                        >
-                            <Info size={16} />
-                            {t("menu.about")}
-                        </Link>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
 
             {/* Main area */}

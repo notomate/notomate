@@ -507,7 +507,6 @@ const AccountSettingsPage = () => {
         <>
             <div className="h-full flex flex-col">
                 <div className="w-full max-w-[1000px] flex flex-col flex-1 min-h-0 p-4 md:p-6">
-                <h1 className="text-xl font-semibold mb-4 md:mb-6 shrink-0">{t("menu.settings")}</h1>
                         <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0">
                         {/* Section picker: a side list when there is room, otherwise a select */}
                         <nav className="hidden md:flex flex-col gap-0.5 w-52 shrink-0">
