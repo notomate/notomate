@@ -15,7 +15,8 @@ import { DragOverlay } from './DragOverlay';
 import { useMarquee } from '../selection/useMarquee';
 import { useTextToBlockDrag } from '../selection/useTextToBlockDrag';
 import { onSinkCopy, onSinkKeyDown, onSinkPaste } from '../selection/blockKeyboard';
-import { placeCaretAtX, selectRange, setCaret } from '../inline/caret';
+import { focusEditable, placeCaretAtX, selectRange, setCaret } from '../inline/caret';
+import { useCrossBlockCopy } from '../selection/useCrossBlockCopy';
 import { extendPage, insertBlockAfter } from '../ops';
 import { isTextBlock, type Doc } from '../model/types';
 import { isCoarsePointer, isMouse } from '../input/pointer';
@@ -28,7 +29,7 @@ function useFocusRequests() {
     if (!req) return;
     const el = document.querySelector<HTMLElement>(`[data-editable-id="${req.id}"]`);
     if (!el) return;
-    el.focus({ preventScroll: true });
+    focusEditable(el);
     const at = req.at;
     if (typeof at === 'object' && 'x' in at) placeCaretAtX(el, at.x, at.line);
     else if (typeof at === 'object') selectRange(el, at.start, at.end);
@@ -224,6 +225,7 @@ export function Editor({
   const tapRef = useRef(false);
   const [coarse, setCoarse] = useState(isCoarsePointer);
 
+  useEffect(() => useEditor.setState({ touchText: coarse }), [coarse]);
   useEffect(() => {
     const mq = window.matchMedia('(pointer: coarse)');
     const on = () => setCoarse(mq.matches);
@@ -251,6 +253,7 @@ export function Editor({
     return () => cleanups.forEach((c) => c?.());
   }, []);
   useTextToBlockDrag();
+  useCrossBlockCopy();
 
   return (
     <div

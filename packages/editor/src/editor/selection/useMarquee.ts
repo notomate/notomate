@@ -3,10 +3,10 @@ import { clearSelection, requestFocus, selectBlocks, useEditor } from '../model/
 import { isTextBlock } from '../model/types';
 import { extendPage } from '../ops';
 import { blockIdOfRow, createAutoScroller, isMouse, rowsIn } from '../input/pointer';
-import { caretFromPoint } from '../inline/caret';
+import { caretFromPoint, focusEditable } from '../inline/caret';
 
 /** Elements that must keep their own pointer behaviour. */
-const NO_MARQUEE = '[contenteditable="true"], button, input, textarea, select, a, .handle, .ui-layer, .no-marquee';
+const NO_MARQUEE = '[contenteditable="true"], [data-editable-id], button, input, textarea, select, a, .handle, .ui-layer, .no-marquee';
 
 function placeCaret(id: string, x: number, y: number) {
   const el = document.querySelector<HTMLElement>(`[data-editable-id="${id}"]`);
@@ -14,7 +14,7 @@ function placeCaret(id: string, x: number, y: number) {
   const box = el.getBoundingClientRect();
   const cx = Math.min(Math.max(x, box.left + 1), box.right - 1);
   const cy = Math.min(Math.max(y, box.top + 1), box.bottom - 1);
-  el.focus({ preventScroll: true });
+  focusEditable(el);
   const p = caretFromPoint(cx, cy);
   if (p && el.contains(p.node)) window.getSelection()?.setBaseAndExtent(p.node, p.offset, p.node, p.offset);
   else requestFocus(id, x < box.left + box.width / 2 ? 'start' : 'end');

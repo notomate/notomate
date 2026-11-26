@@ -42,6 +42,23 @@ export function getSelectionOffsets(root: HTMLElement): { start: number; end: nu
   };
 }
 
+/**
+ * Focus a block's text. On touch only the block being edited is contentEditable (see
+ * `touchText` in the store), so make it editable first or `focus()` does nothing.
+ */
+export function focusEditable(el: HTMLElement) {
+  if (!el.isContentEditable) el.contentEditable = 'true';
+  el.focus({ preventScroll: true });
+}
+
+/** Focus `el` with the caret at a viewport point, e.g. where a touch landed. */
+export function focusEditableAt(el: HTMLElement, x: number, y: number) {
+  focusEditable(el);
+  const p = caretFromPoint(x, y);
+  if (p && el.contains(p.node)) window.getSelection()?.setBaseAndExtent(p.node, p.offset, p.node, p.offset);
+  else setCaret(el, 'end');
+}
+
 export function setCaret(root: HTMLElement, where: number | 'start' | 'end') {
   const sel = window.getSelection();
   if (!sel) return;

@@ -4,6 +4,7 @@ import { useEditor } from '../model/store';
 import { contentOf } from '../blocks/registry';
 import { isCoarsePointer } from '../input/pointer';
 import { isMarkActive, linkAtSelection, setColor, setLink, toggleMark, type Mark } from '../inline/marks';
+import { focusEditable } from '../inline/caret';
 import { msg } from '../messages';
 
 const COLOR_TOKENS = ['default', 'gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red'];
@@ -57,10 +58,25 @@ function closeLinkEditor() {
 }
 
 function restore(saved: Saved) {
-  saved.el.focus({ preventScroll: true });
+  focusEditable(saved.el);
   const sel = window.getSelection();
   sel?.removeAllRanges();
   sel?.addRange(saved.range);
+}
+
+/**
+ * On touch, a long-press selection in a block that is not being edited sits in plain
+ * text; make that block editable (keeping the selection) before changing it.
+ */
+function editIn(el: HTMLElement) {
+  if (el.isContentEditable) return;
+  const sel = window.getSelection();
+  const range = sel?.rangeCount ? sel.getRangeAt(0).cloneRange() : null;
+  focusEditable(el);
+  if (range) {
+    sel!.removeAllRanges();
+    sel!.addRange(range);
+  }
 }
 
 const sync = (el: HTMLElement) => el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -245,6 +261,7 @@ export function FormatToolbar() {
           aria-label={m.label()}
           aria-pressed={isMarkActive(el, m.mark)}
           onClick={() => {
+            editIn(el);
             toggleMark(el, m.mark);
             sync(el);
             force((n) => n + 1);
@@ -292,6 +309,7 @@ export function FormatToolbar() {
                 type="button"
                 className="menu-item compact"
                 onClick={() => {
+                  editIn(el);
                   setColor(el, c.token);
                   sync(el);
                   setColorsOpen(false);

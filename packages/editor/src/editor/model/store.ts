@@ -46,6 +46,11 @@ export interface EditorState {
   slash: SlashState | null;
   blockMenu: MenuState | null;
   dragging: boolean;
+  /**
+   * Touch devices: only the focused block is contentEditable, so native selection handles
+   * can run across blocks (they cannot leave an editing host). A tap starts editing.
+   */
+  touchText: boolean;
   past: Snapshot[];
   future: Snapshot[];
 }
@@ -60,6 +65,7 @@ export const useEditor = create<EditorState>()(() => ({
   slash: null,
   blockMenu: null,
   dragging: false,
+  touchText: false,
   past: [],
   future: [],
 }));

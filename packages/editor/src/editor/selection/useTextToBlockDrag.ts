@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { clearSelection, selectBlocks, useEditor } from '../model/store';
 import { rangeBetween } from '../model/tree';
 import { blockIdOfRow, createAutoScroller, isMouse, rowAtY } from '../input/pointer';
-import { caretFromPoint } from '../inline/caret';
+import { caretFromPoint, focusEditable } from '../inline/caret';
 
 /**
  * Notion detail: dragging a text selection out of one block into another turns it
@@ -50,7 +50,7 @@ export function useTextToBlockDrag() {
         blockMode = false;
         document.body.classList.remove('ne-is-selecting');
         clearSelection();
-        origin.focus({ preventScroll: true });
+        focusEditable(origin);
         const p = caretFromPoint(e.clientX, e.clientY);
         if (anchor && p && origin.contains(p.node)) {
           window.getSelection()?.setBaseAndExtent(anchor.node, anchor.offset, p.node, p.offset);

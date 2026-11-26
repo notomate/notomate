@@ -1021,6 +1021,12 @@ body.ne-is-dragging * {
 
 /* ---------- touch ---------- */
 
+/* Blocks not being edited are plain text on touch, so a selection can run across them. */
+.ne-root.coarse .editable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .ne-root .mobile-toolbar {
   position: fixed;
   left: 0;

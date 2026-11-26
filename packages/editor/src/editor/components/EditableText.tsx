@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type ClipboardEvent, type DragEvent, type Form
 import { clearSelection, commit, setFocusedId, useEditor } from '../model/store';
 import { createBlock, w } from '../model/tree';
 import { onTextKeyDown } from '../keyboard/textKeys';
-import { getSelectionOffsets, selectRange } from '../inline/caret';
+import { focusEditableAt, getSelectionOffsets, selectRange } from '../inline/caret';
 import { normalizeEmpty, sanitizeInline } from '../inline/sanitize';
 import { deleteTextRange } from '../inline/splitHtml';
 import { matchShortcut } from '../markdownShortcuts';
@@ -150,6 +150,7 @@ function handlePaste(e: ClipboardEvent<HTMLElement>, id: string, plain: boolean)
  */
 export function EditableText({ id, html, className = '', placeholder, alwaysPlaceholder, plain }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const editable = useEditor((s) => !s.touchText || s.focusedId === id);
 
   useLayoutEffect(() => {
     const el = ref.current!;
@@ -169,7 +170,7 @@ export function EditableText({ id, html, className = '', placeholder, alwaysPlac
     <div
       ref={ref}
       className={`editable ${alwaysPlaceholder ? 'always-ph' : ''} ${className}`}
-      contentEditable
+      contentEditable={editable}
       suppressContentEditableWarning
       spellCheck
       data-editable-id={id}
@@ -191,7 +192,19 @@ export function EditableText({ id, html, className = '', placeholder, alwaysPlac
       }}
       onClick={(e) => {
         const a = (e.target as HTMLElement).closest('a');
-        if (a && (e.ctrlKey || e.metaKey)) window.open(a.href, '_blank', 'noopener');
+        if (a && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          window.open(a.href, '_blank', 'noopener');
+          return;
+        }
+        const el = e.currentTarget;
+        if (el.isContentEditable) return;
+        // Touch, block not being edited: a tap starts editing at that spot (a link in
+        // plain text would otherwise navigate); a long-press selection is left alone.
+        e.preventDefault();
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed) return;
+        focusEditableAt(el, e.clientX, e.clientY);
       }}
       onDrop={(e) => {
         // Never let the browser insert raw dropped HTML; plugins may upload dropped files.
