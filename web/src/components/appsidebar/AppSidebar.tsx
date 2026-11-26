@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react"
-import { PanelRight, Compass, Info, LogIn, Plus, type LucideIcon } from "lucide-react"
+import { PanelRight, Compass, Info, Plus, Settings, type LucideIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import UserMenu from "@/components/usermenu/UserMenu"
@@ -136,30 +136,29 @@ const AppSidebar = ({ workspaceId, isOpen, onClose }: AppSidebarProps) => {
                 <NavItem to="/about" icon={Info} onClick={onClose} active={pathname.startsWith("/about")}>
                     {t("menu.about")}
                 </NavItem>
-                {!user && (
-                    <NavItem to="/signin" icon={LogIn} onClick={onClose}>
-                        {t("actions.signin")}
-                    </NavItem>
-                )}
-                {user && isSettings && (
-                    <div>
-                        <div className={groupLabelClass}>{t("menu.settings")}</div>
-                        {settingsSections.map((section) => (
-                            <NavItem key={section.value} to={`/account/${section.value}`} icon={section.icon} onClick={onClose}
-                                active={pathname === `/account/${section.value}`}>
-                                {section.label}
-                            </NavItem>
-                        ))}
-                    </div>
+                {user && (
+                    <>
+                        <NavItem to="/account" icon={Settings} onClick={onClose} active={isSettings}>
+                            {t("menu.settings")}
+                        </NavItem>
+                        {isSettings && (
+                            <div className="ml-4 pl-2 border-l border-neutral-200 dark:border-neutral-700">
+                                {settingsSections.map((section) => (
+                                    <NavItem key={section.value} to={`/account/${section.value}`} icon={section.icon} onClick={onClose}
+                                        active={pathname === `/account/${section.value}`}>
+                                        {section.label}
+                                    </NavItem>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
                 {user && <WorkspaceList workspaceId={workspaceId} onClose={onClose} />}
             </nav>
 
-            {user && (
-                <div className="shrink-0 p-2 border-t border-neutral-200 dark:border-neutral-700">
-                    <UserMenu />
-                </div>
-            )}
+            <div className="shrink-0 p-2 border-t border-neutral-200 dark:border-neutral-700">
+                <UserMenu />
+            </div>
         </div>
     )
 }

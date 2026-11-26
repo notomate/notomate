@@ -1,81 +1,43 @@
-import { useRef, useState, useEffect } from "react"
-import { Settings, Compass } from "lucide-react"
-import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
+import { LogIn, LogOut } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { useCurrentUserStore } from "@/stores/current-user"
 import Avatar from "@/components/avatar/Avatar"
-import { BottomSheet } from "@/components/ui/bottom-sheet"
-import { menuIconClass, menuItemClass, menuListClass, menuSurfaceClass } from "@/components/ui/menu"
-import { useIsLg } from "@/hooks/use-media-query"
+import useSignOut from "@/hooks/use-sign-out"
 
+const buttonClass = "w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
+
+/** Foot of the sidebar: the signed-in user with Sign out, or Sign in. */
 const UserMenu = () => {
     const { t } = useTranslation()
     const { user } = useCurrentUserStore()
-    const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const isLg = useIsLg()
-    const menuRef = useRef<HTMLDivElement>(null)
-    const buttonRef = useRef<HTMLButtonElement>(null)
+    const signOut = useSignOut()
 
-    useEffect(() => {
-        if (!isLg || !isMenuOpen) return
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as Node
-            if (!menuRef.current?.contains(target) && !buttonRef.current?.contains(target)) {
-                setIsMenuOpen(false)
-            }
-        }
-        document.addEventListener("pointerdown", handleClickOutside, true)
-        return () => document.removeEventListener("pointerdown", handleClickOutside, true)
-    }, [isMenuOpen, isLg])
-
-    if (!user) return null
-
-    const menuContent = (
-        <div className={menuListClass}>
-            <Link
-                to="/account"
-                onClick={() => setIsMenuOpen(false)}
-                className={menuItemClass(!isLg)}
-            >
-                <span className={menuIconClass()}><Settings size={16} /></span>
-                {t("menu.settings")}
+    if (!user) {
+        return (
+            <Link to="/signin" className={`${buttonClass} text-gray-700 dark:text-gray-200`}>
+                <LogIn size={16} className="shrink-0" />
+                {t("actions.signin")}
             </Link>
-            <Link
-                to="/explore"
-                onClick={() => setIsMenuOpen(false)}
-                className={menuItemClass(!isLg)}
-            >
-                <span className={menuIconClass()}><Compass size={16} /></span>
-                {t("menu.explore")}
-            </Link>
-        </div>
-    )
+        )
+    }
 
     return (
-        <>
-            <div className="relative">
-                <button
-                    ref={buttonRef}
-                    onClick={() => setIsMenuOpen(prev => !prev)}
-                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left"
-                >
-                    <Avatar name={user.name} avatarUrl={user.avatar_url} size={24} />
-                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{user.name}</span>
-                </button>
-                {isLg && isMenuOpen && (
-                    <div
-                        ref={menuRef}
-                        className={`absolute bottom-full left-0 mb-2 w-52 overflow-hidden z-dropdown ${menuSurfaceClass}`}
-                    >
-                        {menuContent}
-                    </div>
-                )}
+        <div className="flex items-center gap-1">
+            <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2 select-none">
+                <Avatar name={user.name} avatarUrl={user.avatar_url} size={24} />
+                <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{user.name}</span>
             </div>
-
-            <BottomSheet open={!isLg && isMenuOpen} onOpenChange={setIsMenuOpen}>
-                {menuContent}
-            </BottomSheet>
-        </>
+            <button
+                onClick={() => signOut.mutate()}
+                disabled={signOut.isPending}
+                title={t("actions.signout")}
+                className="shrink-0 flex items-center gap-1.5 px-2 py-2 rounded-md text-sm text-muted-foreground transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
+            >
+                <LogOut size={16} />
+                {t("actions.signout")}
+            </button>
+        </div>
     )
 }
 

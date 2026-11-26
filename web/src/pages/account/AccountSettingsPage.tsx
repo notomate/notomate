@@ -1,10 +1,7 @@
 import { useTranslation } from "react-i18next"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
-import { useMutation } from "@tanstack/react-query"
 import { useTheme, Theme } from "@/providers/Theme"
 import { useCurrentUserStore } from "@/stores/current-user"
-import { useWorkspaceStore } from "@/stores/workspace"
-import { signOut } from "@/api/auth"
 import { toast } from "@/stores/toast"
 import { useState, useEffect, useRef } from "react"
 import { updatePreferences, uploadAvatar, removeAvatar, updateEmail, changePassword } from "@/api/user"
@@ -19,15 +16,14 @@ import Select from "@/components/select/Select"
 import Avatar from "@/components/avatar/Avatar"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera, X } from "lucide-react"
+import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, Camera, X } from "lucide-react"
 
 // A full-access key has an empty scope, which a select option cannot hold.
 const FULL_ACCESS_OPTION = "full"
 
 
 const AccountSettingsPage = () => {
-    const { user, fetchUser, resetCurrentUser } = useCurrentUserStore()
-    const { resetWorkspaces } = useWorkspaceStore()
+    const { user, fetchUser } = useCurrentUserStore()
     const { t, i18n } = useTranslation()
     const navigate = useNavigate()
     const { theme, setTheme, primaryColor, setPrimaryColor } = useTheme()!
@@ -458,19 +454,6 @@ const AccountSettingsPage = () => {
         }
     }
 
-    const signoutMutation = useMutation({
-        mutationFn: () => signOut(),
-        onSuccess: () => {
-            try {
-                resetWorkspaces()
-                resetCurrentUser()
-                navigate("/")
-            } catch (error) {
-                console.error("Error during sign out:", error)
-            }
-        },
-    })
-
     useEffect(() => {
         if (!user || prefsDirty === 0) return
         savePreferences()
@@ -609,19 +592,6 @@ const AccountSettingsPage = () => {
                                                     {t("pages.preferences.changePassword")}
                                                 </button>
                                             </div>
-                                        </div>
-
-                                        {/* Sign out */}
-                                        <div className="flex flex-col pt-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-fit mt-4 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                                onClick={() => signoutMutation.mutate()}
-                                            >
-                                                <LogOut size={16} />
-                                                {t("actions.signout")}
-                                            </Button>
                                         </div>
                                     </div>
                                 </div>
