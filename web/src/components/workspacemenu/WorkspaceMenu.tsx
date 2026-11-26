@@ -1,16 +1,20 @@
 import { ChevronsUpDown, Info, Plus } from "lucide-react"
 import { useWorkspaceStore } from "@/stores/workspace"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { createWorkspace } from "@/api/workspace"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
 import { menuIconClass, menuItemClass, menuSurfaceClass } from "@/components/ui/menu"
 import { useIsLg } from "@/hooks/use-media-query"
 
-const WorkspaceMenu = () => {
+interface WorkspaceMenuProps {
+    /** The workspace shown as current. */
+    workspaceId?: string
+}
+
+const WorkspaceMenu = ({ workspaceId }: WorkspaceMenuProps) => {
     const { workspaces, fetchWorkspaces, getWorkspaceById } = useWorkspaceStore()
-    const { workspaceId } = useParams()
     const [keyword, setKeyword] = useState("")
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const isLg = useIsLg()
@@ -57,7 +61,7 @@ const WorkspaceMenu = () => {
             : workspaces;
     }, [workspaces, keyword]);
 
-    const currentName = getWorkspaceById(workspaceId!)?.name ?? ""
+    const currentName = (workspaceId && getWorkspaceById(workspaceId)?.name) || ""
 
     const menuContent = (
         <>

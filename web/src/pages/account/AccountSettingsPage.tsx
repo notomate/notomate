@@ -11,6 +11,7 @@ import { updatePreferences, uploadAvatar, removeAvatar, updateEmail, changePassw
 import { listAPIKeys, createAPIKey, deleteAPIKey, APIKey, APIKeyScope, CreateAPIKeyRequest } from "@/api/apikey"
 import { listOAuthGrants, deleteOAuthGrant, OAuthGrant } from "@/api/oauth"
 import McpSettingsTab from "@/components/user/McpSettingsTab"
+import { OWNER_TABS, SETTINGS_TABS, SettingsTab, useSettingsSections } from "./settings-sections"
 import { SelectField } from "@/components/ui/select-field"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
@@ -18,15 +19,11 @@ import Select from "@/components/select/Select"
 import Avatar from "@/components/avatar/Avatar"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
-import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera, X, User as UserIcon, Palette, KeyRound, Plug, Users, Server, type LucideIcon } from "lucide-react"
+import { Trash2, Plus, Copy, AlertTriangle, Edit, UserX, UserCheck, Check, LogOut, Camera, X } from "lucide-react"
 
 // A full-access key has an empty scope, which a select option cannot hold.
 const FULL_ACCESS_OPTION = "full"
 
-type SettingsTab = 'account' | 'preferences' | 'apiKeys' | 'mcp' | 'users' | 'system'
-
-const SETTINGS_TABS: SettingsTab[] = ['account', 'preferences', 'apiKeys', 'mcp', 'users', 'system']
-const OWNER_TABS: SettingsTab[] = ['users', 'system']
 
 const AccountSettingsPage = () => {
     const { user, fetchUser, resetCurrentUser } = useCurrentUserStore()
@@ -190,18 +187,7 @@ const AccountSettingsPage = () => {
         }
     }
 
-    const settingsSections: { value: SettingsTab; label: string; icon: LucideIcon }[] = [
-        { value: "account", label: t("menu.user"), icon: UserIcon },
-        { value: "preferences", label: `${t("pages.preferences.language")} & ${t("pages.preferences.theme")}`, icon: Palette },
-        { value: "apiKeys", label: t("pages.preferences.apiKeys"), icon: KeyRound },
-        { value: "mcp", label: "MCP", icon: Plug },
-        ...(isOwner
-            ? [
-                { value: "users" as const, label: t("pages.preferences.userManagement"), icon: Users },
-                { value: "system" as const, label: t("pages.preferences.systemSettings"), icon: Server },
-            ]
-            : []),
-    ]
+    const settingsSections = useSettingsSections()
 
     const scopeLabel = (scope: string) =>
         scope === "mcp:read" ? t("pages.preferences.scopeMcpRead")
@@ -507,30 +493,13 @@ const AccountSettingsPage = () => {
         <>
             <div className="h-full flex flex-col">
                 <div className="w-full max-w-[1000px] flex flex-col flex-1 min-h-0 p-4 md:p-6">
-                        <div className="flex flex-col md:flex-row gap-4 md:gap-6 flex-1 min-h-0">
-                        {/* Section picker: a side list when there is room, otherwise a select */}
-                        <nav className="hidden md:flex flex-col gap-0.5 w-52 shrink-0">
-                            {settingsSections.map((section) => (
-                                <button
-                                    key={section.value}
-                                    onClick={() => setActiveTab(section.value)}
-                                    aria-current={activeTab === section.value ? "page" : undefined}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-left text-sm font-medium transition-colors ${
-                                        activeTab === section.value
-                                            ? 'bg-neutral-100 dark:bg-neutral-700 text-primary'
-                                            : 'text-muted-foreground hover:bg-neutral-100 dark:hover:bg-neutral-700 hover:text-gray-900 dark:hover:text-gray-200'
-                                    }`}
-                                >
-                                    <section.icon size={16} className="shrink-0" />
-                                    {section.label}
-                                </button>
-                            ))}
-                        </nav>
+                        <div className="flex flex-col gap-4 flex-1 min-h-0">
+                        {/* The sidebar lists the sections; below lg it is a drawer, so offer a select too. */}
                         <SelectField
                             value={activeTab}
                             onChange={(value) => setActiveTab(value as SettingsTab)}
                             aria-label={t("menu.settings")}
-                            className="md:hidden shrink-0 bg-neutral-100 dark:bg-neutral-700"
+                            className="lg:hidden shrink-0 bg-neutral-100 dark:bg-neutral-700"
                             options={settingsSections}
                         />
 
