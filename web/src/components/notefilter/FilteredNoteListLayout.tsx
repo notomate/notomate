@@ -27,6 +27,8 @@ interface FilteredNoteListLayoutProps {
     notice?: ReactNode
     /** Shown under the search bar while the panel is closed (e.g. a clicked-creator chip). */
     chips?: ReactNode
+    /** Shown above the search bar, scrolling with the list (e.g. a page heading). */
+    header?: ReactNode
     children: ReactNode
 }
 
@@ -37,7 +39,7 @@ interface FilteredNoteListLayoutProps {
  */
 export function FilteredNoteListLayout({
     scrollRef, query, onQueryChange, placeholder, filters, onFiltersChange, onReset,
-    activeCount, canReset, creator, tags, contentFilters, chips, notice, children,
+    activeCount, canReset, creator, tags, contentFilters, chips, notice, header, children,
 }: FilteredNoteListLayoutProps) {
     const { t } = useTranslation()
     const [open, setOpen] = useState(false)
@@ -52,6 +54,7 @@ export function FilteredNoteListLayout({
         <div className="h-full flex bg-neutral-50 dark:bg-neutral-950">
             <div ref={scrollRef} className="flex-1 min-w-0 overflow-auto">
                 <div className="w-full lg:max-w-[600px] mx-auto">
+                    {header}
                     <div className="px-2 pt-2 xl:pt-4 pb-2">
                         <div className="flex items-center gap-1">
                             <div className="relative flex-1 min-w-0">

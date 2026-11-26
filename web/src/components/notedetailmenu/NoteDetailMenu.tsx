@@ -36,7 +36,7 @@ const NoteDetailMenu: FC<NoteDetailMenuProps> = ({ note }) => {
         onSuccess: async () => {
             try {
                 await queryClient.invalidateQueries({ queryKey: ['notes', workspaceId] })
-                navigate(`/workspaces/${workspaceId}/notes`)
+                navigate(`/workspaces/${workspaceId}`)
             } catch (error) {
                 addToast({ title: t('messages.deleteNoteFailed'), type: 'error' })
             }

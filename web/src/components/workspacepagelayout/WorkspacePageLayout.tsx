@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom"
 import WorkspaceHeader from "@/components/workspaceheader/WorkspaceHeader"
 
-/** Every workspace page: the workspace header and tab bar above the page. */
+/** Every workspace page: the mobile top bar above the page. */
 const WorkspacePageLayout = () => (
     <>
         <WorkspaceHeader />

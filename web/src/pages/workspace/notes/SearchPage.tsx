@@ -11,6 +11,7 @@ import CreatorFilterChip from "@/components/notecard/CreatorFilterChip"
 import { SelectField } from "@/components/ui/select-field"
 import { FilteredNoteListLayout } from "@/components/notefilter/FilteredNoteListLayout"
 import { useNoteFilters } from "@/components/notefilter/note-filters"
+import WorkspaceHomeHeader from "@/components/workspaceheader/WorkspaceHomeHeader"
 
 const PAGE_SIZE = 30
 /** SelectField value for "no creator filter"; Radix reserves "". */
@@ -34,6 +35,7 @@ const TagChip = ({ tag, onRemove }: { tag: string; onRemove: () => void }) => {
     )
 }
 
+/** Workspace home: links to the workspace pages and pinned notes, then note search. */
 const SearchPage = () => {
     const { t } = useTranslation()
     const currentWorkspaceId = useCurrentWorkspaceId()
@@ -133,6 +135,7 @@ const SearchPage = () => {
     return (
         <FilteredNoteListLayout
             scrollRef={scrollRef}
+            header={<WorkspaceHomeHeader workspaceId={currentWorkspaceId} />}
             query={query}
             onQueryChange={setQuery}
             placeholder={t("placeholder.search")}
