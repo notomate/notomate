@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LogIn, ArrowLeft, Info, Compass, PanelRight, Settings } from 'lucide-react';
+import { LogIn, ArrowLeft, Info, Compass, PanelRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import UserMenu from '@/components/usermenu/UserMenu';
 import MobileTopBar from '@/components/mobiletopbar/MobileTopBar';
@@ -63,16 +63,6 @@ const PublicLayout = () => {
                         <Compass className="shrink-0 size-4 lg:size-3.5" />
                         <span className="leading-snug">{t("menu.explore")}</span>
                     </Link>
-                    {user && (
-                        <Link
-                            to="/account"
-                            onClick={closeSidebar}
-                            className={pathname.startsWith("/account") ? navItemActiveClass : navItemClass}
-                        >
-                            <Settings className="shrink-0 size-4 lg:size-3.5" />
-                            <span className="leading-snug">{t("menu.settings")}</span>
-                        </Link>
-                    )}
                     <Link
                         to="/about"
                         onClick={closeSidebar}

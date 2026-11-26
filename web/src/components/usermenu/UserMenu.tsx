@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react"
-import { Settings, Info, Compass } from "lucide-react"
+import { Settings, Compass } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { useCurrentUserStore } from "@/stores/current-user"
@@ -39,14 +39,6 @@ const UserMenu = () => {
             >
                 <span className={menuIconClass()}><Settings size={16} /></span>
                 {t("menu.settings")}
-            </Link>
-            <Link
-                to="/about"
-                onClick={() => setIsMenuOpen(false)}
-                className={menuItemClass(!isLg)}
-            >
-                <span className={menuIconClass()}><Info size={16} /></span>
-                {t("menu.about")}
             </Link>
             <Link
                 to="/explore"

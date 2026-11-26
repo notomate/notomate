@@ -1,7 +1,7 @@
-import { ChevronsUpDown, Plus } from "lucide-react"
+import { ChevronsUpDown, Info, Plus } from "lucide-react"
 import { useWorkspaceStore } from "@/stores/workspace"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { createWorkspace } from "@/api/workspace"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
@@ -89,6 +89,16 @@ const WorkspaceMenu = () => {
                         <span className="min-w-0 truncate">{keyword ? t("menu.createWithName", { name: keyword }) : t("menu.addNew")}</span>
                     </button>
                 )}
+            </div>
+            <div className="border-t border-neutral-200 dark:border-neutral-700 py-1.5 flex flex-col">
+                <Link
+                    to="/about"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={menuItemClass(!isLg)}
+                >
+                    <span className={menuIconClass()}><Info size={16} /></span>
+                    <span className="min-w-0 truncate">{t("menu.about")}</span>
+                </Link>
             </div>
         </>
     )
