@@ -1,19 +1,18 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { createNote, NoteData } from "@/api/note"
 import { toast } from "@/stores/toast"
+import useCurrentWorkspaceId from "./use-currentworkspace-id"
 
-/** Creates a note in `workspaceId`, or in the workspace in the URL when it is omitted. */
-export default function useCreateNote(workspaceId?: string) {
-    const params = useParams<{ workspaceId?: string }>()
-    const currentWorkspaceId = workspaceId ?? params.workspaceId
+export default function useCreateNote() {
+    const currentWorkspaceId = useCurrentWorkspaceId()
     const queryClient = useQueryClient()
     const navigate = useNavigate()
     const { t } = useTranslation()
 
     const createNoteMutation = useMutation({
-        mutationFn: (data: NoteData) => createNote(currentWorkspaceId!, data),
+        mutationFn: (data: NoteData) => createNote(currentWorkspaceId, data),
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['notes', currentWorkspaceId] })
             navigate(`/workspaces/${currentWorkspaceId}/notes/${data.id}?mode=edit`)
@@ -25,7 +24,6 @@ export default function useCreateNote(workspaceId?: string) {
     })
 
     const handleCreateNote = () => {
-        if (!currentWorkspaceId) return
         const emptyContent = JSON.stringify({
             type: "doc",
             content: [{ type: "paragraph", content: [{ type: "text", text: "" }] }]

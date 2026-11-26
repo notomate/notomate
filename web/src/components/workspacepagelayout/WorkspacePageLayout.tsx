@@ -1,15 +1,15 @@
 import { useTranslation } from "react-i18next"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { Outlet, useLocation } from "react-router-dom"
+import { Outlet, useLocation, useOutletContext } from "react-router-dom"
 import { Edit } from "lucide-react"
 import { useWorkspaceStore } from "@/stores/workspace"
 import useCreateNote from "@/hooks/use-create-note"
 import MobileTopBar from "@/components/mobiletopbar/MobileTopBar"
-import { useAppLayout } from "@/components/applayout/AppLayout"
+import { WorkspaceLayoutContext } from "@/components/workspacelayout/WorkspaceLayout"
 
 const WorkspacePageLayout = () => {
     const currentWorkspaceId = useCurrentWorkspaceId()
-    const { onOpenSidebar } = useAppLayout()
+    const { onOpenSidebar } = useOutletContext<WorkspaceLayoutContext>()
     const { t } = useTranslation()
     const location = useLocation()
     const { getWorkspaceById } = useWorkspaceStore()

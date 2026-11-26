@@ -1,20 +1,16 @@
-import { ChevronsUpDown, Info, Plus, Settings } from "lucide-react"
+import { ChevronsUpDown, Plus } from "lucide-react"
 import { useWorkspaceStore } from "@/stores/workspace"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { createWorkspace } from "@/api/workspace"
 import { BottomSheet } from "@/components/ui/bottom-sheet"
 import { menuIconClass, menuItemClass, menuSurfaceClass } from "@/components/ui/menu"
 import { useIsLg } from "@/hooks/use-media-query"
 
-interface WorkspaceMenuProps {
-    /** The workspace shown as current; undefined when the user has none. */
-    workspaceId?: string
-}
-
-const WorkspaceMenu = ({ workspaceId }: WorkspaceMenuProps) => {
+const WorkspaceMenu = () => {
     const { workspaces, fetchWorkspaces, getWorkspaceById } = useWorkspaceStore()
+    const { workspaceId } = useParams()
     const [keyword, setKeyword] = useState("")
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const isLg = useIsLg()
@@ -61,7 +57,7 @@ const WorkspaceMenu = ({ workspaceId }: WorkspaceMenuProps) => {
             : workspaces;
     }, [workspaces, keyword]);
 
-    const currentName = (workspaceId && getWorkspaceById(workspaceId)?.name) || ""
+    const currentName = getWorkspaceById(workspaceId!)?.name ?? ""
 
     const menuContent = (
         <>
@@ -93,24 +89,6 @@ const WorkspaceMenu = ({ workspaceId }: WorkspaceMenuProps) => {
                         <span className="min-w-0 truncate">{keyword ? t("menu.createWithName", { name: keyword }) : t("menu.addNew")}</span>
                     </button>
                 )}
-            </div>
-            <div className="border-t border-neutral-200 dark:border-neutral-700 py-1.5 flex flex-col">
-                <Link
-                    to="/account"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={menuItemClass(!isLg)}
-                >
-                    <span className={menuIconClass()}><Settings size={16} /></span>
-                    <span className="min-w-0 truncate">{t("menu.settings")}</span>
-                </Link>
-                <Link
-                    to="/about"
-                    onClick={() => setIsMenuOpen(false)}
-                    className={menuItemClass(!isLg)}
-                >
-                    <span className={menuIconClass()}><Info size={16} /></span>
-                    <span className="min-w-0 truncate">{t("menu.about")}</span>
-                </Link>
             </div>
         </>
     )

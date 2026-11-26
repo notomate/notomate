@@ -22,8 +22,7 @@ import RunDetailPage from './pages/workspace/workflows/RunDetailPage';
 import MessagingPage from './pages/workspace/messaging/MessagingPage';
 import { Toast } from './components/toast/Toast'
 import { useToastStore } from './stores/toast';
-import AppLayout from './components/applayout/AppLayout';
-import BasicPageLayout from './components/applayout/BasicPageLayout';
+import WorkspaceLayout from './components/workspacelayout/WorkspaceLayout';
 import WorkspaceLoader from './components/workspaceloader/WorkspaceLoader';
 import WorkspacePageLayout from './components/workspacepagelayout/WorkspacePageLayout';
 import CalendarPage from './pages/workspace/calendar/CalendarPage';
@@ -35,6 +34,7 @@ import WhiteboardPage from './pages/workspace/whiteboard/WhiteboardPage';
 import SpreadsheetPage from './pages/workspace/spreadsheet/SpreadsheetPage';
 import AccountSettingsPage from './pages/account/AccountSettingsPage';
 import AboutPage from './pages/about/AboutPage';
+import PublicLayout from './components/publiclayout/PublicLayout';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import useScrollToTop from '@/hooks/use-scrolltotop';
@@ -75,23 +75,21 @@ function App() {
         <Route path='signin' element={<SignIn />}></Route>
         <Route path='signup' element={<SignUp />}></Route>
         <Route path='oauth/authorize' element={<OAuthAuthorize />} />
+        <Route element={<PublicLayout />}>
+          <Route path='explore' element={<ExplorePage />}>
+            <Route path='notes/:noteId' element={<ExploreNotePage />} />
+          </Route>
+          <Route path='about' element={<AboutPage />} />
+          <Route element={<RequireAuth />}>
+            <Route path='account' element={<Navigate to="/account/account" replace />} />
+            <Route path='account/:section' element={<AccountSettingsPage />} />
+          </Route>
+        </Route>
         <Route path='/' element={<RequireAuth />}>
           <Route index element={<Navigate to="/workspaces" replace />} />
           <Route path='/workspace-setup' element={<Setup />} />
           <Route path='workspaces' element={<WorkspaceLoader />} />
-        </Route>
-        <Route element={<AppLayout />}>
-          <Route element={<BasicPageLayout />}>
-            <Route path='explore' element={<ExplorePage />}>
-              <Route path='notes/:noteId' element={<ExploreNotePage />} />
-            </Route>
-            <Route path='about' element={<AboutPage />} />
-            <Route element={<RequireAuth />}>
-              <Route path='account' element={<Navigate to="/account/account" replace />} />
-              <Route path='account/:section' element={<AccountSettingsPage />} />
-            </Route>
-          </Route>
-          <Route path='workspaces/:workspaceId' element={<RequireAuth />}>
+          <Route path='workspaces/:workspaceId' element={<WorkspaceLayout />}>
             <Route index element={<Navigate to="notes" replace />} />
             <Route path='notes/:noteId' element={<NotesLayout />}>
               <Route index element={<NoteDetailPage />} />
