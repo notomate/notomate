@@ -1,14 +1,14 @@
 import { Search } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import useCurrentWorkspaceId from "@/hooks/use-currentworkspace-id"
-import { Link, Outlet, useOutletContext } from "react-router-dom"
+import { Link, Outlet } from "react-router-dom"
 import { useWorkspaceStore } from "@/stores/workspace"
 import MobileTopBar from "@/components/mobiletopbar/MobileTopBar"
-import { WorkspaceLayoutContext } from "@/components/workspacelayout/WorkspaceLayout"
+import { useAppLayout } from "@/components/applayout/AppLayout"
 
 const NotesLayout = () => {
     const currentWorkspaceId = useCurrentWorkspaceId();
-    const { onOpenSidebar } = useOutletContext<WorkspaceLayoutContext>()
+    const { onOpenSidebar } = useAppLayout()
     const { t } = useTranslation()
     const { getWorkspaceById } = useWorkspaceStore()
     const currentWorkspaceName = getWorkspaceById(currentWorkspaceId)?.name
