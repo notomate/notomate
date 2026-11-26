@@ -2,7 +2,7 @@ import { FC, useEffect, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom"
-import { Hash, Plus } from "lucide-react"
+import { ChevronDown, Hash, Plus } from "lucide-react"
 import { ChannelData, createChannel, deleteChannel, getChannels, updateChannel } from "@/api/channel"
 import { getWorkspaceMembers } from "@/api/workspace"
 import { useCurrentUserStore } from "@/stores/current-user"
@@ -155,17 +155,34 @@ const MessagingPage: FC = () => {
             onOpenChannelList={() => setIsChannelSheetOpen(true)}
           />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground text-center px-4">
-            <span>{channels.length === 0 ? t("messaging.noChannels") : t("messaging.selectChannel")}</span>
-            {channels.length > 0 && (
+          <>
+            {/* Single column: the same header as a channel, so the channel list (and New channel) stays reachable. */}
+            <div className="lg:hidden shrink-0 flex items-center gap-2 px-4 py-3 border-b dark:border-neutral-700">
               <button
-                className="lg:hidden text-xs px-3 py-1.5 border dark:border-neutral-600 rounded-md text-muted-foreground dark:text-gray-300"
+                aria-label={t("messaging.channels") as string}
+                className="flex items-center gap-1.5 min-w-0"
                 onClick={() => setIsChannelSheetOpen(true)}
               >
-                {t("messaging.channels")}
+                <Hash size={16} className="text-muted-foreground shrink-0" />
+                <span className="font-medium text-sm text-gray-800 dark:text-gray-100 truncate">{t("messaging.channels")}</span>
+                <ChevronDown size={14} className="text-muted-foreground shrink-0" />
               </button>
+            </div>
+            {!isLoadingChannels && (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 text-sm text-muted-foreground text-center px-4">
+                <span>{channels.length === 0 ? t("messaging.noChannels") : t("messaging.selectChannel")}</span>
+                {channels.length === 0 && (
+                  <button
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 border dark:border-neutral-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                    onClick={() => setDialogMode("create")}
+                  >
+                    <Plus size={14} />
+                    {t("messaging.newChannel")}
+                  </button>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
