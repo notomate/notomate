@@ -28,6 +28,12 @@ const PublicLayout = () => {
 
     const closeSidebar = () => setIsSidebarOpen(false);
 
+    // Close the mobile sidebar after any navigation, including links outside the
+    // nav list (e.g. Settings / About in the user menu).
+    useEffect(() => {
+        closeSidebar();
+    }, [pathname]);
+
     return (
         <div className="flex h-svh">
             {/* Sidebar */}
