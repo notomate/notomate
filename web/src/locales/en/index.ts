@@ -5,6 +5,8 @@ export default {
     searchWorkspace: "Search / Add Workspace"
   },
   menu: {
+    workspaces: "Workspaces",
+    newWorkspace: "New workspace",
     notes: "Notes",
     files: "Files",
     workflows: "Workflows",

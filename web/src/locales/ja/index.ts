@@ -5,6 +5,8 @@ export default {
     searchWorkspace: "検索 / ワークスペースを追加"
   },
   menu: {
+    workspaces: "ワークスペース",
+    newWorkspace: "新しいワークスペース",
     notes: "ノート",
     files: "ファイル",
     workflows: "Workflows",

@@ -5,6 +5,8 @@ export default {
     searchWorkspace: "بحث / إضافة مساحة عمل"
   },
   menu: {
+    workspaces: "مساحات العمل",
+    newWorkspace: "مساحة عمل جديدة",
     notes: "الملاحظات",
     files: "الملفات",
     workflows: "Workflows",

@@ -6,7 +6,6 @@ import ExplorePage from './pages/explore/ExplorePage';
 import ExploreNotePage from './pages/explore/ExploreNotePage';
 import NotFound from './pages/errors/NotFoundPage';
 import RequireAuth from './components/requireauth/RequireAuth';
-import NotesLayout from './pages/workspace/notes/NotesLayout';
 import NotesPage from './pages/workspace/notes/NotesPage';
 import Setup from './pages/workspacesetup/WorkspaceSetupPage';
 import NoteDetailPage from './pages/workspace/notes/NoteDetailPage';
@@ -93,10 +92,8 @@ function App() {
           </Route>
           <Route path='workspaces/:workspaceId' element={<RequireAuth />}>
             <Route index element={<Navigate to="notes" replace />} />
-            <Route path='notes/:noteId' element={<NotesLayout />}>
-              <Route index element={<NoteDetailPage />} />
-            </Route>
             <Route element={<WorkspacePageLayout />}>
+              <Route path='notes/:noteId' element={<NoteDetailPage />} />
               <Route path='notes' element={<NotesPage />} />
               <Route path='notes/search' element={<SearchPage />} />
               <Route path='files' element={<FilesPage />} />
