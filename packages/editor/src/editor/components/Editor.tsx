@@ -17,6 +17,7 @@ import { useTextToBlockDrag } from '../selection/useTextToBlockDrag';
 import { onSinkCopy, onSinkKeyDown, onSinkPaste } from '../selection/blockKeyboard';
 import { focusEditable, placeCaretAtX, selectRange, setCaret } from '../inline/caret';
 import { useCrossBlockCopy } from '../selection/useCrossBlockCopy';
+import { useTouchSelection } from '../selection/useTouchSelection';
 import { extendPage, insertBlockAfter } from '../ops';
 import { isTextBlock, type Doc } from '../model/types';
 import { isCoarsePointer, isMouse } from '../input/pointer';
@@ -254,6 +255,7 @@ export function Editor({
   }, []);
   useTextToBlockDrag();
   useCrossBlockCopy();
+  useTouchSelection();
 
   return (
     <div
