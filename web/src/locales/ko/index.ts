@@ -153,6 +153,8 @@ export default {
       mcpApiKeyHint: "에이전트가 브라우저로 로그인할 수 없다면 API 키 탭에서 키를 만들고 Authorization: Bearer <key> 헤더로 보내세요.",
       language: "언어",
       theme: "테마",
+      themeLight: "라이트",
+      themeDark: "다크",
       primaryColor: "주요 색상",
       customColor: "커스텀",
       apiKeys: "API 키",

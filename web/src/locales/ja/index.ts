@@ -153,6 +153,8 @@ export default {
       mcpApiKeyHint: "ブラウザーでログインできないエージェントには、「API キー」タブでキーを作成し、Authorization: Bearer <key> ヘッダーで送信してください。",
       language: "言語",
       theme: "テーマ",
+      themeLight: "ライト",
+      themeDark: "ダーク",
       primaryColor: "プライマリーカラー",
       customColor: "カスタム",
       apiKeys: "APIキー",

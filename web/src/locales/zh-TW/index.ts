@@ -320,6 +320,8 @@ export default {
       mcpApiKeyHint: "如果代理無法透過瀏覽器登入，請在「API 金鑰」分頁建立金鑰，並以 Authorization: Bearer <key> 標頭傳送。",
       language: "語言",
       theme: "主題",
+      themeLight: "淺色",
+      themeDark: "深色",
       primaryColor: "主要顏色",
       customColor: "自訂",
       apiKeys: "API 金鑰",

@@ -319,6 +319,8 @@ export default {
       mcpApiKeyHint: "如果代理无法通过浏览器登录，请在“API 密钥”标签页创建密钥，并以 Authorization: Bearer <key> 请求头发送。",
       language: "语言",
       theme: "主题",
+      themeLight: "浅色",
+      themeDark: "深色",
       primaryColor: "主要颜色",
       customColor: "自定义",
       apiKeys: "API 密钥",

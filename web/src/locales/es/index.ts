@@ -153,6 +153,8 @@ export default {
       mcpApiKeyHint: "Si un agente no puede iniciar sesión con un navegador, crea una clave en la pestaña Claves de API y envíala con la cabecera Authorization: Bearer <key>.",
       language: "Idioma",
       theme: "Tema",
+      themeLight: "Claro",
+      themeDark: "Oscuro",
       primaryColor: "Color Primario",
       customColor: "Personalizado",
       apiKeys: "Claves API",

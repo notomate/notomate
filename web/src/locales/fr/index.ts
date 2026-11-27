@@ -153,6 +153,8 @@ export default {
       mcpApiKeyHint: "Si un agent ne peut pas se connecter via un navigateur, créez une clé dans l’onglet Clés API et envoyez-la avec l’en-tête Authorization: Bearer <key>.",
       language: "Langue",
       theme: "Thème",
+      themeLight: "Clair",
+      themeDark: "Sombre",
       primaryColor: "Couleur primaire",
       customColor: "Personnalisé",
       apiKeys: "Clés API",

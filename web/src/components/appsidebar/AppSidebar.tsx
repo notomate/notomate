@@ -3,6 +3,7 @@ import { PanelRight, Compass, Info, Plus, Settings, type LucideIcon } from "luci
 import { useTranslation } from "react-i18next"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import UserMenu from "@/components/usermenu/UserMenu"
+import PreferenceControls from "./PreferenceControls"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { useWorkspaceStore } from "@/stores/workspace"
 import { createWorkspace } from "@/api/workspace"
@@ -147,6 +148,10 @@ const AppSidebar = ({ workspaceId, isOpen, onClose }: AppSidebarProps) => {
                 )}
                 {user && <WorkspaceList workspaceId={workspaceId} onClose={onClose} />}
             </nav>
+
+            <div className="shrink-0 px-2 pb-1">
+                <PreferenceControls />
+            </div>
 
             <div className="shrink-0 p-2 border-t border-neutral-200 dark:border-neutral-700">
                 <UserMenu />

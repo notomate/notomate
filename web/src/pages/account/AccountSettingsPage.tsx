@@ -13,6 +13,7 @@ import { SelectField } from "@/components/ui/select-field"
 import { listUsers, createUser, deleteUser, updateUserPassword, disableUser, enableUser, AdminUser, CreateUserRequest, UpdateUserPasswordRequest } from "@/api/admin"
 import RunnersSection from "@/pages/workspace/settings/RunnersSection"
 import Select from "@/components/select/Select"
+import { LANGUAGE_NATIVE_NAMES } from "@/lib/languages"
 import Avatar from "@/components/avatar/Avatar"
 import { Modal } from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
@@ -53,21 +54,7 @@ const AccountSettingsPage = () => {
     const themes: Theme[] = ["light", "dark"]
     const supportedLanguages = i18n.options.supportedLngs && i18n.options.supportedLngs?.filter(l => l !== "cimode") || []
 
-    // Language native names mapping
-    const languageNativeNames: Record<string, string> = {
-        'en': 'English',
-        'zh-TW': '繁體中文',
-        'zh-CN': '简体中文',
-        'es': 'Español',
-        'fr': 'Français',
-        'ar': 'العربية',
-        'pt-BR': 'Português (Brasil)',
-        'de': 'Deutsch',
-        'ja': '日本語',
-        'ko': '한국어',
-        'ru': 'Русский',
-        'it': 'Italiano'
-    }
+    const languageNativeNames = LANGUAGE_NATIVE_NAMES
 
     const PRESET_COLORS = [
         { name: 'Orange', value: '#f97316' },

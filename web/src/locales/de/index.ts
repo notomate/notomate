@@ -153,6 +153,8 @@ export default {
       mcpApiKeyHint: "Kann sich ein Agent nicht über den Browser anmelden, erstelle im Tab „API-Schlüssel“ einen Schlüssel und sende ihn als Header Authorization: Bearer <key>.",
       language: "Sprache",
       theme: "Design",
+      themeLight: "Hell",
+      themeDark: "Dunkel",
       primaryColor: "Primärfarbe",
       customColor: "Benutzerdefiniert",
       apiKeys: "API-Schlüssel",

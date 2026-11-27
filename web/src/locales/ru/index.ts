@@ -153,6 +153,8 @@ export default {
       mcpApiKeyHint: "Если агент не может войти через браузер, создайте ключ на вкладке «API-ключи» и передавайте его в заголовке Authorization: Bearer <key>.",
       language: "Язык",
       theme: "Тема",
+      themeLight: "Светлая",
+      themeDark: "Тёмная",
       primaryColor: "Основной цвет",
       customColor: "Пользовательский",
       apiKeys: "Ключи API",

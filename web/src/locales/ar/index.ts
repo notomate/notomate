@@ -153,6 +153,8 @@ export default {
       mcpApiKeyHint: "إذا تعذر على الوكيل تسجيل الدخول عبر المتصفح، فأنشئ مفتاحًا في علامة تبويب مفاتيح API وأرسله في الترويسة Authorization: Bearer <key>.",
       language: "اللغة",
       theme: "المظهر",
+      themeLight: "فاتح",
+      themeDark: "داكن",
       primaryColor: "اللون الأساسي",
       customColor: "مخصص",
       apiKeys: "مفاتيح API",
