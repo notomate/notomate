@@ -1,23 +1,25 @@
-import { Outlet } from "react-router-dom"
+import { Outlet, useLocation } from "react-router-dom"
+import { useTranslation } from "react-i18next"
 import MobileTopBar from "@/components/mobiletopbar/MobileTopBar"
 import { useAppLayout } from "@/components/applayout/AppLayout"
-import logo from "@/assets/app.svg"
 
-/** Mobile top bar with the app logo, for pages outside a workspace (Explore, About, account settings). */
+/** Mobile top bar showing the page name, for pages outside a workspace (Explore, About, account settings). */
 const TopLevelPageLayout = () => {
     const { onOpenSidebar } = useAppLayout()
+    const { pathname } = useLocation()
+    const { t } = useTranslation()
+
+    const title = pathname.startsWith("/explore")
+        ? t("menu.explore")
+        : pathname.startsWith("/about")
+            ? t("menu.about")
+            : pathname.startsWith("/account")
+                ? t("menu.settings")
+                : "Notomate"
 
     return (
         <>
-            <MobileTopBar
-                title={
-                    <span className="flex items-center gap-2 select-none">
-                        <img src={logo} className="w-6 shrink-0 dark:invert" alt="logo" />
-                        Notomate
-                    </span>
-                }
-                onOpenSidebar={onOpenSidebar}
-            />
+            <MobileTopBar title={title} onOpenSidebar={onOpenSidebar} />
             <div className="flex-1 overflow-hidden">
                 <Outlet />
             </div>
