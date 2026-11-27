@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react"
-import { PanelRight, Compass, Plus, Settings, type LucideIcon } from "lucide-react"
+import { PanelRight, Compass, Plus, type LucideIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import UserMenu from "@/components/usermenu/UserMenu"
@@ -138,11 +138,6 @@ const AppSidebar = ({ workspaceId, isOpen, onClose }: AppSidebarProps) => {
                 <NavItem to="/explore" icon={Compass} onClick={onClose} active={pathname.startsWith("/explore")}>
                     {t("menu.explore")}
                 </NavItem>
-                {user && (
-                    <NavItem to="/account" icon={Settings} onClick={onClose} active={pathname.startsWith("/account")}>
-                        {t("menu.settings")}
-                    </NavItem>
-                )}
                 {user && <WorkspaceList workspaceId={workspaceId} onClose={onClose} />}
             </nav>
 
@@ -151,7 +146,7 @@ const AppSidebar = ({ workspaceId, isOpen, onClose }: AppSidebarProps) => {
             </div>
 
             <div className="shrink-0 p-2 border-t border-neutral-200 dark:border-neutral-700">
-                <UserMenu />
+                <UserMenu onNavigate={onClose} />
             </div>
         </div>
         </>

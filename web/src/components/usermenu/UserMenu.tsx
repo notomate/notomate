@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { LogIn, LogOut } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useCurrentUserStore } from "@/stores/current-user"
@@ -7,15 +7,19 @@ import useSignOut from "@/hooks/use-sign-out"
 
 const buttonClass = "w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
 
-/** Foot of the sidebar: Sign out with the signed-in user's avatar, or Sign in. */
-const UserMenu = () => {
+/**
+ * Foot of the sidebar: Sign out and the signed-in user's avatar, which opens
+ * the account settings; or Sign in.
+ */
+const UserMenu = ({ onNavigate }: { onNavigate?: () => void }) => {
     const { t } = useTranslation()
+    const { pathname } = useLocation()
     const { user } = useCurrentUserStore()
     const signOut = useSignOut()
 
     if (!user) {
         return (
-            <Link to="/signin" className={`${buttonClass} text-gray-700 dark:text-gray-200`}>
+            <Link to="/signin" onClick={onNavigate} className={`${buttonClass} text-gray-700 dark:text-gray-200`}>
                 <LogIn size={16} className="shrink-0" />
                 {t("actions.signin")}
             </Link>
@@ -33,9 +37,16 @@ const UserMenu = () => {
                 <LogOut size={16} />
                 {t("actions.signout")}
             </button>
-            <div className="shrink-0 px-2 py-2 select-none" title={user.name}>
+            <Link
+                to="/account"
+                onClick={onNavigate}
+                title={`${user.name} · ${t("menu.settings")}`}
+                aria-label={t("menu.settings")}
+                aria-current={pathname.startsWith("/account") ? "page" : undefined}
+                className={`shrink-0 p-1.5 rounded-full transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700 ${pathname.startsWith("/account") ? "ring-2 ring-primary" : ""}`}
+            >
                 <Avatar name={user.name} avatarUrl={user.avatar_url} size={24} />
-            </div>
+            </Link>
         </div>
     )
 }
