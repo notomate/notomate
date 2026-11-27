@@ -477,12 +477,12 @@ const AccountSettingsPage = () => {
             <div className="h-full flex flex-col">
                 <div className="w-full max-w-[1000px] flex flex-col flex-1 min-h-0 p-4 md:p-6">
                         <div className="flex flex-col gap-4 flex-1 min-h-0">
-                        {/* The sidebar lists the sections; below lg it is a drawer, so offer a select too. */}
+                        {/* The only place to pick a settings section; the sidebar just links here. */}
                         <SelectField
                             value={activeTab}
                             onChange={(value) => setActiveTab(value as SettingsTab)}
                             aria-label={t("menu.settings")}
-                            className="lg:hidden shrink-0 bg-neutral-100 dark:bg-neutral-700"
+                            className="shrink-0 md:max-w-xs bg-neutral-100 dark:bg-neutral-700"
                             options={settingsSections}
                         />
 

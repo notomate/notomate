@@ -6,7 +6,6 @@ import UserMenu from "@/components/usermenu/UserMenu"
 import { useCurrentUserStore } from "@/stores/current-user"
 import { useWorkspaceStore } from "@/stores/workspace"
 import { createWorkspace } from "@/api/workspace"
-import { useSettingsSections } from "@/pages/account/settings-sections"
 import logo from "@/assets/app.svg"
 
 const navItemBase = "w-full flex items-center gap-2 px-3 py-2.5 lg:px-3 lg:py-2 rounded-md text-sm cursor-pointer select-none transition-colors duration-100 hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -108,12 +107,17 @@ const AppSidebar = ({ workspaceId, isOpen, onClose }: AppSidebarProps) => {
     const { t } = useTranslation()
     const { pathname } = useLocation()
     const { user } = useCurrentUserStore()
-    const settingsSections = useSettingsSections()
-    const isSettings = pathname.startsWith("/account")
 
     return (
+        <>
+        {/* Mobile: dim the page behind the slide-out sidebar; tap to close. */}
         <div
-            className={`w-full lg:w-[240px] h-full flex flex-col shrink-0 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 ${isOpen ? "flex" : "hidden lg:flex"}`}
+            aria-hidden
+            onClick={onClose}
+            className={`lg:hidden fixed inset-0 z-drawer-backdrop bg-black/40 transition-opacity duration-200 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        />
+        <div
+            className={`fixed inset-y-0 left-0 z-drawer w-[280px] max-w-[85vw] shadow-xl transition-transform duration-200 ease-out ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:static lg:z-auto lg:w-[240px] lg:max-w-none lg:shadow-none lg:translate-x-0 lg:transition-none h-full flex flex-col shrink-0 bg-neutral-50 dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700`}
         >
             <div className="px-3 pt-3 pb-1 flex items-center gap-2">
                 <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-1.5 select-none">
@@ -137,21 +141,9 @@ const AppSidebar = ({ workspaceId, isOpen, onClose }: AppSidebarProps) => {
                     {t("menu.about")}
                 </NavItem>
                 {user && (
-                    <>
-                        <NavItem to="/account" icon={Settings} onClick={onClose} active={isSettings}>
-                            {t("menu.settings")}
-                        </NavItem>
-                        {isSettings && (
-                            <div className="ml-4 pl-2 border-l border-neutral-200 dark:border-neutral-700">
-                                {settingsSections.map((section) => (
-                                    <NavItem key={section.value} to={`/account/${section.value}`} icon={section.icon} onClick={onClose}
-                                        active={pathname === `/account/${section.value}`}>
-                                        {section.label}
-                                    </NavItem>
-                                ))}
-                            </div>
-                        )}
-                    </>
+                    <NavItem to="/account" icon={Settings} onClick={onClose} active={pathname.startsWith("/account")}>
+                        {t("menu.settings")}
+                    </NavItem>
                 )}
                 {user && <WorkspaceList workspaceId={workspaceId} onClose={onClose} />}
             </nav>
@@ -160,6 +152,7 @@ const AppSidebar = ({ workspaceId, isOpen, onClose }: AppSidebarProps) => {
                 <UserMenu />
             </div>
         </div>
+        </>
     )
 }
 
