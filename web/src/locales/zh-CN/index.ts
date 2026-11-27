@@ -552,6 +552,8 @@ export default {
     noLocations: "这个区域没有含地点的笔记",
     capped: "仅显示前 {{count}} 条笔记",
     notesInView: "这个区域有 {{count}} 条笔记",
+    notesAtPlace: "这里有 {{count}} 条笔记",
+    unnamedPlace: "标记的地点",
   },
   common: {
     name: "名称",

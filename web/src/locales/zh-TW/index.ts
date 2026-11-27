@@ -553,6 +553,8 @@ export default {
     noLocations: "這個區域沒有含地點的筆記",
     capped: "僅顯示前 {{count}} 則筆記",
     notesInView: "這個區域有 {{count}} 則筆記",
+    notesAtPlace: "這裡有 {{count}} 則筆記",
+    unnamedPlace: "標記的地點",
   },
   common: {
     name: "名稱",

@@ -386,6 +386,8 @@ export default {
     noLocations: "لا توجد ملاحظات بمواقع في هذه المنطقة",
     capped: "عرض أول {{count}} ملاحظة",
     notesInView: "{{count}} ملاحظة في هذه المنطقة",
+    notesAtPlace: "{{count}} ملاحظة هنا",
+    unnamedPlace: "موقع مُعلَّم",
   },
   common: {
     name: "الاسم",

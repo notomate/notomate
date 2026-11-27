@@ -386,6 +386,8 @@ export default {
     noLocations: "이 지역에 위치가 있는 노트가 없습니다",
     capped: "처음 {{count}}개의 노트만 표시합니다",
     notesInView: "이 지역의 노트 {{count}}개",
+    notesAtPlace: "이곳의 노트 {{count}}개",
+    unnamedPlace: "표시된 위치",
   },
   common: {
     name: "이름",

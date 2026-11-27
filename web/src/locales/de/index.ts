@@ -386,6 +386,8 @@ export default {
     noLocations: "Keine Notizen mit Orten in diesem Bereich",
     capped: "Die ersten {{count}} Notizen werden angezeigt",
     notesInView: "{{count}} Notizen in diesem Bereich",
+    notesAtPlace: "{{count}} Notizen hier",
+    unnamedPlace: "Markierter Ort",
   },
   common: {
     name: "Name",

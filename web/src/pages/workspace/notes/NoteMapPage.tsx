@@ -23,6 +23,7 @@ const NoteMapPage = () => {
             enabled={!!workspaceId}
             getLinkTo={(note) => `/workspaces/${workspaceId}/notes/${note.id}`}
             controls={<NoteSearchInput value={query} onChange={setQuery} floating />}
+            listProps={{ workspaceId, showActions: true }}
         />
     )
 }

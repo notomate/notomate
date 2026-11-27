@@ -386,6 +386,8 @@ export default {
     noLocations: "Нет заметок с местами в этой области",
     capped: "Показаны первые {{count}} заметок",
     notesInView: "Заметок в этой области: {{count}}",
+    notesAtPlace: "Заметок здесь: {{count}}",
+    unnamedPlace: "Отмеченное место",
   },
   common: {
     name: "Имя",

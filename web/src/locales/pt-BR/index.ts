@@ -386,6 +386,8 @@ export default {
     noLocations: "Nenhuma nota com locais nesta área",
     capped: "Mostrando as primeiras {{count}} notas",
     notesInView: "{{count}} notas nesta área",
+    notesAtPlace: "{{count}} notas aqui",
+    unnamedPlace: "Local marcado",
   },
   common: {
     name: "Nome",

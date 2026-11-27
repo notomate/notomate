@@ -95,6 +95,11 @@ const ExplorePage: React.FC = () => {
                         queryKey={['explore-map', debouncedSearch, creator?.id]}
                         fetchNotes={(bbox) => searchPublicNotes({ query: debouncedSearch, creatorId: creator?.id, bbox, pageNumber: 1, pageSize: VIEW_PAGE_SIZE })}
                         getLinkTo={(note) => `/explore/notes/${note.id}`}
+                        listProps={{
+                            linkKind: 'open',
+                            commentsReadOnly: true,
+                            onCreatorClick: (note) => setCreator({ id: note.created_by_id!, name: note.created_by ?? '', avatarUrl: note.created_by_avatar_url }),
+                        }}
                         controls={
                             <div className="flex flex-col gap-1.5">
                                 <div className="flex items-center gap-1.5">

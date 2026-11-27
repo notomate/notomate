@@ -386,6 +386,8 @@ export default {
     noLocations: "このエリアに場所のあるノートはありません",
     capped: "最初の {{count}} 件のノートを表示しています",
     notesInView: "このエリアのノート {{count}} 件",
+    notesAtPlace: "この場所のノート {{count}} 件",
+    unnamedPlace: "ピンの場所",
   },
   common: {
     name: "名前",

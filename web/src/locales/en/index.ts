@@ -553,6 +553,8 @@ export default {
     noLocations: "No notes with locations in this area",
     capped: "Showing the first {{count}} notes",
     notesInView: "{{count}} notes in this area",
+    notesAtPlace: "{{count}} notes here",
+    unnamedPlace: "Pinned location",
   },
   common: {
     name: "Name",
