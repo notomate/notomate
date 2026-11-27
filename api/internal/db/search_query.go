@@ -298,6 +298,15 @@ func FindNoteLocations(g *gorm.DB, noteIDs []string) ([]model.NoteLocation, erro
 	return locs, err
 }
 
+func FindNoteEvents(g *gorm.DB, noteIDs []string) ([]model.NoteEvent, error) {
+	var events []model.NoteEvent
+	if len(noteIDs) == 0 {
+		return events, nil
+	}
+	err := g.Where("note_id IN ?", noteIDs).Order("note_id").Order("date").Order("seq").Find(&events).Error
+	return events, err
+}
+
 // FindTags lists the workspace's tags visible to the user, most used first,
 // optionally only those starting with prefix (normalized).
 func FindTags(g *gorm.DB, workspaceID, userID, prefix string, limit int) ([]model.TagCount, error) {

@@ -146,6 +146,10 @@ func SearchIndex(t *testing.T, s db.DB) {
 	if len(tagRows) != 2 || len(locRows) != 1 || locRows[0].Lat != 25.03 {
 		t.Fatalf("note rows: %+v %+v", tagRows, locRows)
 	}
+	eventRows, err := s.FindNoteEvents([]string{"n5"})
+	if err != nil || len(eventRows) != 1 || eventRows[0].Date != "2026-07-15" || eventRows[0].Title != "Launch" {
+		t.Fatalf("event rows: %+v err %v", eventRows, err)
+	}
 
 	// Updating a note marks it pending; the old index keeps serving results
 	// until it is rebuilt.

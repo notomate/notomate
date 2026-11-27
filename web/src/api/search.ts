@@ -9,9 +9,16 @@ export interface NoteLocation {
   lng: number;
 }
 
+/** A calendar block's day, YYYY-MM-DD. */
+export interface NoteEvent {
+  date: string;
+  title: string;
+}
+
 export interface SearchNote extends NoteData {
   tags: string[];
   locations: NoteLocation[];
+  events: NoteEvent[];
 }
 
 export interface SearchNotesResult {

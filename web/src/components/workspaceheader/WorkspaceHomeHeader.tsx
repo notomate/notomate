@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
-import { Edit, Folder, MessageSquare, Pin, Settings, Workflow, type LucideIcon } from "lucide-react"
+import { CalendarDays, Edit, Folder, Map as MapIcon, MessageSquare, Pin, Settings, Workflow, type LucideIcon } from "lucide-react"
 import { getNotes, NoteData } from "@/api/note"
 import useCreateNote from "@/hooks/use-create-note"
 import { useWorkspaceStore } from "@/stores/workspace"
@@ -41,6 +41,8 @@ const WorkspaceHomeHeader = ({ workspaceId, pinnedOnly, onPinnedOnlyChange }: Wo
 
     const base = `/workspaces/${workspaceId}`
     const links: { to: string, label: string, icon: LucideIcon }[] = [
+        { to: `${base}/calendar`, label: t("noteViews.calendar"), icon: CalendarDays },
+        { to: `${base}/map`, label: t("noteViews.map"), icon: MapIcon },
         { to: `${base}/files`, label: t("menu.files"), icon: Folder },
         { to: `${base}/workflows`, label: t("menu.workflows"), icon: Workflow },
         { to: `${base}/messaging`, label: t("menu.messaging"), icon: MessageSquare },

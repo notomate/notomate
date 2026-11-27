@@ -51,6 +51,10 @@ func (s MySQLDB) FindNoteLocations(noteIDs []string) ([]model.NoteLocation, erro
 	return db.FindNoteLocations(s.getDB(), noteIDs)
 }
 
+func (s MySQLDB) FindNoteEvents(noteIDs []string) ([]model.NoteEvent, error) {
+	return db.FindNoteEvents(s.getDB(), noteIDs)
+}
+
 func (s MySQLDB) FindTags(workspaceID, userID, prefix string, limit int) ([]model.TagCount, error) {
 	return db.FindTags(s.getDB(), workspaceID, userID, prefix, limit)
 }

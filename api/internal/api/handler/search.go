@@ -20,6 +20,7 @@ const (
 type SearchNoteResponse struct {
 	GetNoteResponse
 	Locations []model.NoteLocation `json:"locations"`
+	Events    []model.NoteEvent    `json:"events"`
 }
 
 type SearchNotesResponse struct {
@@ -122,6 +123,10 @@ func (h Handler) SearchNotes(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	events, err := h.db.FindNoteEvents(ids)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 	tagsByNote := map[string][]string{}
 	for _, t := range tags {
 		tagsByNote[t.NoteID] = append(tagsByNote[t.NoteID], t.Tag)
@@ -129,6 +134,11 @@ func (h Handler) SearchNotes(c echo.Context) error {
 	locsByNote := map[string][]model.NoteLocation{}
 	for _, l := range locs {
 		locsByNote[l.NoteID] = append(locsByNote[l.NoteID], l)
+	}
+
+	eventsByNote := map[string][]model.NoteEvent{}
+	for _, e := range events {
+		eventsByNote[e.NoteID] = append(eventsByNote[e.NoteID], e)
 	}
 
 	pending, err := h.db.CountUnindexedNotes(f.WorkspaceID)
@@ -146,6 +156,10 @@ func (h Handler) SearchNotes(c echo.Context) error {
 		noteLocs := locsByNote[n.ID]
 		if noteLocs == nil {
 			noteLocs = []model.NoteLocation{}
+		}
+		noteEvents := eventsByNote[n.ID]
+		if noteEvents == nil {
+			noteEvents = []model.NoteEvent{}
 		}
 		res.Notes = append(res.Notes, SearchNoteResponse{
 			GetNoteResponse: GetNoteResponse{
@@ -165,6 +179,7 @@ func (h Handler) SearchNotes(c echo.Context) error {
 				UpdatedBy:          h.getUserNameByID(n.UpdatedBy),
 			},
 			Locations: noteLocs,
+			Events:    noteEvents,
 		})
 	}
 	return c.JSON(http.StatusOK, res)

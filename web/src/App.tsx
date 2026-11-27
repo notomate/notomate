@@ -10,6 +10,8 @@ import Setup from './pages/workspacesetup/WorkspaceSetupPage';
 import NoteDetailPage from './pages/workspace/notes/NoteDetailPage';
 import FilesPage from './pages/workspace/files/FilesPage';
 import SearchPage from './pages/workspace/notes/SearchPage';
+import NoteCalendarPage from './pages/workspace/notes/NoteCalendarPage';
+import NoteMapPage from './pages/workspace/notes/NoteMapPage';
 import Settings from './pages/workspace/settings/SettingsPage';
 import WorkflowsPage from './pages/workspace/workflows/WorkflowsPage';
 import WorkflowEditPage from './pages/workspace/workflows/WorkflowEditPage';
@@ -96,6 +98,8 @@ function App() {
               <Route path='notes' element={<Navigate to=".." replace />} />
               <Route path='notes/search' element={<Navigate to=".." replace />} />
               <Route path='files' element={<FilesPage />} />
+              <Route path='calendar' element={<NoteCalendarPage />} />
+              <Route path='map' element={<NoteMapPage />} />
               <Route path='settings' element={<Settings />} />
               <Route path='workflows' element={<WorkflowsPage />} />
               <Route path='workflows/new' element={<WorkflowEditPage />} />

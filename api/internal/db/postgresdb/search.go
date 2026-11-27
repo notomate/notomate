@@ -51,6 +51,10 @@ func (s PostgresDB) FindNoteLocations(noteIDs []string) ([]model.NoteLocation, e
 	return db.FindNoteLocations(s.getDB(), noteIDs)
 }
 
+func (s PostgresDB) FindNoteEvents(noteIDs []string) ([]model.NoteEvent, error) {
+	return db.FindNoteEvents(s.getDB(), noteIDs)
+}
+
 func (s PostgresDB) FindTags(workspaceID, userID, prefix string, limit int) ([]model.TagCount, error) {
 	return db.FindTags(s.getDB(), workspaceID, userID, prefix, limit)
 }

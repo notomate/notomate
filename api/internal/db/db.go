@@ -56,7 +56,7 @@ type NoteRepository interface {
 	GetNoteCountsByDate(workspaceID string, startDate string, timezoneOffsetMinutes int) (map[string]int, error)
 }
 // SearchRepository keeps the structured search index (note_search,
-// note_tags, note_locations) and the notes.search_indexed_at marker.
+// note_tags, note_locations, note_events, ...) and the notes.search_indexed_at marker.
 type SearchRepository interface {
 	FindNotesToIndex(limit int) ([]string, error)
 	CountUnindexedNotes(workspaceID string) (int64, error)
@@ -69,6 +69,7 @@ type SearchRepository interface {
 	SearchNotes(f model.SearchFilter) ([]model.Note, error)
 	FindNoteTags(noteIDs []string) ([]model.NoteTag, error)
 	FindNoteLocations(noteIDs []string) ([]model.NoteLocation, error)
+	FindNoteEvents(noteIDs []string) ([]model.NoteEvent, error)
 	FindTags(workspaceID, userID, prefix string, limit int) ([]model.TagCount, error)
 }
 type CommentRepository interface {
