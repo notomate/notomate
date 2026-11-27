@@ -35,7 +35,7 @@ const TagChip = ({ tag, onRemove }: { tag: string; onRemove: () => void }) => {
     )
 }
 
-/** Workspace home: links to the workspace pages and pinned notes, then note search. */
+/** Workspace home: links to the workspace pages and a pinned filter, then note search. */
 const SearchPage = () => {
     const { t } = useTranslation()
     const currentWorkspaceId = useCurrentWorkspaceId()
@@ -44,6 +44,7 @@ const SearchPage = () => {
     const [creatorId, setCreatorId] = useState("")
     const [tags, setTags] = useState<string[]>([])
     const [tagInput, setTagInput] = useState("")
+    const [pinnedOnly, setPinnedOnly] = useState(false)
     const { filters, params, update, reset, activeCount, sortChanged } = useNoteFilters()
     const observerRef = useRef<IntersectionObserver | null>(null)
     const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -53,10 +54,11 @@ const SearchPage = () => {
         return () => clearTimeout(handler)
     }, [query])
 
-    // Reset the creator and tag filters when switching workspaces; both differ.
+    // Reset the creator, tag and pinned filters when switching workspaces.
     useEffect(() => {
         setCreatorId("")
         setTags([])
+        setPinnedOnly(false)
     }, [currentWorkspaceId])
 
     const { data: members = [] } = useQuery({
@@ -82,12 +84,13 @@ const SearchPage = () => {
     const removeTag = (tag: string) => setTags(tags.filter((t) => t !== tag))
 
     const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-        queryKey: ["notes-search", currentWorkspaceId, debouncedQuery, creatorId, tags, params],
+        queryKey: ["notes-search", currentWorkspaceId, debouncedQuery, creatorId, tags, pinnedOnly, params],
         queryFn: async ({ pageParam = 1 }: { pageParam?: unknown }) =>
             await searchNotes(currentWorkspaceId, {
                 query: debouncedQuery,
                 tags,
                 creatorId,
+                pinned: pinnedOnly,
                 filters: params,
                 pageNumber: Number(pageParam),
                 pageSize: PAGE_SIZE,
@@ -119,7 +122,7 @@ const SearchPage = () => {
 
     const selectedMember = members.find((m) => m.user_id === creatorId)
     const totalActive = activeCount + (creatorId ? 1 : 0) + tags.length
-    const hasFilters = totalActive > 0 || sortChanged
+    const hasFilters = totalActive > 0 || sortChanged || pinnedOnly
     const chips = (selectedMember || tags.length > 0) && (
         <>
             {selectedMember && (
@@ -135,13 +138,19 @@ const SearchPage = () => {
     return (
         <FilteredNoteListLayout
             scrollRef={scrollRef}
-            header={<WorkspaceHomeHeader workspaceId={currentWorkspaceId} />}
+            header={
+                <WorkspaceHomeHeader
+                    workspaceId={currentWorkspaceId}
+                    pinnedOnly={pinnedOnly}
+                    onPinnedOnlyChange={(v) => { setPinnedOnly(v); scrollRef.current?.scrollTo({ top: 0 }) }}
+                />
+            }
             query={query}
             onQueryChange={setQuery}
             placeholder={t("placeholder.search")}
             filters={filters}
             onFiltersChange={update}
-            onReset={() => { reset(); setCreatorId(""); setTags([]) }}
+            onReset={() => { reset(); setCreatorId(""); setTags([]); setPinnedOnly(false) }}
             activeCount={totalActive}
             canReset={hasFilters}
             contentFilters

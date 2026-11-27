@@ -27,6 +27,8 @@ export interface SearchNotesParams {
   /** [minLng, minLat, maxLng, maxLat]; minLng > maxLng crosses the antimeridian. */
   bbox?: [number, number, number, number];
   creatorId?: string;
+  /** Only pinned notes. */
+  pinned?: boolean;
   /** Sort, block types and date range, as for the note list endpoints. */
   filters?: NoteListFilterParams;
   pageNumber: number;
@@ -40,6 +42,7 @@ export const searchNotes = async (workspaceId: string, p: SearchNotesParams): Pr
   if (p.tagMode) params.set('tagMode', p.tagMode);
   if (p.bbox) params.set('bbox', p.bbox.join(','));
   if (p.creatorId) params.set('creatorId', p.creatorId);
+  if (p.pinned) params.set('pinned', 'true');
   for (const [key, value] of Object.entries(p.filters ?? {})) {
     if (value) params.set(key, value);
   }
