@@ -20,7 +20,7 @@ interface WorkspaceHomeHeaderProps {
 }
 
 /**
- * Top of the workspace home: the workspace name, New note, links to the
+ * Top of the workspace home: the workspace name with a settings icon, New note, links to the
  * workspace's other pages, and a Pinned button that narrows the note list
  * below to pinned notes.
  */
@@ -44,16 +44,26 @@ const WorkspaceHomeHeader = ({ workspaceId, pinnedOnly, onPinnedOnlyChange }: Wo
         { to: `${base}/files`, label: t("menu.files"), icon: Folder },
         { to: `${base}/workflows`, label: t("menu.workflows"), icon: Workflow },
         { to: `${base}/messaging`, label: t("menu.messaging"), icon: MessageSquare },
-        { to: `${base}/settings`, label: t("menu.workspaceSettings"), icon: Settings },
     ]
 
     return (
         <div className="px-4 pt-4 xl:pt-6">
-            {workspaceName && (
-                <h1 className="hidden lg:block mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
-                    {workspaceName}
-                </h1>
-            )}
+            {/* Below lg the name and settings link live in the mobile top bar. */}
+            <div className="hidden lg:flex items-center gap-1 mb-3">
+                {workspaceName && (
+                    <h1 className="min-w-0 text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
+                        {workspaceName}
+                    </h1>
+                )}
+                <Link
+                    to={`${base}/settings`}
+                    title={t("menu.workspaceSettings")}
+                    aria-label={t("menu.workspaceSettings")}
+                    className="shrink-0 p-1.5 rounded-md text-muted-foreground transition-colors hover:bg-neutral-100 hover:text-gray-700 dark:hover:bg-neutral-800 dark:hover:text-gray-200"
+                >
+                    <Settings size={18} />
+                </Link>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <button onClick={handleCreateNote} disabled={isCreatingNote} className={tileClass}>
                     <Edit size={16} className="shrink-0" />
