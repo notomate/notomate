@@ -18,7 +18,6 @@ export default {
     userSettings: "Configuración de Usuario",
     settings: "Configuración",
     explore: "Explorar",
-    about: "Acerca de",
   },
   about: {
     description: "Servicio colaborativo autoalojado",

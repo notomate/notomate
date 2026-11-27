@@ -18,7 +18,6 @@ export default {
     userSettings: "사용자 설정",
     settings: "설정",
     explore: "탐색",
-    about: "정보",
   },
   form: {
     email: "이메일",

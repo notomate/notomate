@@ -18,7 +18,6 @@ export default {
     userSettings: "用户设置",
     settings: "设置",
     explore: "浏览",
-    about: "关于",
   },
   form: {
     email: "邮箱",

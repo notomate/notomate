@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import MobileTopBar from "@/components/mobiletopbar/MobileTopBar"
 import { useAppLayout } from "@/components/applayout/AppLayout"
 
-/** Mobile top bar showing the page name, for pages outside a workspace (Explore, About, account settings). */
+/** Mobile top bar showing the page name, for pages outside a workspace (Explore, account settings). */
 const TopLevelPageLayout = () => {
     const { onOpenSidebar } = useAppLayout()
     const { pathname } = useLocation()
@@ -11,11 +11,9 @@ const TopLevelPageLayout = () => {
 
     const title = pathname.startsWith("/explore")
         ? t("menu.explore")
-        : pathname.startsWith("/about")
-            ? t("menu.about")
-            : pathname.startsWith("/account")
-                ? t("menu.settings")
-                : "Notomate"
+        : pathname.startsWith("/account")
+            ? t("menu.settings")
+            : "Notomate"
 
     return (
         <>

@@ -18,7 +18,6 @@ export default {
     userSettings: "Параметры пользователя",
     settings: "Параметры",
     explore: "Обзор",
-    about: "О приложении",
   },
   form: {
     email: "Электронная почта",

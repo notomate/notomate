@@ -18,7 +18,6 @@ export default {
     userSettings: "ユーザー設定",
     settings: "設定",
     explore: "探索",
-    about: "について",
   },
   form: {
     email: "メールアドレス",

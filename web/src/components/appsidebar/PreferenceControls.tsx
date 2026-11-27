@@ -1,4 +1,4 @@
-import { Languages, Moon, Sun } from "lucide-react"
+import { Github, Languages, Moon, Sun } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { updatePreferences } from "@/api/user"
 import { useTheme, type Theme } from "@/providers/Theme"
@@ -6,8 +6,11 @@ import { useCurrentUserStore } from "@/stores/current-user"
 import { toast } from "@/stores/toast"
 import { LANGUAGE_NATIVE_NAMES } from "@/lib/languages"
 
+const appVersion = import.meta.env.VITE_APP_VERSION || "0.0.0"
+
 /**
- * Language and theme in the sidebar footer, for everyone: the browser keeps
+ * Theme, language and the project link with the app version, above the
+ * sidebar footer, for everyone. Theme and language: the browser keeps
  * them (i18next's detector and the theme provider use localStorage), and a
  * signed-in user's account preferences are updated too, as in Settings.
  */
@@ -65,6 +68,17 @@ const PreferenceControls = () => {
                     ))}
                 </select>
             </label>
+            <a
+                href="https://github.com/notomate/notomate"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`GitHub · ${t("about.version")} ${appVersion}`}
+                title="GitHub"
+                className={rowClass}
+            >
+                <Github size={16} className="shrink-0" />
+                <span className="truncate">{appVersion}</span>
+            </a>
         </div>
     )
 }
