@@ -372,6 +372,8 @@ export default {
     },
   },
   noteViews: {
+    list: "목록",
+    switchView: "보기 전환",
     calendar: "캘린더",
     map: "지도",
     today: "오늘",

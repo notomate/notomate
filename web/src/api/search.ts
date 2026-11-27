@@ -42,7 +42,7 @@ export interface SearchNotesParams {
   pageSize: number;
 }
 
-export const searchNotes = async (workspaceId: string, p: SearchNotesParams): Promise<SearchNotesResult> => {
+const searchParams = (p: SearchNotesParams) => {
   const params = new URLSearchParams({ pageSize: String(p.pageSize), pageNumber: String(p.pageNumber) });
   if (p.query) params.set('q', p.query);
   if (p.tags?.length) params.set('tags', p.tags.join(','));
@@ -53,7 +53,19 @@ export const searchNotes = async (workspaceId: string, p: SearchNotesParams): Pr
   for (const [key, value] of Object.entries(p.filters ?? {})) {
     if (value) params.set(key, value);
   }
-  const response = await axios.get(`/api/v1/workspaces/${workspaceId}/search?${params}`, { withCredentials: true });
+  return params;
+};
+
+export const searchNotes = async (workspaceId: string, p: SearchNotesParams): Promise<SearchNotesResult> => {
+  const response = await axios.get(`/api/v1/workspaces/${workspaceId}/search?${searchParams(p)}`, { withCredentials: true });
+  return response.data;
+};
+
+export type PublicSearchParams = Omit<SearchNotesParams, 'pinned'>;
+
+/** Public root notes of every workspace, for Explore; `pending` is always 0. */
+export const searchPublicNotes = async (p: PublicSearchParams): Promise<SearchNotesResult> => {
+  const response = await axios.get(`/api/v1/explore/search?${searchParams(p)}`);
   return response.data;
 };
 

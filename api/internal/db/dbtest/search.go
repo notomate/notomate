@@ -136,6 +136,39 @@ func SearchIndex(t *testing.T, s db.DB) {
 		}
 	}
 
+	// Explore searches every workspace's public notes without a viewer.
+	if err := s.CreateWorkspace(model.Workspace{ID: "ws2", Name: "ws2"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.CreateNote(model.Note{ID: "m1", WorkspaceID: "ws2", Title: "Other", Visibility: "public", CreatedBy: "u3",
+		CreatedAt: "2026-01-01T00:00:00Z", UpdatedAt: "2026-01-01T00:00:00Z",
+		Content: noteContent([]string{"work"}, 25.05, 121.52, "taipei")}); err != nil {
+		t.Fatal(err)
+	}
+	indexAll(t, s)
+	public := func(f model.SearchFilter) string {
+		t.Helper()
+		f.PageSize, f.PageNumber = 50, 1
+		notes, err := s.SearchNotes(f)
+		if err != nil {
+			t.Fatalf("public search %+v: %v", f, err)
+		}
+		return ids(notes)
+	}
+	for _, c := range []struct {
+		name string
+		f    model.SearchFilter
+		want string
+	}{
+		{"public across workspaces", model.SearchFilter{Tags: []string{"work"}}, "m1,n1"},
+		{"public bbox", model.SearchFilter{BBox: &model.BBox{MinLng: 121, MinLat: 24.5, MaxLng: 122, MaxLat: 25.5}}, "m1,n1"},
+		{"public events", model.SearchFilter{EventFrom: "2026-07-01", EventTo: "2026-08-31"}, "n5,n6"},
+	} {
+		if got := public(c.f); got != c.want {
+			t.Errorf("%s: got %q, want %q", c.name, got, c.want)
+		}
+	}
+
 	tags, err := s.FindTags("ws", "u1", "wo", 10)
 	if err != nil || len(tags) != 1 || tags[0].Tag != "Work" && tags[0].Tag != "work" || tags[0].Count != 2 {
 		t.Fatalf("tags: %+v err %v", tags, err)

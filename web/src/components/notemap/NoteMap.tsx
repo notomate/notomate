@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react"
-import { MapContainer, Marker, Popup, TileLayer, ZoomControl, useMapEvents } from "react-leaflet"
+import { MapContainer, Marker, Popup, TileLayer, ZoomControl, useMap, useMapEvents } from "react-leaflet"
 import { DivIcon, LatLngBounds, type Map as LeafletMap } from "leaflet"
 import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
@@ -26,16 +26,27 @@ const BoundsWatcher = ({ onChange }: { onChange: (bbox: BBox) => void }) => {
     return null
 }
 
+/** Redraws the map when its container changes size, e.g. after being shown again. */
+const SizeWatcher = () => {
+    const map = useMap()
+    useEffect(() => {
+        const observer = new ResizeObserver(() => map.invalidateSize())
+        observer.observe(map.getContainer())
+        return () => observer.disconnect()
+    }, [map])
+    return null
+}
+
 interface NoteMapProps {
     notes: SearchNote[]
-    workspaceId: string
+    getLinkTo: (note: SearchNote) => string
     /** Called with the visible area after the map settles. */
     onBoundsChange: (bbox: BBox) => void
     className?: string
 }
 
 /** Pins for every location in the notes; the first results frame the map, later pans refetch. */
-const NoteMap = ({ notes, workspaceId, onBoundsChange, className = "h-full w-full" }: NoteMapProps) => {
+const NoteMap = ({ notes, getLinkTo, onBoundsChange, className = "h-full w-full" }: NoteMapProps) => {
     const { t } = useTranslation()
     const mapRef = useRef<LeafletMap | null>(null)
     const framed = useRef(false)
@@ -70,11 +81,12 @@ const NoteMap = ({ notes, workspaceId, onBoundsChange, className = "h-full w-ful
                 />
                 <ZoomControl position="bottomright" />
                 <BoundsWatcher onChange={onBoundsChange} />
+                <SizeWatcher />
                 {pins.map(({ key, note, loc }) => (
                     <Marker key={key} position={[loc.lat, loc.lng]} icon={markerIcon}>
                         <Popup>
                             <Link
-                                to={`/workspaces/${workspaceId}/notes/${note.id}`}
+                                to={getLinkTo(note)}
                                 className="block font-medium text-blue-600 dark:text-blue-400"
                             >
                                 {note.title || t("editor.titlePlaceholder")}

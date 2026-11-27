@@ -538,6 +538,8 @@ export default {
     },
   },
   noteViews: {
+    list: "列表",
+    switchView: "切换视图",
     calendar: "日历",
     map: "地图",
     today: "今天",

@@ -185,7 +185,12 @@ func DeleteOrphanSearchIndex(g *gorm.DB) (int64, error) {
 }
 
 func SearchNotes(g *gorm.DB, f model.SearchFilter) ([]model.Note, error) {
-	q := g.Model(&model.Note{}).Select("notes.*").Where("notes.workspace_id = ?", f.WorkspaceID)
+	// Without a workspace (Explore) every workspace is searched; visibleNote
+	// then keeps only public notes for an anonymous viewer.
+	q := g.Model(&model.Note{}).Select("notes.*")
+	if f.WorkspaceID != "" {
+		q = q.Where("notes.workspace_id = ?", f.WorkspaceID)
+	}
 	q = visibleNote(q, "notes", f.UserID)
 
 	if len(f.Terms) > 0 {
@@ -196,10 +201,11 @@ func SearchNotes(g *gorm.DB, f model.SearchFilter) ([]model.Note, error) {
 	}
 
 	if len(f.Tags) > 0 {
-		sub := g.Model(&model.NoteTag{}).
-			Select("note_id").
-			Where("workspace_id = ? AND tag_norm IN ?", f.WorkspaceID, f.Tags).
-			Group("note_id")
+		sub := g.Model(&model.NoteTag{}).Select("note_id").Where("tag_norm IN ?", f.Tags)
+		if f.WorkspaceID != "" {
+			sub = sub.Where("workspace_id = ?", f.WorkspaceID)
+		}
+		sub = sub.Group("note_id")
 		if !f.MatchAnyTag {
 			sub = sub.Having("COUNT(*) = ?", len(f.Tags))
 		}

@@ -372,6 +372,8 @@ export default {
     },
   },
   noteViews: {
+    list: "القائمة",
+    switchView: "تبديل العرض",
     calendar: "التقويم",
     map: "الخريطة",
     today: "اليوم",

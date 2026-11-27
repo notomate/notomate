@@ -539,6 +539,8 @@ export default {
     },
   },
   noteViews: {
+    list: "列表",
+    switchView: "切換檢視",
     calendar: "行事曆",
     map: "地圖",
     today: "今天",

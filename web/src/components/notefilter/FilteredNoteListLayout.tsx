@@ -29,6 +29,8 @@ interface FilteredNoteListLayoutProps {
     chips?: ReactNode
     /** Shown above the search bar, scrolling with the list (e.g. a page heading). */
     header?: ReactNode
+    /** Shown beside the filter button, e.g. a view switch. */
+    actions?: ReactNode
     children: ReactNode
 }
 
@@ -39,7 +41,7 @@ interface FilteredNoteListLayoutProps {
  */
 export function FilteredNoteListLayout({
     scrollRef, query, onQueryChange, placeholder, filters, onFiltersChange, onReset,
-    activeCount, canReset, creator, tags, contentFilters, chips, notice, header, children,
+    activeCount, canReset, creator, tags, contentFilters, chips, notice, header, actions, children,
 }: FilteredNoteListLayoutProps) {
     const { t } = useTranslation()
     const [open, setOpen] = useState(false)
@@ -79,6 +81,7 @@ export function FilteredNoteListLayout({
                                     </button>
                                 )}
                             </div>
+                            {actions}
                             <NoteFilterButton activeCount={activeCount} pressed={open} onClick={() => setOpen((o) => !o)} />
                         </div>
                         {chips && !showColumn && <div className="px-2 pt-2 flex flex-wrap items-center gap-1.5">{chips}</div>}

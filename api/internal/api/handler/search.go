@@ -44,18 +44,62 @@ type SearchNotesResponse struct {
 //	pageNumber as in GetNotes; types are matched against the index
 func (h Handler) SearchNotes(c echo.Context) error {
 	user := c.Get("user").(model.User)
-	var list model.NoteFilter
-	if err := applyNoteListFilters(c, &list); err != nil {
+	f, err := parseSearchFilter(c)
+	if err != nil {
 		return err
 	}
+	f.WorkspaceID = c.Param("workspaceId")
+	f.UserID = user.ID
+	f.ParentID = c.QueryParam("parentId")
+	f.PinnedOnly = c.QueryParam("pinned") == "true"
+
+	notes, err := h.db.SearchNotes(f)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	items, err := h.searchNoteResponses(notes)
+	if err != nil {
+		return err
+	}
+	pending, err := h.db.CountUnindexedNotes(f.WorkspaceID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, SearchNotesResponse{Notes: items, Pending: pending})
+}
+
+// SearchPublicNotes searches every workspace's public root notes, for
+// Explore's calendar and map, to anyone signed in or not. It takes the same
+// parameters as SearchNotes except parentId and pinned; pending is always 0.
+func (h Handler) SearchPublicNotes(c echo.Context) error {
+	f, err := parseSearchFilter(c)
+	if err != nil {
+		return err
+	}
+	f.ParentID = "null"
+
+	notes, err := h.db.SearchNotes(f)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	items, err := h.searchNoteResponses(notes)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, SearchNotesResponse{Notes: items})
+}
+
+// parseSearchFilter reads the query parameters SearchNotes and
+// SearchPublicNotes share; the caller sets the scope (workspace, viewer).
+func parseSearchFilter(c echo.Context) (model.SearchFilter, error) {
+	var list model.NoteFilter
+	if err := applyNoteListFilters(c, &list); err != nil {
+		return model.SearchFilter{}, err
+	}
 	f := model.SearchFilter{
-		WorkspaceID: c.Param("workspaceId"),
-		UserID:      user.ID,
 		Terms:       search.Terms(c.QueryParam("q")),
 		Tags:        parseTags(c.QueryParams()["tags"]),
 		MatchAnyTag: c.QueryParam("tagMode") == "any",
-		ParentID:    c.QueryParam("parentId"),
-		PinnedOnly:  c.QueryParam("pinned") == "true",
 		CreatedBy:   list.CreatedBy,
 		SortBy:      list.SortBy,
 		SortAsc:     list.SortAsc,
@@ -67,15 +111,15 @@ func (h Handler) SearchNotes(c echo.Context) error {
 		PageNumber:  1,
 	}
 	if len(f.Terms) > maxSearchTerms {
-		return echo.NewHTTPError(http.StatusBadRequest, "too many search terms")
+		return f, echo.NewHTTPError(http.StatusBadRequest, "too many search terms")
 	}
 	if len(f.Tags) > maxSearchTags {
-		return echo.NewHTTPError(http.StatusBadRequest, "too many tags")
+		return f, echo.NewHTTPError(http.StatusBadRequest, "too many tags")
 	}
 	for param, dst := range map[string]*string{"eventFrom": &f.EventFrom, "eventTo": &f.EventTo} {
 		if v := c.QueryParam(param); v != "" {
 			if _, err := time.Parse(time.DateOnly, v); err != nil {
-				return echo.NewHTTPError(http.StatusBadRequest, param+" must be a YYYY-MM-DD date")
+				return f, echo.NewHTTPError(http.StatusBadRequest, param+" must be a YYYY-MM-DD date")
 			}
 			*dst = v
 		}
@@ -84,19 +128,19 @@ func (h Handler) SearchNotes(c echo.Context) error {
 	case "", "open", "done":
 		f.Tasks = tasks
 	default:
-		return echo.NewHTTPError(http.StatusBadRequest, "tasks must be open or done")
+		return f, echo.NewHTTPError(http.StatusBadRequest, "tasks must be open or done")
 	}
 	if raw := c.QueryParam("minRating"); raw != "" {
 		v, err := strconv.ParseFloat(raw, 64)
 		if err != nil || v < 0 || v > 5 {
-			return echo.NewHTTPError(http.StatusBadRequest, "minRating must be a number from 0 to 5")
+			return f, echo.NewHTTPError(http.StatusBadRequest, "minRating must be a number from 0 to 5")
 		}
 		f.MinRating = v
 	}
 	if raw := c.QueryParam("bbox"); raw != "" {
 		bbox, err := parseBBox(raw)
 		if err != nil {
-			return err
+			return f, err
 		}
 		f.BBox = bbox
 	}
@@ -106,26 +150,26 @@ func (h Handler) SearchNotes(c echo.Context) error {
 	if v, err := strconv.Atoi(c.QueryParam("pageNumber")); err == nil && v > 0 {
 		f.PageNumber = v
 	}
+	return f, nil
+}
 
-	notes, err := h.db.SearchNotes(f)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
+// searchNoteResponses adds each note's tags, locations and calendar events.
+func (h Handler) searchNoteResponses(notes []model.Note) ([]SearchNoteResponse, error) {
 	ids := make([]string, len(notes))
 	for i, n := range notes {
 		ids[i] = n.ID
 	}
 	tags, err := h.db.FindNoteTags(ids)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	locs, err := h.db.FindNoteLocations(ids)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	events, err := h.db.FindNoteEvents(ids)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return nil, echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	tagsByNote := map[string][]string{}
 	for _, t := range tags {
@@ -141,12 +185,7 @@ func (h Handler) SearchNotes(c echo.Context) error {
 		eventsByNote[e.NoteID] = append(eventsByNote[e.NoteID], e)
 	}
 
-	pending, err := h.db.CountUnindexedNotes(f.WorkspaceID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	res := SearchNotesResponse{Notes: make([]SearchNoteResponse, 0, len(notes)), Pending: pending}
+	res := make([]SearchNoteResponse, 0, len(notes))
 	for _, n := range notes {
 		createdByName, avatar := h.getUserInfoByID(n.CreatedBy)
 		noteTags := tagsByNote[n.ID]
@@ -161,7 +200,7 @@ func (h Handler) SearchNotes(c echo.Context) error {
 		if noteEvents == nil {
 			noteEvents = []model.NoteEvent{}
 		}
-		res.Notes = append(res.Notes, SearchNoteResponse{
+		res = append(res, SearchNoteResponse{
 			GetNoteResponse: GetNoteResponse{
 				ID:                 n.ID,
 				WorkspaceID:        n.WorkspaceID,
@@ -182,7 +221,7 @@ func (h Handler) SearchNotes(c echo.Context) error {
 			Events:    noteEvents,
 		})
 	}
-	return c.JSON(http.StatusOK, res)
+	return res, nil
 }
 
 // GetSearchTags lists the workspace's tags with how many visible notes use

@@ -372,6 +372,8 @@ export default {
     },
   },
   noteViews: {
+    list: "Liste",
+    switchView: "Changer de vue",
     calendar: "Calendrier",
     map: "Carte",
     today: "Aujourd'hui",
