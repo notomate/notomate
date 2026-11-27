@@ -7,7 +7,7 @@ import useSignOut from "@/hooks/use-sign-out"
 
 const buttonClass = "w-full flex items-center gap-2 px-2 py-2 rounded-md text-sm text-left transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
 
-/** Foot of the sidebar: the signed-in user with Sign out, or Sign in. */
+/** Foot of the sidebar: Sign out with the signed-in user's avatar, or Sign in. */
 const UserMenu = () => {
     const { t } = useTranslation()
     const { user } = useCurrentUserStore()
@@ -23,11 +23,7 @@ const UserMenu = () => {
     }
 
     return (
-        <div className="flex items-center gap-1">
-            <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2 select-none">
-                <Avatar name={user.name} avatarUrl={user.avatar_url} size={24} />
-                <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{user.name}</span>
-            </div>
+        <div className="flex items-center justify-between gap-1">
             <button
                 onClick={() => signOut.mutate()}
                 disabled={signOut.isPending}
@@ -37,6 +33,9 @@ const UserMenu = () => {
                 <LogOut size={16} />
                 {t("actions.signout")}
             </button>
+            <div className="shrink-0 px-2 py-2 select-none" title={user.name}>
+                <Avatar name={user.name} avatarUrl={user.avatar_url} size={24} />
+            </div>
         </div>
     )
 }
